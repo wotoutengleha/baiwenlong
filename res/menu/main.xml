@@ -1,0 +1,17 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android" >
+
+    <item
+        android:id="@+id/action_contact"
+        android:icon="@drawable/ic_action_user"
+        android:showAsAction="ifRoom"
+        android:title="@string/action_contact"/>
+    <item
+        android:id="@+id/menu"
+        android:layout_width="48dip"
+        android:layout_height="match_parent"
+        android:background="@drawable/button_grey_backgound_when_pressed"
+        android:icon="@drawable/overflow_white"
+        android:showAsAction="ifRoom"
+        android:src="@drawable/overflow_dark"/>
+
+</menu>

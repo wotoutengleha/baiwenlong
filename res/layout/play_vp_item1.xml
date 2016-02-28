@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:imagecontrol="http://schemas.android.com/apk/res-auto"
+    xmlns:lrc="http://schemas.android.com/apk/res/com.esint.music"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent" >
+
+    <com.esint.music.view.RoundImageView
+        android:id="@+id/infoOperating"
+        android:layout_width="260dp"
+        android:layout_height="250dp"
+        android:layout_centerHorizontal="true"
+        android:scaleType="centerCrop"
+        android:src="@drawable/girl"
+        imagecontrol:border_inside_color="#fff7f2e9"
+        imagecontrol:border_outside_color="#ffd5d1c8"
+        imagecontrol:border_thickness="2dp" />
+
+    <com.esint.music.view.LrcView
+        xmlns:lrc="http://schemas.android.com/apk/res/com.esint.music"
+        android:id="@+id/play_first_lrc"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/infoOperating"
+        android:layout_marginBottom="5dp"
+        android:layout_marginTop="30dp"
+        lrc:currentTextColor="#FF31C27C"
+        lrc:dividerHeight="20dp"
+        lrc:normalTextColor="@android:color/white"
+        lrc:rows="1"
+        lrc:textSize="18sp" />
+
+</RelativeLayout>

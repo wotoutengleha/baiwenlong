@@ -1,0 +1,289 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/popMenuParent"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent" >
+
+    <LinearLayout
+        android:id="@+id/pop_layout"
+        android:layout_width="fill_parent"
+        android:layout_height="215dp"
+        android:layout_alignParentBottom="true"
+        android:background="@drawable/play_bar_bottom"
+        android:orientation="vertical" >
+
+        <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="0dp"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
+            android:layout_weight="1"
+            android:orientation="horizontal" >
+
+            <RelativeLayout
+                android:id="@+id/menuScan"
+                android:layout_width="0dp"
+                android:layout_height="fill_parent"
+                android:layout_marginBottom="5dp"
+                android:layout_marginRight="5dp"
+                android:layout_marginTop="5dp"
+                android:layout_weight="1"
+                android:background="@drawable/play_bottom_scan"
+                android:clickable="true"
+                android:onClick="menuOnClick" >
+
+                <ImageView
+                    android:id="@+id/menuScanPic"
+                    android:layout_width="35dp"
+                    android:layout_height="35dp"
+                    android:layout_centerHorizontal="true"
+                    android:layout_marginTop="10dp"
+                    android:src="@drawable/menu_scan_meitu_10" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/menuScanPic"
+                    android:layout_centerInParent="true"
+                    android:layout_marginTop="10dp"
+                    android:text="扫描音乐" />
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:id="@+id/menuSkin"
+                android:layout_width="0dp"
+                android:layout_height="fill_parent"
+                android:layout_marginBottom="5dp"
+                android:layout_marginRight="5dp"
+                android:layout_marginTop="5dp"
+                android:layout_weight="1"
+                android:background="@drawable/play_bottom_scan"
+                android:clickable="true"
+                android:onClick="menuOnClick" >
+
+                <ImageView
+                    android:id="@+id/menuSkinPic"
+                    android:layout_width="45dp"
+                    android:layout_height="45dp"
+                    android:layout_centerHorizontal="true"
+                    android:layout_marginTop="5dp"
+                    android:background="@null"
+                    android:clickable="true"
+                    android:src="@drawable/menu_skin" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/menuSkinPic"
+                    android:layout_centerInParent="true"
+                    android:layout_marginTop="5dp"
+                    android:text="主题皮肤" />
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:id="@+id/menuAbout"
+                android:layout_width="0dp"
+                android:layout_height="fill_parent"
+                android:layout_marginBottom="5dp"
+                android:layout_marginRight="5dp"
+                android:layout_marginTop="5dp"
+                android:layout_weight="1"
+                android:background="@drawable/play_bottom_scan"
+                android:clickable="true"
+                android:onClick="menuOnClick" >
+
+                <ImageView
+                    android:id="@+id/menuAboutPic"
+                    android:layout_width="25dp"
+                    android:layout_height="25dp"
+                    android:layout_centerHorizontal="true"
+                    android:layout_marginTop="15dp"
+                    android:src="@drawable/menu_about_meitu_8" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/menuAboutPic"
+                    android:layout_centerInParent="true"
+                    android:layout_marginTop="15dp"
+                    android:text="关于" />
+            </RelativeLayout>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="0dp"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
+            android:layout_weight="1"
+            android:orientation="horizontal" >
+
+            <RelativeLayout
+                android:id="@+id/menuPlayMode"
+                android:layout_width="0dp"
+                android:layout_height="fill_parent"
+                android:layout_marginBottom="5dp"
+                android:layout_marginRight="5dp"
+                android:layout_marginTop="5dp"
+                android:layout_weight="1"
+                android:background="@drawable/play_bottom_scan"
+                android:clickable="true"
+                android:onClick="menuOnClick" >
+
+                <RelativeLayout
+                    android:id="@+id/menuShuffleParent"
+                    android:layout_width="fill_parent"
+                    android:layout_height="fill_parent"
+                    android:background="@drawable/play_bottom_scan" >
+
+                    <ImageView
+                        android:id="@+id/menuShufflePic"
+                        android:layout_width="35dp"
+                        android:layout_height="35dp"
+                        android:layout_centerHorizontal="true"
+                        android:layout_marginTop="10dp"
+                        android:src="@drawable/ic_player_mode_random1_meitu_6" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_below="@+id/menuShufflePic"
+                        android:layout_centerInParent="true"
+                        android:layout_marginTop="10dp"
+                        android:text="随机播放" />
+                </RelativeLayout>
+
+                <RelativeLayout
+                    android:id="@+id/menuSequenceParent"
+                    android:layout_width="fill_parent"
+                    android:layout_height="fill_parent"
+                    android:background="@drawable/play_bottom_scan"
+                    android:visibility="invisible" >
+
+                    <ImageView
+                        android:id="@+id/menuSequencePic"
+                        android:layout_width="35dp"
+                        android:layout_height="35dp"
+                        android:layout_centerHorizontal="true"
+                        android:layout_marginTop="10dp"
+                        android:src="@drawable/ic_player_mode_all1_meitu_5" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_below="@+id/menuSequencePic"
+                        android:layout_centerInParent="true"
+                        android:layout_marginTop="10dp"
+                        android:text="顺序播放" />
+                </RelativeLayout>
+
+                <RelativeLayout
+                    android:id="@+id/menuRepeatoneParent"
+                    android:layout_width="fill_parent"
+                    android:layout_height="fill_parent"
+                    android:background="@drawable/play_bottom_scan"
+                    android:visibility="invisible" >
+
+                    <ImageView
+                        android:id="@+id/menuRepeatonePic"
+                        android:layout_width="35dp"
+                        android:layout_height="35dp"
+                        android:layout_centerHorizontal="true"
+                        android:layout_marginTop="10dp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_below="@+id/menuRepeatonePic"
+                        android:layout_centerInParent="true"
+                        android:layout_marginTop="10dp"
+                        android:src="@drawable/ic_player_mode_single1_meitu_7"
+                        android:text="单曲循环" />
+                </RelativeLayout>
+
+                <RelativeLayout
+                    android:id="@+id/menuRepeatParent"
+                    android:layout_width="fill_parent"
+                    android:layout_height="fill_parent"
+                    android:background="@drawable/play_bottom_scan"
+                    android:visibility="invisible" >
+
+                    <ImageView
+                        android:id="@+id/menuRepeatPic"
+                        android:layout_width="35dp"
+                        android:layout_height="35dp"
+                        android:layout_centerHorizontal="true"
+                        android:layout_marginTop="10dp"
+                        android:src="@drawable/ic_player_mode_all_press_meitu_4" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_below="@+id/menuRepeatPic"
+                        android:layout_centerInParent="true"
+                        android:layout_marginTop="10dp"
+                        android:text="循环播放" />
+                </RelativeLayout>
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:id="@+id/menuSetting"
+                android:layout_width="0dp"
+                android:layout_height="fill_parent"
+                android:layout_marginBottom="5dp"
+                android:layout_marginRight="5dp"
+                android:layout_marginTop="5dp"
+                android:layout_weight="1"
+                android:background="@drawable/play_bottom_scan"
+                android:clickable="true"
+                android:onClick="menuOnClick" >
+
+                <ImageView
+                    android:id="@+id/menuSettingPic"
+                    android:layout_width="35dp"
+                    android:layout_height="35dp"
+                    android:layout_centerHorizontal="true"
+                    android:layout_marginTop="10dp"
+                    android:src="@drawable/menu_setting_meitu_11" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/menuSettingPic"
+                    android:layout_centerInParent="true"
+                    android:layout_marginTop="10dp"
+                    android:text="设置" />
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:id="@+id/menuExit"
+                android:layout_width="0dp"
+                android:layout_height="fill_parent"
+                android:layout_marginBottom="5dp"
+                android:layout_marginRight="5dp"
+                android:layout_marginTop="5dp"
+                android:layout_weight="1"
+                android:background="@drawable/play_bottom_scan"
+                android:clickable="true"
+                android:onClick="menuOnClick" >
+
+                <ImageView
+                    android:id="@+id/menuExitPic"
+                    android:layout_width="23dp"
+                    android:layout_height="23dp"
+                    android:layout_centerHorizontal="true"
+                    android:layout_marginTop="18dp"
+                    android:src="@drawable/menu_exit_meitu_9" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/menuExitPic"
+                    android:layout_centerInParent="true"
+                    android:layout_marginTop="13dp"
+                    android:text="退出" />
+            </RelativeLayout>
+        </LinearLayout>
+    </LinearLayout>
+
+</RelativeLayout>
