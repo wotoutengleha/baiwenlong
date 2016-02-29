@@ -2,9 +2,15 @@ package com.esint.music.activity;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
+
+import org.apache.http.NameValuePair;
+import org.apache.http.message.BasicNameValuePair;
+import org.json.JSONObject;
 
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
@@ -20,6 +26,8 @@ import android.graphics.drawable.BitmapDrawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
+import android.os.Message;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
@@ -27,6 +35,7 @@ import android.support.v4.view.ViewPager;
 import android.support.v4.view.ViewPager.OnPageChangeListener;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.Display;
 import android.view.Gravity;
 import android.view.KeyEvent;
@@ -49,6 +58,8 @@ import android.widget.Toast;
 
 import com.esint.music.R;
 import com.esint.music.R.color;
+import com.esint.music.XListView.XListView;
+import com.esint.music.XListView.XListView.IXListViewListener;
 import com.esint.music.adapter.SearchResultAdapter;
 import com.esint.music.dialog.Effectstype;
 import com.esint.music.dialog.NiftyDialogBuilder;
@@ -57,13 +68,16 @@ import com.esint.music.fragment.NetMusicFragment;
 import com.esint.music.model.DownImageInfo;
 import com.esint.music.model.DownMucicInfo;
 import com.esint.music.model.Mp3Info;
+import com.esint.music.model.SearchMusicInfo;
 import com.esint.music.model.SearchResult;
 import com.esint.music.slidemenu.SlidingMenu;
 import com.esint.music.sortlistview.CharacterParser;
 import com.esint.music.sortlistview.PinyinComparator;
 import com.esint.music.utils.Constant;
 import com.esint.music.utils.MediaUtils;
+import com.esint.music.utils.MusicAPI;
 import com.esint.music.utils.MyApplication;
+import com.esint.music.utils.MyHttpUtils;
 import com.esint.music.utils.PageAction;
 import com.esint.music.utils.SearchMusicUtil;
 import com.esint.music.utils.SortListUtil;
@@ -72,6 +86,7 @@ import com.esint.music.utils.SharedPrefUtil;
 import com.esint.music.view.AlwaysMarqueeTextView;
 import com.esint.music.view.MainFunctionPop;
 import com.lidroid.xutils.exception.DbException;
+import com.lidroid.xutils.http.RequestParams;
 
 @SuppressLint("DefaultLocale")
 @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
@@ -108,6 +123,7 @@ public class MainFragmentActivity extends BaseActivity implements
 	private List<Mp3Info> myLikeMp3Infos;// 我的最爱的list
 	private MyApplication myApp;
 	private ArrayList<DownMucicInfo> downMusicList;// 下载的歌曲
+	private MyHttpUtils myHttpUtils;// 请求网络的工具类
 
 	// 注意 布局设置选择器 需要设置 android:clickable="true" 成可点击的状态
 
@@ -250,6 +266,7 @@ public class MainFragmentActivity extends BaseActivity implements
 		mFragLists = new ArrayList<Fragment>();
 		myApp = (MyApplication) getApplication();
 		mp3Infos = MediaUtils.getMp3Info(MainFragmentActivity.this);
+		myHttpUtils = new MyHttpUtils(MainFragmentActivity.this);
 		try {
 			// 排序MP3列表的数据
 			mp3Infos = MediaUtils.getMp3Info(this);
@@ -349,6 +366,7 @@ public class MainFragmentActivity extends BaseActivity implements
 	}
 
 	private void searchMusicView() {
+		final ArrayList<SearchMusicInfo> searchMusicList = new ArrayList<SearchMusicInfo>();
 		LayoutInflater inflater = this.getLayoutInflater();
 		View searchView = inflater.inflate(R.layout.activity_searchmusic, null,
 				false);
@@ -361,8 +379,36 @@ public class MainFragmentActivity extends BaseActivity implements
 				.findViewById(R.id.et_search);
 		ImageView btnSearch = (ImageView) searchView
 				.findViewById(R.id.btn_search);
-		final ListView resultLV = (ListView) searchView
+		final XListView resultLV = (XListView) searchView
 				.findViewById(R.id.lv_search);
+		resultLV.setPullRefreshEnable(true);
+		resultLV.setPullLoadEnable(true);
+		resultLV.setXListViewListener(new IXListViewListener() {
+
+			@Override
+			public void onRefresh() {
+				new Handler().postDelayed(new Runnable() {
+
+					@Override
+					public void run() {
+						scrollEnd(resultLV);
+					}
+				}, 2500);
+			}
+
+			@Override
+			public void onLoadMore() {
+				new Handler().postDelayed(new Runnable() {
+
+					@Override
+					public void run() {
+						scrollEnd(resultLV);
+					}
+				}, 2500);
+
+			}
+		});
+
 		btnBack.setOnClickListener(new OnClickListener() {
 
 			@Override
@@ -381,24 +427,32 @@ public class MainFragmentActivity extends BaseActivity implements
 				if (TextUtils.isEmpty(searchResult)) {
 					showEmptyDialog();
 				} else {
-					SearchMusicUtil.getInstance()
-							.setListener(new onSearchResultListener() {
-
-								@Override
-								public void onSearchResult(
-										ArrayList<SearchResult> results) {
-									ArrayList<SearchResult> searchResult = new ArrayList<SearchResult>();
-									searchResult.clear();
-									searchResult.addAll(results);
-									SearchResultAdapter resultAdapter = new SearchResultAdapter(
-											MainFragmentActivity.this,
-											searchResult);
-									resultLV.setAdapter(resultAdapter);
-								}
-							}).search(searchResult, Constant.page);
+					String edSearch = searchEt.getText().toString();
+					List<NameValuePair> parmas = new ArrayList<NameValuePair>();
+					parmas.add(new BasicNameValuePair("s", edSearch));
+					parmas.add(new BasicNameValuePair("type", "1"));
+					parmas.add(new BasicNameValuePair("offset", "0"));
+					parmas.add(new BasicNameValuePair("sub", "false"));
+					parmas.add(new BasicNameValuePair("limit", "6"));
+					myHttpUtils.searchMusicToAPI(Constant.API_NET_SEARCH_MUSIC,
+							parmas);
 				}
 			}
 		});
+		MyHttpUtils.handler = new Handler() {
+			@SuppressWarnings("unchecked")
+			@Override
+			public void handleMessage(Message msg) {
+				super.handleMessage(msg);
+				if (msg.what == Constant.WHAT_NET_HOTMUSIC_LIST) {
+					searchMusicList
+							.addAll((ArrayList<SearchMusicInfo>) msg.obj);
+					SearchResultAdapter resultAdapter = new SearchResultAdapter(
+							MainFragmentActivity.this, searchMusicList);
+					resultLV.setAdapter(resultAdapter);
+				}
+			}
+		};
 
 		action.addPage(searchView);
 	}
@@ -710,5 +764,16 @@ public class MainFragmentActivity extends BaseActivity implements
 			searchActionBar.setBackgroundResource(color.holo_blue_light);
 			break;
 		}
+	}
+
+	/**
+	 * 列表上拉下拉事件结束和初始化
+	 */
+	public void scrollEnd(XListView lv) {
+		Date now = new Date();
+		DateFormat d1 = DateFormat.getDateTimeInstance();
+		lv.stopRefresh();
+		lv.stopLoadMore();
+		lv.setRefreshTime(d1.format(now));
 	}
 }

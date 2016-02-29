@@ -47,6 +47,9 @@
     <color name="black_translucence2">#55000000</color>
     <color name="grey_dark_light2">#55aaaaaa</color>
     <color name="bule_light">#D1EEEE</color>
+      <color name="transparent">#00000000</color>
+    <color name="background">#F7F4F0</color>
+    <color name="title_color">#333333</color>
     
 
 </resources>

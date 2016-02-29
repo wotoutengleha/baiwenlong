@@ -11,7 +11,6 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
 
-import android.app.ProgressDialog;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
@@ -40,7 +39,6 @@ public class DownMusicUtils {
 	private static DownMusicUtils mInstance;
 	private ExecutorService mThreadPool;
 	public static Handler handler;
-
 
 	// 设置回调监听对象
 	public DownMusicUtils setListener(OnDownLoadListener mListener) {
@@ -103,54 +101,53 @@ public class DownMusicUtils {
 
 			}
 		};
-		getDownLoadMusicURL(searchResult, handler);
+		// getDownLoadMusicURL(searchResult, handler);
 	}
 
-	private void getDownLoadMusicURL(final SearchResult searchResult,
-			final Handler handler) {
-		mThreadPool.execute(new Runnable() {
-
-			private String url111;
-
-			@Override
-			public void run() {
-				String url = searchResult.getUrl();
-				try {
-					Document doc = Jsoup.connect(url)
-							.userAgent(Constant.USER_AGENT).timeout(6000).get();
-					Elements targetElements = doc.select("div.songOther");
-					Document divcontions = Jsoup.parse(targetElements
-							.toString());
-					Elements element = divcontions.getElementsByTag("li");
-					for (int i = 0; i < element.size(); i++) {
-						String nextDownUrl = element.get(1).toString();
-						Document divcontions1 = Jsoup.parse(nextDownUrl
-								.toString());
-						Elements element1 = divcontions1.getElementsByTag("a");
-						url111 = element1.attr("href");
-					}
-
-					String newUrl = Constant.ND + url111;
-					Document doc1 = Jsoup.connect(newUrl)
-							.userAgent(Constant.USER_AGENT).timeout(6000).get();
-					Elements targetElements1 = doc1.select("li.songOtherDown");
-					Document divcontions1 = Jsoup.parse(targetElements1
-							.toString());
-					Elements element1 = divcontions1.getElementsByTag("a");
-					String link = element1.attr("href");
-					Log.e("link", link + "");
-					Message message = handler.obtainMessage(GET_SUCC_MP3URL,
-							link);
-					message.sendToTarget();
-				} catch (IOException e) {
-					e.printStackTrace();
-					handler.obtainMessage(GET_FAILED_MP3URL).sendToTarget();
-				}
-			}
-		});
-
-	}
-
+	// private void getDownLoadMusicURL(final SearchResult searchResult,
+	// final Handler handler) {
+	// mThreadPool.execute(new Runnable() {
+	//
+	// private String url111;
+	//
+	// @Override
+	// public void run() {
+	// String url = searchResult.getUrl();
+	// try {
+	// Document doc = Jsoup.connect(url)
+	// .userAgent(Constant.USER_AGENT).timeout(6000).get();
+	// Elements targetElements = doc.select("div.songOther");
+	// Document divcontions = Jsoup.parse(targetElements
+	// .toString());
+	// Elements element = divcontions.getElementsByTag("li");
+	// for (int i = 0; i < element.size(); i++) {
+	// String nextDownUrl = element.get(1).toString();
+	// Document divcontions1 = Jsoup.parse(nextDownUrl
+	// .toString());
+	// Elements element1 = divcontions1.getElementsByTag("a");
+	// url111 = element1.attr("href");
+	// }
+	//
+	// String newUrl = Constant.ND + url111;
+	// Document doc1 = Jsoup.connect(newUrl)
+	// .userAgent(Constant.USER_AGENT).timeout(6000).get();
+	// Elements targetElements1 = doc1.select("li.songOtherDown");
+	// Document divcontions1 = Jsoup.parse(targetElements1
+	// .toString());
+	// Elements element1 = divcontions1.getElementsByTag("a");
+	// String link = element1.attr("href");
+	// Log.e("link", link + "");
+	// Message message = handler.obtainMessage(GET_SUCC_MP3URL,
+	// link);
+	// message.sendToTarget();
+	// } catch (IOException e) {
+	// e.printStackTrace();
+	// handler.obtainMessage(GET_FAILED_MP3URL).sendToTarget();
+	// }
+	// }
+	// });
+	//
+	// }
 
 	// 下载歌词
 	public void downLoadLRC(final String url, final String musicName,
@@ -169,8 +166,11 @@ public class DownMusicUtils {
 						lrcDirFile.mkdir();
 					}
 					lrcUrl = Constant.BAIDU_URL + lrcUrl;
-					final String target = Environment.getExternalStorageDirectory()
-							+ "/" + "/下载的歌词" + "/" + musicName + ".lrc";
+					final String target = Environment
+							.getExternalStorageDirectory()
+							+ "/"
+							+ "/下载的歌词"
+							+ "/" + musicName + ".lrc";
 					HttpUtils utils = new HttpUtils();
 					utils.download(lrcUrl, target, new RequestCallBack<File>() {
 						@Override
@@ -183,9 +183,10 @@ public class DownMusicUtils {
 
 						@Override
 						public void onSuccess(ResponseInfo<File> arg0) {
-							Toast.makeText(MyApplication.getContext(), "歌词下载成功了",
-									0).show();
-							handler.obtainMessage(SUCCESS_LRC,musicName).sendToTarget();
+							Toast.makeText(MyApplication.getContext(),
+									"歌词下载成功了", 0).show();
+							handler.obtainMessage(SUCCESS_LRC, musicName)
+									.sendToTarget();
 							Log.e("target下载的时候", target);
 						}
 

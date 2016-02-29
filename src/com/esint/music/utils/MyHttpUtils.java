@@ -1,7 +1,17 @@
 package com.esint.music.utils;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.List;
 
+import org.apache.http.Header;
+import org.apache.http.HttpEntity;
+import org.apache.http.NameValuePair;
+import org.apache.http.cookie.Cookie;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.message.BasicNameValuePair;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -14,10 +24,13 @@ import android.widget.Toast;
 
 import com.esint.music.model.HotMusicInfo;
 import com.esint.music.model.NewMusicInfo;
+import com.esint.music.model.SearchMusicInfo;
 import com.lidroid.xutils.exception.HttpException;
+import com.lidroid.xutils.http.RequestParams;
 import com.lidroid.xutils.http.ResponseInfo;
 import com.lidroid.xutils.http.callback.RequestCallBack;
 import com.lidroid.xutils.http.client.HttpRequest.HttpMethod;
+import com.lidroid.xutils.http.client.entity.BodyParamsEntity;
 
 /**
  * 类名称：HttpUtils 类描述： 解析json数据 返回list 创建人：bai 创建时间：2016-2-19 下午4:56:42
@@ -27,8 +40,11 @@ public class MyHttpUtils {
 	private Context context;
 	private com.lidroid.xutils.HttpUtils httpUtils;
 	public static Handler handler;
-	private String aliasName;
-	private String artistName;
+	private String aliasName;// 排行榜下解析数据的原唱歌手
+	private String artistName;// 排行榜数据下接续数据的音乐演唱者
+
+	public static final String COOKIE_APP_VERSION = "appver=2.6.1";
+	public static final String HTTP_REFERER = "http://music.163.com";
 
 	public MyHttpUtils(Context context) {
 		this.context = context;
@@ -145,7 +161,6 @@ public class MyHttpUtils {
 						try {
 							parseHotMusicJson(hotMusicJson);
 						} catch (JSONException e) {
-							// TODO Auto-generated catch block
 							e.printStackTrace();
 						}
 					}
@@ -154,12 +169,12 @@ public class MyHttpUtils {
 	}
 
 	/**
-	* @Description:解析数据，将数据通过handler返回 
-	* @param jsonResult
-	* @throws JSONException
-	* @return void 
-	* @author bai 
-	*/
+	 * @Description:解析数据，将数据通过handler返回
+	 * @param jsonResult
+	 * @throws JSONException
+	 * @return void
+	 * @author bai
+	 */
 	private void parseHotMusicJson(String jsonResult) throws JSONException {
 		ArrayList<HotMusicInfo> netNewMusicList = new ArrayList<HotMusicInfo>();
 		JSONObject jsonObject = new JSONObject(jsonResult);
@@ -207,11 +222,82 @@ public class MyHttpUtils {
 			HotMusicInfo netNewMusicInfo = new HotMusicInfo(mp3Url, musicName,
 					duration, aliasName, artistName, albumName, trackCount,
 					picUrl);
-			Log.e("eeeeeeeeeeee", netNewMusicInfo.toString());
 			netNewMusicList.add(netNewMusicInfo);
 		}
 		Message message = handler.obtainMessage(
 				Constant.WHAT_NET_NEWMUSIC_LIST, netNewMusicList);
+		message.sendToTarget();
+	}
+
+	/**
+	 * @Description:通过网易云音乐搜索的接口搜索音乐 (输入歌名 或者演唱家)
+	 * @return void
+	 * @author bai
+	 */
+	public void searchMusicToAPI(final String url, List<NameValuePair> parmas) {
+		httpUtils.configCurrentHttpCacheExpiry(1000 * 10);// 超时时间
+		final RequestParams params = new RequestParams();
+		params.addHeader("Cookie", COOKIE_APP_VERSION);
+		params.addHeader("Referer", HTTP_REFERER);
+		params.addQueryStringParameter(parmas);
+		httpUtils.send(HttpMethod.POST, url, params,
+				new RequestCallBack<String>() {
+
+					@Override
+					public void onFailure(HttpException arg0, String arg1) {
+						Toast.makeText(context, "搜索音乐失败了", 0).show();
+					}
+
+					@Override
+					public void onSuccess(ResponseInfo<String> arg0) {
+						String searchResult = arg0.result;
+						try {
+							ParseSearchResultJson(searchResult);
+						} catch (JSONException e) {
+							e.printStackTrace();
+						}
+					}
+				});
+
+	}
+
+	/**
+	 * @Description:解析搜索结果的api
+	 * @param searchResult
+	 * @return void
+	 * @author bai
+	 * @throws JSONException
+	 */
+	protected void ParseSearchResultJson(String searchResult)
+			throws JSONException {
+		String searchArtistName = null;
+		ArrayList<SearchMusicInfo> searchMusicList = new ArrayList<SearchMusicInfo>();
+
+		JSONObject object = new JSONObject(searchResult);
+		String result = object.getString("result");
+		JSONObject jsonObject = new JSONObject(result);
+		String resultObject = jsonObject.getString("songs");
+		JSONArray resultArray = new JSONArray(resultObject);
+		for (int i = 0; i < resultArray.length(); i++) {
+			SearchMusicInfo musicInfo = new SearchMusicInfo();
+			JSONObject musicObject = resultArray.getJSONObject(i);
+			String musicID = musicObject.getString("id");
+			String musicName = musicObject.getString("name");
+			String artists = musicObject.getString("artists");
+
+			JSONArray array = new JSONArray(artists);
+			for (int j = 0; j < array.length(); j++) {
+				JSONObject jsonObject1 = array.getJSONObject(j);
+				searchArtistName = jsonObject1.getString("name");
+			}
+			musicInfo.setMusicArtist(searchArtistName);
+			musicInfo.setMusicID(musicID);
+			musicInfo.setMusicName(musicName);
+			searchMusicList.add(musicInfo);
+		}
+
+		Message message = handler.obtainMessage(
+				Constant.WHAT_NET_HOTMUSIC_LIST, searchMusicList);
 		message.sendToTarget();
 	}
 

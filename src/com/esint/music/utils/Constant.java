@@ -56,6 +56,7 @@ public class Constant {
 
 	public static final String API_NET_NEWMUSIC_LIST = "http://music.163.com/api/playlist/detail?id=3779629";
 	public static final String API_NET_HOTMUSIC_LIST = "http://music.163.com/api/playlist/detail?id=3778678";
+	public static final String API_NET_SEARCH_MUSIC = "http://music.163.com/api/search/get";// ËÑË÷ÒôÀÖµÄ½Ó¿Ú
 	public static final int WHAT_NET_NEWMUSIC_LIST = 0x111;
 	public static final int WHAT_NEW_SONGINFO = 0x112;
 	public static final int WHAT_HOT_SONGINFO = 0x114;

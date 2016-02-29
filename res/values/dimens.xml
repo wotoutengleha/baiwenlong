@@ -15,5 +15,8 @@
     <dimen name="dialog_padding">25dp</dimen>
     <dimen name="popmenu_width">150dip</dimen>
     <dimen name="popmenu_yoff">5.0dip</dimen>
+     <dimen name="header_height">60dp</dimen>
+    <dimen name="footer_height">90dp</dimen>
+    <dimen name="footer_padding">10dp</dimen>
 
 </resources>

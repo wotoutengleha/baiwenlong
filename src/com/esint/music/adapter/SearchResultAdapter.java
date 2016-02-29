@@ -3,7 +3,7 @@ package com.esint.music.adapter;
 import java.util.ArrayList;
 
 import com.esint.music.R;
-import com.esint.music.model.SearchResult;
+import com.esint.music.model.SearchMusicInfo;
 import com.esint.music.utils.DownMusicUtils;
 import com.esint.music.utils.DownMusicUtils.OnDownLoadListener;
 
@@ -21,10 +21,10 @@ import android.widget.Toast;
 public class SearchResultAdapter extends BaseAdapter {
 
 	private Context context;
-	private ArrayList<SearchResult> netDataList;
+	private ArrayList<SearchMusicInfo> netDataList;
 
 	public SearchResultAdapter(Context context,
-			ArrayList<SearchResult> searchResult) {
+			ArrayList<SearchMusicInfo> searchResult) {
 		this.context = context;
 		this.netDataList = searchResult;
 	}
@@ -63,9 +63,9 @@ public class SearchResultAdapter extends BaseAdapter {
 			viewHolder = (ViewHolder) convertView.getTag();
 		}
 
-		SearchResult searchResult = netDataList.get(position);
+		SearchMusicInfo searchResult = netDataList.get(position);
 		viewHolder.musicName.setText(searchResult.getMusicName());
-		viewHolder.artist.setText(searchResult.getArtist());
+		viewHolder.artist.setText(searchResult.getMusicArtist());
 		viewHolder.arrowDown.setOnClickListener(new OnClickListener() {
 
 			@Override
@@ -115,17 +115,17 @@ public class SearchResultAdapter extends BaseAdapter {
 
 	private void downloadMusic(int position) {
 
-		Toast.makeText(context,
-				"正在下载" + netDataList.get(position).getMusicName(), 0).show();
-		DownMusicUtils.getInstance().setListener(new OnDownLoadListener() {
-			@Override
-			public void onFailed(String error) {
-				Toast.makeText(context, error, 0).show();
-			}
-			@Override
-			public void onDownLoad(String mp3Url) {
-				Toast.makeText(context, "下载成功", 0).show();
-			}
-		}).down(netDataList.get(position));
+//		Toast.makeText(context,
+//				"正在下载" + netDataList.get(position).getMusicName(), 0).show();
+//		DownMusicUtils.getInstance().setListener(new OnDownLoadListener() {
+//			@Override
+//			public void onFailed(String error) {
+//				Toast.makeText(context, error, 0).show();
+//			}
+//			@Override
+//			public void onDownLoad(String mp3Url) {
+//				Toast.makeText(context, "下载成功", 0).show();
+//			}
+//		}).down(netDataList.get(position));
 	}
 }
