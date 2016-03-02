@@ -43,6 +43,7 @@ public class SearchMusicInfo {
 	public void setMusicArtist(String musicArtist) {
 		this.musicArtist = musicArtist;
 	}
+	
 
 	@Override
 	public String toString() {

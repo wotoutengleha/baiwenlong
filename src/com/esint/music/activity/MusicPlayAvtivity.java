@@ -291,7 +291,6 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 
 	}
 
-
 	@Override
 	public void onBackPressed() {
 		super.onBackPressed();
@@ -358,8 +357,8 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 
 			Toast.makeText(this, "点击了上一首", 0).show();
 			musicPlayService.previous();
-			intentMusicName = mp3List.get(musicPlayService.getCurrentPosition())
-					.getTitle();
+			intentMusicName = mp3List
+					.get(musicPlayService.getCurrentPosition()).getTitle();
 			// setLrc(intentMusicName);
 			btnPause.setVisibility(View.VISIBLE);
 			btnPlay.setVisibility(View.GONE);
@@ -389,8 +388,8 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 			bindService(intent, connection, Context.BIND_AUTO_CREATE);
 			Toast.makeText(this, "点击了下一首播放按钮", 0).show();
 			musicPlayService.next();
-			intentMusicName = mp3List.get(musicPlayService.getCurrentPosition())
-					.getTitle();
+			intentMusicName = mp3List
+					.get(musicPlayService.getCurrentPosition()).getTitle();
 			// setLrc(intentMusicName);
 			btnPause.setVisibility(View.VISIBLE);
 			btnPlay.setVisibility(View.GONE);
@@ -444,7 +443,8 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 		}
 			break;
 		case R.id.ivLikeNormal: {
-			Mp3Info mp3Info = mp3List.get(musicPlayService.getCurrentPosition());
+			Mp3Info mp3Info = mp3List
+					.get(musicPlayService.getCurrentPosition());
 			try {
 				Mp3Info myLikeMp3Info = myApp.dbUtils
 						.findFirst(Selector.from(Mp3Info.class).where(
@@ -521,7 +521,8 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 			}
 			initPlayMode();
 			// 初始化收藏歌曲的状态
-			Mp3Info mp3Info = mp3List.get(musicPlayService.getCurrentPosition());
+			Mp3Info mp3Info = mp3List
+					.get(musicPlayService.getCurrentPosition());
 			try {
 				Mp3Info myLikeMp3Info = myApp.dbUtils
 						.findFirst(Selector.from(Mp3Info.class).where(

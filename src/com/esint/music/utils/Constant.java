@@ -28,8 +28,10 @@ public class Constant {
 	public static final String DIR_MUSIC = "/suixin_music/music";
 	public static final String LRC_MUSIC = "suixin_music/lrc";
 	public static final int UPTATE_LRC = 0x007;
+	public static final int UPTATE_LRC_LOCK = 0x008;
 	public static final int SUCCESS = 0x005;
 	public static final int FAILED = 0x006;
+	public static final int UPDATE_LOCKTIME  = 0x009;//更新锁屏页面的进度条
 	public static final int page = 1;// 搜索歌曲的时候搜索的页数
 	public static boolean isFirst = true;
 	public static boolean ISFirst_PLAY = true;
@@ -61,4 +63,5 @@ public class Constant {
 	public static final int WHAT_NEW_SONGINFO = 0x112;
 	public static final int WHAT_HOT_SONGINFO = 0x114;
 	public static final int WHAT_NET_HOTMUSIC_LIST = 0x113;
+	public static final int WHAT_EXECEPTION = 0X114;
 }

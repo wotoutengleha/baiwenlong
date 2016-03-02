@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
+import com.esint.music.activity.LockActivity;
 import com.esint.music.fragment.MyTabMusic;
 import com.esint.music.model.Mp3Info;
 import com.esint.music.model.DownMucicInfo;
@@ -18,7 +19,10 @@ import com.esint.music.utils.SharedPrefUtil;
 import com.esint.music.utils.SortListUtil;
 
 import android.app.Service;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.media.MediaPlayer;
 import android.media.MediaPlayer.OnCompletionListener;
 import android.media.MediaPlayer.OnErrorListener;
@@ -53,6 +57,7 @@ public class MusicPlayService extends Service implements OnCompletionListener,
 	// 下载歌曲的文件夹
 	private String target;
 	private ArrayList<DownMucicInfo> netMusicList;// 我的下载的音乐列表
+	private ScreenBroadcastReceiver sOnBroadcastReciver;
 
 	public class PlayBinder extends Binder {
 		public MusicPlayService getPlayService() {
@@ -67,10 +72,16 @@ public class MusicPlayService extends Service implements OnCompletionListener,
 		// 排序MP3列表的数据
 		mp3Infos = MediaUtils.getMp3Info(this);
 		mp3Infos = new SortListUtil().initMyLocalMusic(mp3Infos);
-//		 mPlayer.setOnCompletionListener(this);
+		// mPlayer.setOnCompletionListener(this);
 		// mPlayer.setOnErrorListener(this);
 		target = Environment.getExternalStorageDirectory() + "/" + "/下载的歌曲";
 		netMusicList = MediaUtils.GetMusicFiles(target, ".mp3", true);
+
+		sOnBroadcastReciver = new ScreenBroadcastReceiver();
+		IntentFilter recevierFilter = new IntentFilter();
+		recevierFilter.addAction(Intent.ACTION_SCREEN_ON);
+		recevierFilter.addAction(Intent.ACTION_SCREEN_OFF);
+		registerReceiver(sOnBroadcastReciver, recevierFilter);
 	}
 
 	@Override
@@ -78,6 +89,7 @@ public class MusicPlayService extends Service implements OnCompletionListener,
 		super.onDestroy();
 		mPlayer.release();
 		mPlayer = null;
+		unregisterReceiver(sOnBroadcastReciver);
 	}
 
 	@Override

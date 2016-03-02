@@ -10,11 +10,13 @@ import java.util.List;
 
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -52,6 +54,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.PopupWindow;
+import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -365,7 +368,13 @@ public class MainFragmentActivity extends BaseActivity implements
 		}
 	}
 
+	private ProgressDialog progressDialog;
+	private boolean isRefresh = true;
+	private SearchResultAdapter resultAdapter;
+	private EditText searchEt;// 搜索音乐输入的关键字
+
 	private void searchMusicView() {
+		progressDialog = new ProgressDialog(this);
 		final ArrayList<SearchMusicInfo> searchMusicList = new ArrayList<SearchMusicInfo>();
 		LayoutInflater inflater = this.getLayoutInflater();
 		View searchView = inflater.inflate(R.layout.activity_searchmusic, null,
@@ -375,8 +384,7 @@ public class MainFragmentActivity extends BaseActivity implements
 		updateActionBar();
 		ImageView btnBack = (ImageView) searchView
 				.findViewById(R.id.backBtn_search);
-		final EditText searchEt = (EditText) searchView
-				.findViewById(R.id.et_search);
+		searchEt = (EditText) searchView.findViewById(R.id.et_search);
 		ImageView btnSearch = (ImageView) searchView
 				.findViewById(R.id.btn_search);
 		final XListView resultLV = (XListView) searchView
@@ -387,24 +395,14 @@ public class MainFragmentActivity extends BaseActivity implements
 
 			@Override
 			public void onRefresh() {
-				new Handler().postDelayed(new Runnable() {
-
-					@Override
-					public void run() {
-						scrollEnd(resultLV);
-					}
-				}, 2500);
+				isRefresh = true;
+				updateSearchMusic(0);
 			}
 
 			@Override
 			public void onLoadMore() {
-				new Handler().postDelayed(new Runnable() {
-
-					@Override
-					public void run() {
-						scrollEnd(resultLV);
-					}
-				}, 2500);
+				isRefresh = false;
+				updateSearchMusic(searchMusicList.size());
 
 			}
 		});
@@ -427,34 +425,58 @@ public class MainFragmentActivity extends BaseActivity implements
 				if (TextUtils.isEmpty(searchResult)) {
 					showEmptyDialog();
 				} else {
-					String edSearch = searchEt.getText().toString();
-					List<NameValuePair> parmas = new ArrayList<NameValuePair>();
-					parmas.add(new BasicNameValuePair("s", edSearch));
-					parmas.add(new BasicNameValuePair("type", "1"));
-					parmas.add(new BasicNameValuePair("offset", "0"));
-					parmas.add(new BasicNameValuePair("sub", "false"));
-					parmas.add(new BasicNameValuePair("limit", "6"));
-					myHttpUtils.searchMusicToAPI(Constant.API_NET_SEARCH_MUSIC,
-							parmas);
+					progressDialog.setMessage("正在搜索，请稍后。。。");
+					progressDialog.show();
+					searchMusicList.clear();
+					updateSearchMusic(0);
+					Toast.makeText(MainFragmentActivity.this, "点击了搜索", 0)
+							.show();
 				}
 			}
 		});
 		MyHttpUtils.handler = new Handler() {
+
 			@SuppressWarnings("unchecked")
 			@Override
 			public void handleMessage(Message msg) {
 				super.handleMessage(msg);
 				if (msg.what == Constant.WHAT_NET_HOTMUSIC_LIST) {
-					searchMusicList
-							.addAll((ArrayList<SearchMusicInfo>) msg.obj);
-					SearchResultAdapter resultAdapter = new SearchResultAdapter(
-							MainFragmentActivity.this, searchMusicList);
-					resultLV.setAdapter(resultAdapter);
+					onLoadEnd(resultLV);
+					progressDialog.dismiss();
+					if (isRefresh == true) {
+						searchMusicList.clear();
+						searchMusicList
+								.addAll((ArrayList<SearchMusicInfo>) msg.obj);
+						resultAdapter = new SearchResultAdapter(
+								MainFragmentActivity.this, searchMusicList);
+						resultLV.setAdapter(resultAdapter);
+					} else {
+						ArrayList<SearchMusicInfo> dataLoadMore = ((ArrayList<SearchMusicInfo>) msg.obj);
+						searchMusicList.addAll(dataLoadMore);
+						resultAdapter.notifyDataSetChanged();
+					}
+				} else if (msg.what == Constant.WHAT_EXECEPTION) {
+					Toast.makeText(MainFragmentActivity.this, "没有更多数据了", 0)
+							.show();
+					resultLV.stopLoadMore();
 				}
 			}
 		};
 
 		action.addPage(searchView);
+	}
+
+	// 更新搜索音乐的列表
+	private void updateSearchMusic(int offset) {
+
+		String edSearch = searchEt.getText().toString();
+		List<NameValuePair> parmas = new ArrayList<NameValuePair>();
+		parmas.add(new BasicNameValuePair("s", edSearch));
+		parmas.add(new BasicNameValuePair("type", "1"));
+		parmas.add(new BasicNameValuePair("offset", offset + ""));
+		parmas.add(new BasicNameValuePair("sub", "false"));
+		parmas.add(new BasicNameValuePair("limit", "6"));
+		myHttpUtils.searchMusicToAPI(Constant.API_NET_SEARCH_MUSIC, parmas);
 	}
 
 	// 关键字为空的时候弹出来的dialog
@@ -769,7 +791,7 @@ public class MainFragmentActivity extends BaseActivity implements
 	/**
 	 * 列表上拉下拉事件结束和初始化
 	 */
-	public void scrollEnd(XListView lv) {
+	public void onLoadEnd(XListView lv) {
 		Date now = new Date();
 		DateFormat d1 = DateFormat.getDateTimeInstance();
 		lv.stopRefresh();

@@ -54,6 +54,13 @@
         <activity
             android:name="com.esint.music.activity.MusicPlayAvtivity"
             android:theme="@android:style/Theme.Translucent" />
+        <activity
+            android:name="com.esint.music.activity.LockActivity"
+            android:excludeFromRecents="true"
+            android:launchMode="singleInstance"
+            android:screenOrientation="portrait"
+            android:taskAffinity="com.esint.music"
+            android:theme="@android:style/Theme.Translucent" />
         <activity android:name="com.esint.music.fragment.MylocalMusinFrag" />
         <activity
             android:name="com.esint.music.activity.MainFragmentActivity"

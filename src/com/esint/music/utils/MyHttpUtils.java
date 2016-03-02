@@ -251,11 +251,7 @@ public class MyHttpUtils {
 					@Override
 					public void onSuccess(ResponseInfo<String> arg0) {
 						String searchResult = arg0.result;
-						try {
-							ParseSearchResultJson(searchResult);
-						} catch (JSONException e) {
-							e.printStackTrace();
-						}
+						ParseSearchResultJson(searchResult);
 					}
 				});
 
@@ -268,37 +264,44 @@ public class MyHttpUtils {
 	 * @author bai
 	 * @throws JSONException
 	 */
-	protected void ParseSearchResultJson(String searchResult)
-			throws JSONException {
+	protected void ParseSearchResultJson(String searchResult) {
 		String searchArtistName = null;
 		ArrayList<SearchMusicInfo> searchMusicList = new ArrayList<SearchMusicInfo>();
 
-		JSONObject object = new JSONObject(searchResult);
-		String result = object.getString("result");
-		JSONObject jsonObject = new JSONObject(result);
-		String resultObject = jsonObject.getString("songs");
-		JSONArray resultArray = new JSONArray(resultObject);
-		for (int i = 0; i < resultArray.length(); i++) {
-			SearchMusicInfo musicInfo = new SearchMusicInfo();
-			JSONObject musicObject = resultArray.getJSONObject(i);
-			String musicID = musicObject.getString("id");
-			String musicName = musicObject.getString("name");
-			String artists = musicObject.getString("artists");
+		JSONObject object;
+		try {
+			object = new JSONObject(searchResult);
+			String result = object.getString("result");
+			JSONObject jsonObject = new JSONObject(result);
+			String resultObject = jsonObject.getString("songs");
+			JSONArray resultArray = new JSONArray(resultObject);
+			for (int i = 0; i < resultArray.length(); i++) {
+				SearchMusicInfo musicInfo = new SearchMusicInfo();
+				JSONObject musicObject = resultArray.getJSONObject(i);
+				String musicID = musicObject.getString("id");
+				String musicName = musicObject.getString("name");
+				String artists = musicObject.getString("artists");
 
-			JSONArray array = new JSONArray(artists);
-			for (int j = 0; j < array.length(); j++) {
-				JSONObject jsonObject1 = array.getJSONObject(j);
-				searchArtistName = jsonObject1.getString("name");
+				JSONArray array = new JSONArray(artists);
+				for (int j = 0; j < array.length(); j++) {
+					JSONObject jsonObject1 = array.getJSONObject(j);
+					searchArtistName = jsonObject1.getString("name");
+				}
+				musicInfo.setMusicArtist(searchArtistName);
+				musicInfo.setMusicID(musicID);
+				musicInfo.setMusicName(musicName);
+				searchMusicList.add(musicInfo);
 			}
-			musicInfo.setMusicArtist(searchArtistName);
-			musicInfo.setMusicID(musicID);
-			musicInfo.setMusicName(musicName);
-			searchMusicList.add(musicInfo);
+
+			Message message = handler.obtainMessage(
+					Constant.WHAT_NET_HOTMUSIC_LIST, searchMusicList);
+			message.sendToTarget();
+		} catch (JSONException e) {
+			Message message = handler.obtainMessage(Constant.WHAT_EXECEPTION);
+			message.sendToTarget();
+			e.printStackTrace();
 		}
 
-		Message message = handler.obtainMessage(
-				Constant.WHAT_NET_HOTMUSIC_LIST, searchMusicList);
-		message.sendToTarget();
 	}
 
 }
