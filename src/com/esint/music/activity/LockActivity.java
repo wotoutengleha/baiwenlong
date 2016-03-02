@@ -4,6 +4,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import com.esint.music.R;
+import com.esint.music.model.DownMucicInfo;
 import com.esint.music.model.Mp3Info;
 import com.esint.music.service.MusicPlayService;
 import com.esint.music.service.MusicPlayService.PlayBinder;
@@ -21,6 +22,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.drawable.AnimationDrawable;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
@@ -38,7 +40,6 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import name.teze.layout.lib.SwipeBackActivity;
@@ -70,6 +71,9 @@ public class LockActivity extends SwipeBackActivity implements OnClickListener {
 	private LinearLayout lockBackGround;// 锁屏界面的背景 要设置成歌手写真
 	private MusicPlayService musicPlayService;
 	private int currentPosition;
+	private ArrayList<DownMucicInfo> downMusicList;// 我的下载的音乐的列表
+	private int recordDownMusicPosition;// 记录点击我的下载歌曲里边的列表
+	private String downMusicSongTime;// 下载的音乐的歌曲时间 设置锁屏进度条
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -113,13 +117,14 @@ public class LockActivity extends SwipeBackActivity implements OnClickListener {
 		aniLoading = (AnimationDrawable) lockImageView.getBackground();
 		playOrPauseButton.setPlayingProgress(0);
 		playOrPauseButton.setMaxProgress(0);
-		playOrPauseButton.invalidate();
+		playOrPauseButton.setOnClickListener(this);
 		prewButton.setOnClickListener(this);
 		nextButton.setOnClickListener(this);
 		setDate();
-		setTime();
+
 	}
 
+	@SuppressWarnings("deprecation")
 	private void initData() {
 		AniUtil.startAnimation(aniLoading);// 开启动画
 		// 绑定服务
@@ -130,43 +135,67 @@ public class LockActivity extends SwipeBackActivity implements OnClickListener {
 		mp3List = new SortListUtil().initMyLocalMusic(mp3List);
 		currentPosition = SharedPrefUtil.getInt(this,
 				Constant.CLICKED_MUNSIC_NAME, -1);
+		recordDownMusicPosition = SharedPrefUtil.getInt(this,
+				Constant.CLICKED_MUNSIC_NAME_DOWN, -1);
 		if (currentPosition != -1) {
 			songNameTextView.setText(mp3List.get(currentPosition).getTitle());
 			songerTextView.setText(mp3List.get(currentPosition).getArtist());
-			Bitmap preBitmap = MediaUtils.getArtwork(this,
+			setLrc(songNameTextView.getText().toString());
+			Bitmap bitmap = MediaUtils.getArtwork(this,
 					mp3List.get(currentPosition).getId(),
 					mp3List.get(currentPosition).getAlbumId(), true, false);
-			// Drawable boxBlurFilter =
-			// GaussianBlurUtil.BoxBlurFilter(preBitmap);
-			// albumIV.setImageBitmap(preBitmap);
-			// Drawable drawable = new BitmapDrawable(preBitmap);
-			// lockBackGround.setBackground(drawable);
+			Drawable drawable = new BitmapDrawable(bitmap);
+			lockBackGround.setBackground(drawable);
 		}
+		if (recordDownMusicPosition != -1) {
+			// 下载歌曲的文件夹
+			String MusicTarget = Environment.getExternalStorageDirectory()
+					+ "/" + "/下载的歌曲";
+			downMusicList = MediaUtils.GetMusicFiles(MusicTarget, ".mp3", true);
+			downMusicSongTime = downMusicList.get(recordDownMusicPosition)
+					.getDownMusicDuration();
+			songNameTextView.setText(downMusicList.get(recordDownMusicPosition)
+					.getDownMusicName());
+			songerTextView.setText(downMusicList.get(recordDownMusicPosition)
+					.getDownMusicArtist());
+			final String ImageTarget = Environment
+					.getExternalStorageDirectory() + "/" + "/下载的图片" + "/";
+			Bitmap albumBit = BitmapFactory.decodeFile(ImageTarget
+					+ downMusicList.get(recordDownMusicPosition)
+							.getDownMusicName().trim() + ".jpg", null);
+			Drawable downDraw = new BitmapDrawable(albumBit);
+			lockBackGround.setBackgroundDrawable(downDraw);
+			setLrc(songNameTextView.getText().toString());
 
-		mHandler = new Handler() {
-			@Override
-			public void handleMessage(Message msg) {
-				super.handleMessage(msg);
-				switch (msg.what) {
-				case Constant.UPTATE_LRC_LOCK:
-					int progress = (Integer) msg.obj;
-					if (lrcView.hasLrc())
-						lrcView.changeCurrent(progress);
-					break;
-				case Constant.UPDATE_LOCKTIME: {
-					int timeProgress = (Integer) msg.obj;
-					playOrPauseButton.setMaxProgress((int) mp3List.get(
-							currentPosition).getDuration());
-					playOrPauseButton.setPlayingProgress(timeProgress);
-					playOrPauseButton.invalidate();
-
+			mHandler = new Handler() {
+				@Override
+				public void handleMessage(Message msg) {
+					super.handleMessage(msg);
+					switch (msg.what) {
+					case Constant.UPTATE_LRC_LOCK:
+						int progress = (Integer) msg.obj;
+						if (lrcView.hasLrc())
+							lrcView.changeCurrent(progress);
+						break;
+					case Constant.UPDATE_LOCKTIME: {
+						setTime();
+						int timeProgress = (Integer) msg.obj;
+						if (downMusicSongTime != null) {
+							playOrPauseButton.setMaxProgress((int) MediaUtils
+									.getTrackLength(downMusicSongTime));
+						} else {
+							playOrPauseButton.setMaxProgress((int) mp3List.get(
+									currentPosition).getDuration());
+						}
+						playOrPauseButton.setPlayingProgress(timeProgress);
+						playOrPauseButton.invalidate();
+					}
+						break;
+					}
 				}
-					break;
+			};
 
-				}
-			}
-		};
-
+		}
 	}
 
 	/**
@@ -281,20 +310,63 @@ public class LockActivity extends SwipeBackActivity implements OnClickListener {
 
 	}
 
+	@SuppressWarnings("deprecation")
 	@Override
 	public void onClick(View v) {
 		switch (v.getId()) {
 		case R.id.prev_button:
 			Toast.makeText(this, "点击了上一首", 0).show();
 			musicPlayService.previous();
-			break;
-		case R.id.play_pause_button:
-			Toast.makeText(this, "点击了播放或者暂停", 0).show();
-			// musicPlayService.p
+			pauseImageView.setVisibility(View.VISIBLE);
+			playImageView.setVisibility(View.GONE);
+			int prePosition = musicPlayService.getCurrentPosition();
+			SharedPrefUtil.setInt(this, Constant.CLICKED_MUNSIC_NAME,
+					prePosition);
+			setLrc(songNameTextView.getText().toString());
+			songNameTextView.setText(mp3List.get(prePosition).getTitle());
+			songerTextView.setText(mp3List.get(prePosition).getArtist());
+			Bitmap preBitmap = MediaUtils.getArtwork(this,
+					mp3List.get(prePosition).getId(), mp3List.get(prePosition)
+							.getAlbumId(), true, false);
+			@SuppressWarnings("deprecation")
+			Drawable drawable = new BitmapDrawable(preBitmap);
+			lockBackGround.setBackground(drawable);
 			break;
 		case R.id.next_button:
 			Toast.makeText(this, "点击了下一首", 0).show();
 			musicPlayService.next();
+			pauseImageView.setVisibility(View.VISIBLE);
+			playImageView.setVisibility(View.GONE);
+			// 切换数据
+			int nextPosition = musicPlayService.getCurrentPosition();
+			SharedPrefUtil.setInt(this, Constant.CLICKED_MUNSIC_NAME,
+					nextPosition);
+			songNameTextView.setText(mp3List.get(nextPosition).getTitle());
+			songerTextView.setText(mp3List.get(nextPosition).getArtist());
+			Bitmap nextBitmap = MediaUtils.getArtwork(this,
+					mp3List.get(nextPosition).getId(), mp3List
+							.get(nextPosition).getAlbumId(), true, false);
+			Drawable drawableNext = new BitmapDrawable(nextBitmap);
+			lockBackGround.setBackground(drawableNext);
+			setLrc(songNameTextView.getText().toString());
+
+			break;
+		case R.id.play_pause_button:
+			boolean isPlaying = musicPlayService.isPlaying();
+			if (isPlaying) {
+				Toast.makeText(this, "点击了暂停", 0).show();
+				musicPlayService.pause();
+				pauseImageView.setVisibility(View.GONE);
+				playImageView.setVisibility(View.VISIBLE);
+				// 发送更新暂停按钮的广播
+				Intent pauseIntent = new Intent(Constant.PAUSEBUTTON_BROAD);
+				this.sendBroadcast(pauseIntent);
+			} else if (!isPlaying) {
+				Toast.makeText(this, "点击了播放", 0).show();
+				musicPlayService.start();
+				pauseImageView.setVisibility(View.VISIBLE);
+				playImageView.setVisibility(View.GONE);
+			}
 			break;
 		}
 	}

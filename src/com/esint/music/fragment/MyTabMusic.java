@@ -185,7 +185,7 @@ public class MyTabMusic extends Fragment implements OnClickListener {
 
 		musicFlag = SharedPrefUtil.getString(mainActivity, Constant.MUSIC_FLAG,
 				"");
-		
+
 	}
 
 	@Override
@@ -261,7 +261,7 @@ public class MyTabMusic extends Fragment implements OnClickListener {
 				pauseButton.setVisibility(View.VISIBLE);
 				playButton.setVisibility(View.INVISIBLE);
 				startAnim();
-				if (currentPlayPosition != -1&&sortMyLikeMp3Infos!=null) {
+				if (currentPlayPosition != -1 && sortMyLikeMp3Infos != null) {
 					// // 设置进度条
 					progressBar.setMax((int) sortMyLikeMp3Infos.get(
 							currentPlayPosition).getDuration());
@@ -290,7 +290,7 @@ public class MyTabMusic extends Fragment implements OnClickListener {
 				pauseButton.setVisibility(View.VISIBLE);
 				playButton.setVisibility(View.INVISIBLE);
 				startAnim();
-				if (recordDownMusicPosition != -1&&downMusicList!=null) {
+				if (recordDownMusicPosition != -1 && downMusicList != null) {
 					// // 设置进度条
 					progressBar.setMax((int) MediaUtils
 							.getTrackLength(downMusicList.get(
@@ -329,7 +329,7 @@ public class MyTabMusic extends Fragment implements OnClickListener {
 			Toast.makeText(getActivity(), "点击了下一首按钮", 0).show();
 			currentPlayPosition = SharedPrefUtil.getInt(getActivity(),
 					Constant.CLICKED_MUNSIC_NAME, -1);
-			
+
 			if (currentPlayPosition == -1) {
 				return;
 			}
@@ -696,16 +696,13 @@ public class MyTabMusic extends Fragment implements OnClickListener {
 	// 加载我的下载的视图
 	private void myDownLoad() {
 		// 下载歌曲的文件夹
-				String MusicTarget = Environment.getExternalStorageDirectory() + "/"
-						+ "/下载的歌曲";
-				downMusicList = MediaUtils.GetMusicFiles(MusicTarget, ".mp3", true);
+		String MusicTarget = Environment.getExternalStorageDirectory() + "/"
+				+ "/下载的歌曲";
+		downMusicList = MediaUtils.GetMusicFiles(MusicTarget, ".mp3", true);
 		final DownMusicAdapter adapter_down = new DownMusicAdapter(
 				getActivity(), downMusicList);
 		final String ImageTarget = Environment.getExternalStorageDirectory()
 				+ "/" + "/下载的图片" + "/";
-		final ArrayList<DownImageInfo> imagFilesPath = MediaUtils.GetImagFiles(
-				ImageTarget, ".jpg", true);
-
 		View downLoadView = View.inflate(mainActivity,
 				R.layout.activity_my_download, null);
 		LayoutInflater inflater = getActivity().getLayoutInflater();
@@ -775,8 +772,9 @@ public class MyTabMusic extends Fragment implements OnClickListener {
 					@Override
 					public void run() {
 						while (true) {
-							progressBar.setProgress(mainActivity.musicPlayService
-									.getCurrentProgress());
+							progressBar
+									.setProgress(mainActivity.musicPlayService
+											.getCurrentProgress());
 							try {
 								Thread.sleep(1000);
 							} catch (InterruptedException e) {
@@ -789,18 +787,11 @@ public class MyTabMusic extends Fragment implements OnClickListener {
 				// 设置专辑图片和歌曲的信息
 				singer.setText(downMusicList.get(position).getDownMusicArtist());
 				songName.setText(downMusicList.get(position).getDownMusicName());
-				Bitmap albumBit;
-				for (int i = 0; i < imagFilesPath.size(); i++) {
-					if (imagFilesPath
-							.get(i)
-							.getDownImagePath()
-							.equals(ImageTarget
-									+ downMusicList.get(position)
-											.getDownMusicName().trim() + ".jpg")) {
-						albumBit = BitmapFactory.decodeFile(imagFilesPath
-								.get(i).getDownImagePath(), null);
-						albumImg.setImageBitmap(albumBit);
-					}
+				Bitmap albumBit = BitmapFactory.decodeFile(ImageTarget
+						+ downMusicList.get(position).getDownMusicName().trim()
+						+ ".jpg", null);
+				if (albumBit != null) {
+					albumImg.setImageBitmap(albumBit);
 				}
 				// 开始旋转专辑图片的动画
 				Animation operatingAnim = AnimationUtils.loadAnimation(

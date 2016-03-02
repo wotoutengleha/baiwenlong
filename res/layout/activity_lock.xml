@@ -2,7 +2,7 @@
     android:id="@+id/kscManyLineLyricsViewParent"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/background"
+    android:background="@drawable/lock_background"
     android:orientation="vertical" >
 
     <RelativeLayout

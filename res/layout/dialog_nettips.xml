@@ -2,7 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-   android:background="@drawable/corners_dialog_bg"
+    android:background="@drawable/corners_dialog_bg"
     android:orientation="vertical" >
 
     <LinearLayout
@@ -29,7 +29,9 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="是否下载该歌曲？" />
+            android:lineSpacingExtra="4dp"
+            android:text="当前非Wi-Fi网络,继续在线试听将\n会消耗手机流量。"
+             />
     </LinearLayout>
 
     <View
@@ -52,7 +54,8 @@
                 android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:gravity="center"
-                android:text="取消" />
+                android:text="停止播放"
+                android:textColor="#31C27C" />
 
             <View
                 android:layout_width="1dp"
@@ -65,7 +68,8 @@
                 android:layout_height="match_parent"
                 android:layout_weight="1.00"
                 android:gravity="center"
-                android:text="确定" />
+                android:text="继续播放"
+                android:textColor="#31C27C" />
         </LinearLayout>
     </LinearLayout>
 

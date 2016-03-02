@@ -3,11 +3,14 @@ package com.esint.music.adapter;
 import java.io.File;
 import java.util.ArrayList;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.os.Environment;
 import android.util.Log;
+import android.view.Display;
 import android.view.View;
+import android.view.WindowManager;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
@@ -122,6 +125,12 @@ public class HotMusicListAdapter extends BaseAdapter {
 				.findViewById(R.id.tv_dismiss);
 		TextView ok = (TextView) dialogDownload.findViewById(R.id.tv_ok);
 		dialog.show();
+		WindowManager m = ((Activity) context).getWindowManager();
+		WindowManager.LayoutParams params = dialog.getWindow().getAttributes();
+		Display d = m.getDefaultDisplay(); // 获取屏幕宽、高用
+		params.height = (int) (d.getHeight() * 0.286); // 高度设置为屏幕的0.6
+		params.width = (int) (d.getWidth() * 0.8); // 宽度设置为屏幕的0.65
+		dialog.getWindow().setAttributes(params);
 		dialog.setContentView(dialogDownload);
 		cancle.setOnClickListener(new OnClickListener() {
 

@@ -10,7 +10,7 @@ import android.widget.RelativeLayout;
 
 /**
  * 
- * 閿佸睆鎸夐挳
+ * 锁屏界面的播放或者暂停按钮
  * 
  */
 public class LockPalyOrPauseButtonRelativeLayout extends RelativeLayout {

@@ -430,6 +430,11 @@ public class MediaUtils {
 		return candidate;
 	}
 
+	/**
+	* @Description:得到下载的音乐 
+	* @param Path
+	* @author bai
+	*/
 	public static ArrayList<DownMucicInfo> GetMusicFiles(String Path,
 			String Extension, boolean IsIterative) // 搜索目录，扩展名，是否进入子文件夹
 	{

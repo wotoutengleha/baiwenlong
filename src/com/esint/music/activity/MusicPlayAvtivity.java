@@ -229,23 +229,12 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 			musicTime.setText(downMusicSongTime);
 			final String ImageTarget = Environment
 					.getExternalStorageDirectory() + "/" + "/下载的图片" + "/";
-			final ArrayList<DownImageInfo> imagFilesPath = MediaUtils
-					.GetImagFiles(ImageTarget, ".jpg", true);
 
-			Bitmap albumBit;
-
-			for (int i = 0; i < imagFilesPath.size(); i++) {
-				if (imagFilesPath
-						.get(i)
-						.getDownImagePath()
-						.equals(ImageTarget
-								+ downMusicList.get(recordDownMusicPosition)
-										.getDownMusicName().trim() + ".jpg")) {
-					albumBit = BitmapFactory.decodeFile(imagFilesPath.get(i)
-							.getDownImagePath(), null);
-					albumIV.setImageBitmap(albumBit);
-
-				}
+			Bitmap albumBit = BitmapFactory.decodeFile(ImageTarget
+					+ downMusicList.get(recordDownMusicPosition)
+							.getDownMusicName().trim() + ".jpg", null);
+			if (albumBit != null) {
+				albumIV.setImageBitmap(albumBit);
 			}
 			// 开始旋转专辑图片的动画
 			Animation operatingAnim = AnimationUtils.loadAnimation(this,

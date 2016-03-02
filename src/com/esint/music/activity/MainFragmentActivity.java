@@ -4,17 +4,15 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.text.DateFormat;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
@@ -37,7 +35,6 @@ import android.support.v4.view.ViewPager;
 import android.support.v4.view.ViewPager.OnPageChangeListener;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.view.Display;
 import android.view.Gravity;
 import android.view.KeyEvent;
@@ -52,9 +49,7 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.ListView;
 import android.widget.PopupWindow;
-import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -68,28 +63,20 @@ import com.esint.music.dialog.Effectstype;
 import com.esint.music.dialog.NiftyDialogBuilder;
 import com.esint.music.fragment.MyTabMusic;
 import com.esint.music.fragment.NetMusicFragment;
-import com.esint.music.model.DownImageInfo;
 import com.esint.music.model.DownMucicInfo;
 import com.esint.music.model.Mp3Info;
 import com.esint.music.model.SearchMusicInfo;
-import com.esint.music.model.SearchResult;
 import com.esint.music.slidemenu.SlidingMenu;
-import com.esint.music.sortlistview.CharacterParser;
-import com.esint.music.sortlistview.PinyinComparator;
 import com.esint.music.utils.Constant;
 import com.esint.music.utils.MediaUtils;
-import com.esint.music.utils.MusicAPI;
 import com.esint.music.utils.MyApplication;
 import com.esint.music.utils.MyHttpUtils;
 import com.esint.music.utils.PageAction;
-import com.esint.music.utils.SearchMusicUtil;
 import com.esint.music.utils.SortListUtil;
-import com.esint.music.utils.SearchMusicUtil.onSearchResultListener;
 import com.esint.music.utils.SharedPrefUtil;
 import com.esint.music.view.AlwaysMarqueeTextView;
 import com.esint.music.view.MainFunctionPop;
 import com.lidroid.xutils.exception.DbException;
-import com.lidroid.xutils.http.RequestParams;
 
 @SuppressLint("DefaultLocale")
 @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
@@ -195,13 +182,10 @@ public class MainFragmentActivity extends BaseActivity implements
 						+ downMusicList.get(currentPlayPositionDown)
 								.getDownMusicName().trim() + ".jpg", null);
 				if (albumBit != null) {
-
 					albumImg.setImageBitmap(albumBit);
 				}
-
 			}
 		}
-
 		int colorIndex = SharedPrefUtil.getInt(MainFragmentActivity.this,
 				Constant.COLOR_INDEX, -1);
 		switch (colorIndex) {
@@ -488,6 +472,12 @@ public class MainFragmentActivity extends BaseActivity implements
 		LinearLayout dismissLL = (LinearLayout) emptyDialog
 				.findViewById(R.id.dismiss_ll);
 		dialog.show();
+		WindowManager m = getWindowManager();
+		WindowManager.LayoutParams params = dialog.getWindow().getAttributes();
+		Display d = m.getDefaultDisplay(); // 获取屏幕宽、高用
+		params.height = (int) (d.getHeight() * 0.26); // 高度设置为屏幕的0.6
+		params.width = (int) (d.getWidth() * 0.8); // 宽度设置为屏幕的0.65
+		dialog.getWindow().setAttributes(params);
 		dialog.setContentView(emptyDialog);
 		dismissLL.setOnClickListener(new OnClickListener() {
 
