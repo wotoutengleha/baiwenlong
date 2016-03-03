@@ -17,6 +17,9 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.content.Context;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.net.NetworkInfo.State;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
@@ -32,9 +35,12 @@ import com.lidroid.xutils.http.callback.RequestCallBack;
 import com.lidroid.xutils.http.client.HttpRequest.HttpMethod;
 import com.lidroid.xutils.http.client.entity.BodyParamsEntity;
 
-/**
- * 类名称：HttpUtils 类描述： 解析json数据 返回list 创建人：bai 创建时间：2016-2-19 下午4:56:42
- */
+/**   
+* 类名称：MyHttpUtils   
+* 类描述：请求服务器返回数据 判断网络状态   
+* 创建人：bai   
+* 创建时间：2016-3-3 上午9:03:09         
+*/
 public class MyHttpUtils {
 
 	private Context context;
@@ -43,13 +49,92 @@ public class MyHttpUtils {
 	private String aliasName;// 排行榜下解析数据的原唱歌手
 	private String artistName;// 排行榜数据下接续数据的音乐演唱者
 
-	public static final String COOKIE_APP_VERSION = "appver=2.6.1";
-	public static final String HTTP_REFERER = "http://music.163.com";
+	private static final String COOKIE_APP_VERSION = "appver=2.6.1";
+	private static final String HTTP_REFERER = "http://music.163.com";
+	private static final String TAG = "MyHttpUtil";
 
 	public MyHttpUtils(Context context) {
 		this.context = context;
 		httpUtils = new com.lidroid.xutils.HttpUtils();
 		handler = new Handler();
+	}
+
+	public static final int NETWORN_NONE = 0;
+	public static final int NETWORN_WIFI = 1;
+	public static final int NETWORN_MOBILE = 2;
+
+	public static int getNetworkState(Context context) {
+		ConnectivityManager connManager = (ConnectivityManager) context
+				.getSystemService(Context.CONNECTIVITY_SERVICE);
+
+		// Wifi
+		State state = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI)
+				.getState();
+		if (state == State.CONNECTED || state == State.CONNECTING) {
+			return NETWORN_WIFI;
+		}
+
+		// 3G
+		state = connManager.getNetworkInfo(ConnectivityManager.TYPE_MOBILE)
+				.getState();
+		if (state == State.CONNECTED || state == State.CONNECTING) {
+			return NETWORN_MOBILE;
+		}
+		return NETWORN_NONE;
+	}
+
+	/**
+	 * 网络连接是否可用
+	 */
+	public boolean isConnnected(Context context) {
+		ConnectivityManager connectivityManager = (ConnectivityManager) context
+				.getSystemService(Context.CONNECTIVITY_SERVICE);
+		if (null != connectivityManager) {
+			NetworkInfo networkInfo[] = connectivityManager.getAllNetworkInfo();
+
+			if (null != networkInfo) {
+				for (NetworkInfo info : networkInfo) {
+					if (info.getState() == NetworkInfo.State.CONNECTED) {
+						Log.e(TAG, "the net is ok");
+						return true;
+					}
+				}
+			}
+		}
+		return false;
+	}
+
+	private final int NETTYPE_WIFI = 0x01;
+	private final int NETTYPE_CMWAP = 0x02;
+	private final int NETTYPE_CMNET = 0x03;
+
+	/**
+	 * 获取当前网络类型
+	 * 
+	 * @return 0：没有网络 1：WIFI网络 2：WAP网络 3：NET网络
+	 */
+	public int getNetworkType() {
+		int netType = 0;
+		ConnectivityManager connectivityManager = (ConnectivityManager) context
+				.getSystemService(Context.CONNECTIVITY_SERVICE);
+		NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
+		if (networkInfo == null) {
+			return netType;
+		}
+		int nType = networkInfo.getType();
+		if (nType == ConnectivityManager.TYPE_MOBILE) {
+			String extraInfo = networkInfo.getExtraInfo();
+			if (extraInfo != null && extraInfo.equals("")) {
+				if (extraInfo.toLowerCase().equals("cmnet")) {
+					netType = NETTYPE_CMNET;
+				} else {
+					netType = NETTYPE_CMWAP;
+				}
+			}
+		} else if (nType == ConnectivityManager.TYPE_WIFI) {
+			netType = NETTYPE_WIFI;
+		}
+		return netType;
 	}
 
 	/**

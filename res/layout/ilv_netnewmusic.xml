@@ -22,7 +22,7 @@
             android:textSize="15sp" />
 
         <LinearLayout
-            android:layout_width="200dp"
+            android:layout_width="170dp"
             android:layout_height="wrap_content"
             android:layout_toRightOf="@+id/tv_musicname"
             android:ellipsize="end" >
@@ -58,6 +58,7 @@
             android:layout_toRightOf="@+id/tv_artist"
             android:text=" - (我是歌手第四季 第5期)"
             android:textColor="#666666"
+            android:maxLength="20"
             android:textSize="12sp" />
 
         <TextView

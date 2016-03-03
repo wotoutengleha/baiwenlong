@@ -49,7 +49,6 @@ import com.esint.music.R;
 import com.esint.music.R.color;
 import com.esint.music.activity.MainFragmentActivity;
 import com.esint.music.adapter.DownMusicAdapter;
-import com.esint.music.model.DownImageInfo;
 import com.esint.music.model.Mp3Info;
 import com.esint.music.model.DownMucicInfo;
 import com.esint.music.service.MusicPlayService;
@@ -202,6 +201,12 @@ public class MyTabMusic extends Fragment implements OnClickListener {
 			break;
 		case R.id.ib_random_play:
 			Toast.makeText(getActivity(), "随机为您点了一首歌", 0).show();
+			Bitmap bitmap = MediaUtils.getArtwork(mainActivity,
+					mp3List.get(currentPlayPosition).getId(),
+					mp3List.get(currentPlayPosition).getAlbumId(), true, false);
+			musicPlayService.updateNotification(bitmap,
+					mp3List.get(currentPlayPosition).getTitle(),
+					mp3List.get(currentPlayPosition).getArtist());
 			randomPlay();
 
 			break;
@@ -228,7 +233,9 @@ public class MyTabMusic extends Fragment implements OnClickListener {
 				Constant.ISFirst_PLAY = false;
 				// 得到记录的位置
 				Toast.makeText(getActivity(), "开始进来点击播放按钮了", 0).show();
+
 				musicPlayService.playLocalMusic(currentPlayPosition);
+
 				pauseButton.setVisibility(View.VISIBLE);
 				playButton.setVisibility(View.INVISIBLE);
 				startAnim();
@@ -1027,6 +1034,9 @@ public class MyTabMusic extends Fragment implements OnClickListener {
 			} else if (intent.getAction().equals(Constant.PAUSEBUTTON_BROAD)) {
 				pauseButton.setVisibility(View.GONE);
 				playButton.setVisibility(View.VISIBLE);
+			} else if (intent.getAction().equals(Constant.PLAYBUTTON_BROAD)) {
+				pauseButton.setVisibility(View.VISIBLE);
+				playButton.setVisibility(View.GONE);
 			}
 			// 开始旋转专辑图片的动画
 			Animation operatingAnim = AnimationUtils.loadAnimation(
@@ -1047,18 +1057,8 @@ public class MyTabMusic extends Fragment implements OnClickListener {
 
 		@Override
 		public void onServiceConnected(ComponentName name, IBinder service) {
-
 			PlayBinder playBinder = (PlayBinder) service;
 			musicPlayService = playBinder.getPlayService();
-			// 拿到是否播放了
-			boolean isPlaying = musicPlayService.isPlaying();
-			if (isPlaying == true) {
-				pauseButton.setVisibility(View.VISIBLE);
-				playButton.setVisibility(View.GONE);
-			} else {
-				pauseButton.setVisibility(View.GONE);
-				playButton.setVisibility(View.VISIBLE);
-			}
 		}
 	};
 

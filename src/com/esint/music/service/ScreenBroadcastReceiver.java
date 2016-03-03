@@ -19,18 +19,16 @@ public class ScreenBroadcastReceiver extends BroadcastReceiver {
 	@Override
 	public void onReceive(Context context, Intent intent) {
 		action = intent.getAction();
-		if (Intent.ACTION_SCREEN_ON.equals(action)) {
-			// 开屏
-			Log.e("开屏了", "开屏了");
+		if (action.equals("start_notifition")) {
+
+			Log.e("解锁到了开启通知栏的广播了", "11111111111");
+
 		} else if (Intent.ACTION_SCREEN_OFF.equals(action)) {
 			// 锁屏
 			Log.e("锁屏了", "锁屏了");
 			Intent intent1 = new Intent(context, LockActivity.class);
 			intent1.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 			context.startActivity(intent1);
-		} else if (Intent.ACTION_USER_PRESENT.equals(action)) {
-			// 解锁
-			Log.e("解锁了", "锁屏了");
 		}
 	}
 }

@@ -358,6 +358,7 @@ public class MainFragmentActivity extends BaseActivity implements
 	private EditText searchEt;// 搜索音乐输入的关键字
 
 	private void searchMusicView() {
+
 		progressDialog = new ProgressDialog(this);
 		final ArrayList<SearchMusicInfo> searchMusicList = new ArrayList<SearchMusicInfo>();
 		LayoutInflater inflater = this.getLayoutInflater();
@@ -380,12 +381,30 @@ public class MainFragmentActivity extends BaseActivity implements
 			@Override
 			public void onRefresh() {
 				isRefresh = true;
+				// 判断是否有网络
+				final boolean isConnected = myHttpUtils
+						.isConnnected(MainFragmentActivity.this);
+				if (isConnected == false) {
+					Toast.makeText(MainFragmentActivity.this, "当前网络没有连接网络", 0)
+							.show();
+					resultLV.stopRefresh();
+					return;
+				}
 				updateSearchMusic(0);
 			}
 
 			@Override
 			public void onLoadMore() {
 				isRefresh = false;
+				// 判断是否有网络
+				final boolean isConnected = myHttpUtils
+						.isConnnected(MainFragmentActivity.this);
+				if (isConnected == false) {
+					Toast.makeText(MainFragmentActivity.this, "当前网络没有连接网络", 0)
+							.show();
+					resultLV.stopLoadMore();
+					return;
+				}
 				updateSearchMusic(searchMusicList.size());
 
 			}
@@ -405,16 +424,22 @@ public class MainFragmentActivity extends BaseActivity implements
 
 			@Override
 			public void onClick(View v) {
+				// 判断是否有网络
+				final boolean isConnected = myHttpUtils
+						.isConnnected(MainFragmentActivity.this);
 				String searchResult = searchEt.getText().toString();
 				if (TextUtils.isEmpty(searchResult)) {
 					showEmptyDialog();
 				} else {
+					if (isConnected == false) {
+						Toast.makeText(MainFragmentActivity.this, "当前没有连接网络", 0)
+								.show();
+						return;
+					}
 					progressDialog.setMessage("正在搜索，请稍后。。。");
 					progressDialog.show();
 					searchMusicList.clear();
 					updateSearchMusic(0);
-					Toast.makeText(MainFragmentActivity.this, "点击了搜索", 0)
-							.show();
 				}
 			}
 		});
@@ -475,7 +500,7 @@ public class MainFragmentActivity extends BaseActivity implements
 		WindowManager m = getWindowManager();
 		WindowManager.LayoutParams params = dialog.getWindow().getAttributes();
 		Display d = m.getDefaultDisplay(); // 获取屏幕宽、高用
-		params.height = (int) (d.getHeight() * 0.26); // 高度设置为屏幕的0.6
+		params.height = (int) (d.getHeight() * 0.24); // 高度设置为屏幕的0.6
 		params.width = (int) (d.getWidth() * 0.8); // 宽度设置为屏幕的0.65
 		dialog.getWindow().setAttributes(params);
 		dialog.setContentView(emptyDialog);

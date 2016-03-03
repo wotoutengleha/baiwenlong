@@ -145,7 +145,7 @@ public class LockActivity extends SwipeBackActivity implements OnClickListener {
 					mp3List.get(currentPosition).getId(),
 					mp3List.get(currentPosition).getAlbumId(), true, false);
 			Drawable drawable = new BitmapDrawable(bitmap);
-			lockBackGround.setBackground(drawable);
+			// lockBackGround.setBackground(drawable);
 		}
 		if (recordDownMusicPosition != -1) {
 			// 下载歌曲的文件夹
@@ -164,38 +164,37 @@ public class LockActivity extends SwipeBackActivity implements OnClickListener {
 					+ downMusicList.get(recordDownMusicPosition)
 							.getDownMusicName().trim() + ".jpg", null);
 			Drawable downDraw = new BitmapDrawable(albumBit);
-			lockBackGround.setBackgroundDrawable(downDraw);
+			// lockBackGround.setBackgroundDrawable(downDraw);
 			setLrc(songNameTextView.getText().toString());
-
-			mHandler = new Handler() {
-				@Override
-				public void handleMessage(Message msg) {
-					super.handleMessage(msg);
-					switch (msg.what) {
-					case Constant.UPTATE_LRC_LOCK:
-						int progress = (Integer) msg.obj;
-						if (lrcView.hasLrc())
-							lrcView.changeCurrent(progress);
-						break;
-					case Constant.UPDATE_LOCKTIME: {
-						setTime();
-						int timeProgress = (Integer) msg.obj;
-						if (downMusicSongTime != null) {
-							playOrPauseButton.setMaxProgress((int) MediaUtils
-									.getTrackLength(downMusicSongTime));
-						} else {
-							playOrPauseButton.setMaxProgress((int) mp3List.get(
-									currentPosition).getDuration());
-						}
-						playOrPauseButton.setPlayingProgress(timeProgress);
-						playOrPauseButton.invalidate();
-					}
-						break;
-					}
-				}
-			};
-
 		}
+
+		mHandler = new Handler() {
+			@Override
+			public void handleMessage(Message msg) {
+				super.handleMessage(msg);
+				switch (msg.what) {
+				case Constant.UPTATE_LRC_LOCK:
+					int progress = (Integer) msg.obj;
+					if (lrcView.hasLrc())
+						lrcView.changeCurrent(progress);
+					break;
+				case Constant.UPDATE_LOCKTIME: {
+					setTime();
+					int timeProgress = (Integer) msg.obj;
+					if (downMusicSongTime != null) {
+						playOrPauseButton.setMaxProgress((int) MediaUtils
+								.getTrackLength(downMusicSongTime));
+					} else {
+						playOrPauseButton.setMaxProgress((int) mp3List.get(
+								currentPosition).getDuration());
+					}
+					playOrPauseButton.setPlayingProgress(timeProgress);
+					playOrPauseButton.invalidate();
+				}
+					break;
+				}
+			}
+		};
 	}
 
 	/**
@@ -330,7 +329,7 @@ public class LockActivity extends SwipeBackActivity implements OnClickListener {
 							.getAlbumId(), true, false);
 			@SuppressWarnings("deprecation")
 			Drawable drawable = new BitmapDrawable(preBitmap);
-			lockBackGround.setBackground(drawable);
+			// lockBackGround.setBackground(drawable);
 			break;
 		case R.id.next_button:
 			Toast.makeText(this, "点击了下一首", 0).show();
@@ -347,7 +346,7 @@ public class LockActivity extends SwipeBackActivity implements OnClickListener {
 					mp3List.get(nextPosition).getId(), mp3List
 							.get(nextPosition).getAlbumId(), true, false);
 			Drawable drawableNext = new BitmapDrawable(nextBitmap);
-			lockBackGround.setBackground(drawableNext);
+			// lockBackGround.setBackground(drawableNext);
 			setLrc(songNameTextView.getText().toString());
 
 			break;
@@ -366,6 +365,9 @@ public class LockActivity extends SwipeBackActivity implements OnClickListener {
 				musicPlayService.start();
 				pauseImageView.setVisibility(View.VISIBLE);
 				playImageView.setVisibility(View.GONE);
+				// 发送更新暂停按钮的广播
+				Intent playIntent = new Intent(Constant.PLAYBUTTON_BROAD);
+				this.sendBroadcast(playIntent);
 			}
 			break;
 		}
