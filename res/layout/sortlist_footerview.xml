@@ -10,6 +10,6 @@
         android:layout_height="wrap_content"
         android:gravity="center"
         android:padding="8dp"
-        android:text="共有18首歌曲" />
+        android:text="共有0首歌曲" />
 
 </LinearLayout>

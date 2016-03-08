@@ -35,7 +35,9 @@ import android.media.MediaPlayer.OnErrorListener;
 import android.net.Uri;
 import android.os.Binder;
 import android.os.Environment;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Message;
 import android.util.Log;
 import android.widget.RemoteViews;
 
@@ -63,7 +65,7 @@ public class MusicPlayService extends Service implements OnCompletionListener,
 
 	// 下载歌曲的文件夹
 	private String target;
-	private ArrayList<DownMucicInfo> netMusicList;// 我的下载的音乐列表
+	private ArrayList<DownMucicInfo> downMusicList;// 我的下载的音乐列表
 	private ScreenBroadcastReceiver sOnBroadcastReciver;
 	private NotificationManager notificationManager;// 通知栏
 	private static final String PAUSE_BROADCAST_NAME = "com.esint.music.pause.broadcast";
@@ -73,7 +75,8 @@ public class MusicPlayService extends Service implements OnCompletionListener,
 	private static final int NEXT_FLAG = 0x2;
 	private static final int PRE_FLAG = 0x3;
 	private int NOTIFICATION_ID = 0x1;
-	private static final String  START_NOTIFITION = "start_notifition";
+	private static final String START_NOTIFITION = "start_notifition";
+	private String musicPlayOrPause;
 
 	public class PlayBinder extends Binder {
 		public MusicPlayService getPlayService() {
@@ -91,45 +94,59 @@ public class MusicPlayService extends Service implements OnCompletionListener,
 		// mPlayer.setOnCompletionListener(this);
 		// mPlayer.setOnErrorListener(this);
 		target = Environment.getExternalStorageDirectory() + "/" + "/下载的歌曲";
-		netMusicList = MediaUtils.GetMusicFiles(target, ".mp3", true);
+		downMusicList = MediaUtils.GetMusicFiles(target, ".mp3", true);
 		notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-		
-		//注册监听锁屏界面的广播
+
+		// 注册监听锁屏界面的广播
 		sOnBroadcastReciver = new ScreenBroadcastReceiver();
 		IntentFilter recevierFilter = new IntentFilter();
 		recevierFilter.addAction(Intent.ACTION_SCREEN_ON);
 		recevierFilter.addAction(Intent.ACTION_SCREEN_OFF);
 		registerReceiver(sOnBroadcastReciver, recevierFilter);
-		//注册通知栏的广播
+		// 注册通知栏的广播
 		ControlBroadcast controlBroadcast = new ControlBroadcast();
 		IntentFilter notifiFilter = new IntentFilter();
 		notifiFilter.addAction(PAUSE_BROADCAST_NAME);
 		notifiFilter.addAction(NEXT_BROADCAST_NAME);
 		notifiFilter.addAction(PRE_BROADCAST_NAME);
 		registerReceiver(controlBroadcast, notifiFilter);
-		
+
 	}
+
 	private class ControlBroadcast extends BroadcastReceiver {
 
 		@Override
 		public void onReceive(Context context, Intent intent) {
 			int flag = intent.getIntExtra("FLAG", -1);
-			switch(flag) {
+			switch (flag) {
 			case PAUSE_FLAG:
-//				MediaService.this.stopForeground(true);
-				Log.e("pause", "next");
+				// MediaService.this.stopForeground(true);
 				pause();
 				break;
 			case NEXT_FLAG:
-				Log.e("next", "next");
-				next();
+				// next();
+				musicPlayOrPause = "next";
+				updateMusicInfo(musicPlayOrPause);
 				break;
 			case PRE_FLAG:
-				previous();
-				Log.e("previous", "previous");
+				// previous();
+				musicPlayOrPause = "previous";
+				updateMusicInfo(musicPlayOrPause);
 				break;
 			}
 		}
+	}
+
+	// 获取播放的音乐的信息
+	public void updateMusicInfo(String musicPlayOrPause) {
+
+		Bitmap bitmap = MediaUtils.getArtwork(MusicPlayService.this, mp3Infos
+				.get(currentPlayPosition).getId(),
+				mp3Infos.get(currentPlayPosition).getAlbumId(), true, false);
+		updateNotification(bitmap,
+				mp3Infos.get(currentPlayPosition).getTitle(),
+				mp3Infos.get(currentPlayPosition).getArtist(), musicPlayOrPause);
+
 	}
 
 	/**
@@ -138,7 +155,7 @@ public class MusicPlayService extends Service implements OnCompletionListener,
 	* @author bai
 	*/
 	public void updateNotification(Bitmap bitmap, String musicTitle,
-			String musicArtist) {
+			String musicArtist, String playOrPause) {
 		Intent intent = new Intent(getApplicationContext(),
 				MainFragmentActivity.class);
 		intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
@@ -170,8 +187,6 @@ public class MusicPlayService extends Service implements OnCompletionListener,
 		PendingIntent pausePIntent = PendingIntent.getBroadcast(this, 0,
 				pauseIntent, 0);
 		remoteViews.setOnClickPendingIntent(R.id.iv_pause, pausePIntent);
-		
-		Log.e("ddddddddddddd", "dddddddd");
 
 		Intent nextIntent = new Intent(NEXT_BROADCAST_NAME);
 		nextIntent.putExtra("FLAG", NEXT_FLAG);
@@ -185,8 +200,16 @@ public class MusicPlayService extends Service implements OnCompletionListener,
 				preIntent, 0);
 		remoteViews.setOnClickPendingIntent(R.id.iv_previous, prePIntent);
 		startForeground(NOTIFICATION_ID, notification);
+		if (playOrPause.equals("next")) {
+			// next();
+		} else if (playOrPause.equals("play")) {
+			// start();
+		} else if (playOrPause.equals("previous")) {
+			// previous();
+		}
 
 	}
+
 	private void cancelNotification() {
 		stopForeground(true);
 		notificationManager.cancel(NOTIFICATION_ID);
@@ -247,8 +270,8 @@ public class MusicPlayService extends Service implements OnCompletionListener,
 
 	// 播放我的下载的音乐 从头状态
 	public void playMyDown(int position) {
-		if (position >= 0 && position < netMusicList.size()) {
-			DownMucicInfo mp3Info = netMusicList.get(position);
+		if (position >= 0 && position < downMusicList.size()) {
+			DownMucicInfo mp3Info = downMusicList.get(position);
 			try {
 				mPlayer.reset();
 				// 设置播放的位置
@@ -283,12 +306,10 @@ public class MusicPlayService extends Service implements OnCompletionListener,
 	public void pause() {
 		if (mPlayer.isPlaying())
 			mPlayer.pause();
-		Log.e("暂停", "暂停");
 	}
 
-	// 下一首
+	// 下一首 本地音乐列表
 	public void next() {
-		Log.e("下一首", "下一首");
 		int currentPlayMode = getPlayMode();
 		switch (currentPlayMode) {
 		case PLAY_ORDER: {
@@ -316,15 +337,52 @@ public class MusicPlayService extends Service implements OnCompletionListener,
 		}
 	}
 
-	// 上一首
+	// 下一首 播放下载音乐的下一首歌曲
+	public void nextDownMusic() {
+		int currentPlayMode = getPlayMode();
+		switch (currentPlayMode) {
+		case PLAY_ORDER: {
+			if (currentPlayPosition + 1 >= downMusicList.size()) {
+				currentPlayPosition = 0;// 回到第一首歌
+			} else {
+				currentPlayPosition++;
+			}
+			playMyDown(currentPlayPosition);
+			break;
+		}
+		case PLAY_RANDOM: {
+			playMyDown(random.nextInt(downMusicList.size()));
+			break;
+		}
+		case PLAY_SINGLE: {
+			if (currentPlayPosition + 1 >= downMusicList.size()) {
+				currentPlayPosition = 0;// 回到第一首歌
+			} else {
+				currentPlayPosition++;
+			}
+			playMyDown(currentPlayPosition);
+			break;
+		}
+		}
+	}
+
+	// 上一首 本地音乐列表
 	public void previous() {
 		if (currentPlayPosition - 1 < 0) {
 			currentPlayPosition = mp3Infos.size() - 1;// 回到最后一首
 		} else {
 			currentPlayPosition--;
 		}
-		Log.e("上一首", "上一首");
 		playLocalMusic(currentPlayPosition);
+	}
+	//上一首  下载音乐列表
+	public void previousDown(){
+		if (currentPlayPosition - 1 < 0) {
+			currentPlayPosition = downMusicList.size() - 1;// 回到最后一首
+		} else {
+			currentPlayPosition--;
+		}
+		playMyDown(currentPlayPosition);
 	}
 
 	// 开始
@@ -351,11 +409,9 @@ public class MusicPlayService extends Service implements OnCompletionListener,
 	 */
 	public void playUrl(String url) {
 		try {
-			Log.e("1111111111", "111111");
 			mPlayer.reset();
 			mPlayer.setDataSource(url); // 设置数据源
 			mPlayer.prepare(); // prepare自动播放
-			Log.e("2222222", "333333");
 		} catch (IllegalArgumentException e) {
 			e.printStackTrace();
 		} catch (SecurityException e) {

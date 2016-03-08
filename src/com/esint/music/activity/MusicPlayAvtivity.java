@@ -80,6 +80,7 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 	private ArrayList<Mp3Info> mp3List;// 本地音乐的list
 	private ImageView albumIV;
 	private int currentPosition;
+	private int currentPositionDown;// 记录我的下载的音乐里边的标志
 	private String musicFlag;
 	private Handler mHandler;
 	private MusicPlayService musicPlayService;
@@ -177,6 +178,8 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 		mPlayViewPager.setOnPageChangeListener(new MyListener());
 		currentPosition = SharedPrefUtil.getInt(this,
 				Constant.CLICKED_MUNSIC_NAME, -1);
+		currentPositionDown = SharedPrefUtil.getInt(this,
+				Constant.CLICKED_MUNSIC_NAME_DOWN, -1);
 		mp3List = MediaUtils.getMp3Info(this);
 		mp3List = new SortListUtil().initMyLocalMusic(mp3List);
 		intentMusicName = getIntent().getStringExtra("Music_name");
@@ -337,68 +340,26 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 			break;
 		}
 		case R.id.ib_play_pre: {
-			if (currentPosition == -1) {
-				return;
-			}
-			this.unbindService(connection);
-			Intent intent = new Intent(this, MusicPlayService.class);
-			bindService(intent, connection, Context.BIND_AUTO_CREATE);
 
-			Toast.makeText(this, "点击了上一首", 0).show();
-			musicPlayService.previous();
-			intentMusicName = mp3List
-					.get(musicPlayService.getCurrentPosition()).getTitle();
-			// setLrc(intentMusicName);
-			btnPause.setVisibility(View.VISIBLE);
-			btnPlay.setVisibility(View.GONE);
-			int prePosition = musicPlayService.getCurrentPosition();
-			SharedPrefUtil.setInt(this, Constant.CLICKED_MUNSIC_NAME,
-					prePosition);
-			musicName.setText(mp3List.get(prePosition).getTitle());
-			musicSinger.setText("一   " + mp3List.get(prePosition).getArtist()
-					+ "  一");
-			musicTime.setText(MediaUtils.formatTime(mp3List.get(prePosition)
-					.getDuration()));
-			Bitmap preBitmap = MediaUtils.getArtwork(this,
-					mp3List.get(prePosition).getId(), mp3List.get(prePosition)
-							.getAlbumId(), true, false);
-			albumIV.setImageBitmap(preBitmap);
-			Drawable boxBlurFilter = GaussianBlurUtil.BoxBlurFilter(preBitmap);
-			playMusicBg.setBackgroundDrawable(boxBlurFilter);
-			startAnim();
+			if (musicFlag.equals("local_music")) {
+				musicPlayService.previous();
+				localMusicNextOrPre();
+			} else if (musicFlag.equals("down_music")) {
+				musicPlayService.previousDown();
+				downMusicNextOrPre();
+			}
 			break;
 		}
 		case R.id.ib_play_next: {
-			if (currentPosition == -1) {
-				return;
+
+			if (musicFlag.equals("local_music")) {
+				musicPlayService.next();
+				localMusicNextOrPre();
+			} else if (musicFlag.equals("down_music")) {
+				musicPlayService.nextDownMusic();
+				downMusicNextOrPre();
 			}
-			this.unbindService(connection);
-			Intent intent = new Intent(this, MusicPlayService.class);
-			bindService(intent, connection, Context.BIND_AUTO_CREATE);
-			Toast.makeText(this, "点击了下一首播放按钮", 0).show();
-			musicPlayService.next();
-			intentMusicName = mp3List
-					.get(musicPlayService.getCurrentPosition()).getTitle();
-			// setLrc(intentMusicName);
-			btnPause.setVisibility(View.VISIBLE);
-			btnPlay.setVisibility(View.GONE);
-			// 切换数据
-			int nextPosition = musicPlayService.getCurrentPosition();
-			SharedPrefUtil.setInt(this, Constant.CLICKED_MUNSIC_NAME,
-					nextPosition);
-			musicName.setText(mp3List.get(nextPosition).getTitle());
-			musicSinger.setText("一   " + mp3List.get(nextPosition).getArtist()
-					+ "  一");
-			musicTime.setText(MediaUtils.formatTime(mp3List.get(nextPosition)
-					.getDuration()));
-			Bitmap nextBitmap = MediaUtils.getArtwork(this,
-					mp3List.get(nextPosition).getId(), mp3List
-							.get(nextPosition).getAlbumId(), true, false);
-			albumIV.setImageBitmap(nextBitmap);
-			Drawable boxBlurFilter1 = GaussianBlurUtil
-					.BoxBlurFilter(nextBitmap);
-			playMusicBg.setBackgroundDrawable(boxBlurFilter1);
-			startAnim();
+
 			break;
 		}
 		case R.id.play_mode: {
@@ -453,6 +414,82 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 		}
 			break;
 		}
+	}
+
+	// 当是在本地音乐列表的是点击下一首调用的方法
+	private void localMusicNextOrPre() {
+		if (currentPosition == -1) {
+			return;
+		}
+		this.unbindService(connection);
+		Intent intent = new Intent(this, MusicPlayService.class);
+		bindService(intent, connection, Context.BIND_AUTO_CREATE);
+		Toast.makeText(this, "在本地音乐下点击了下一首播放按钮", 0).show();
+		// musicPlayService.next();
+		intentMusicName = mp3List.get(musicPlayService.getCurrentPosition())
+				.getTitle();
+		// setLrc(intentMusicName);
+		btnPause.setVisibility(View.VISIBLE);
+		btnPlay.setVisibility(View.GONE);
+		// 切换数据
+		int nextPosition = musicPlayService.getCurrentPosition();
+		SharedPrefUtil.setInt(this, Constant.CLICKED_MUNSIC_NAME, nextPosition);
+		musicName.setText(mp3List.get(nextPosition).getTitle());
+		musicSinger.setText("一   " + mp3List.get(nextPosition).getArtist()
+				+ "  一");
+		musicTime.setText(MediaUtils.formatTime(mp3List.get(nextPosition)
+				.getDuration()));
+		Bitmap nextBitmap = MediaUtils.getArtwork(this,
+				mp3List.get(nextPosition).getId(), mp3List.get(nextPosition)
+						.getAlbumId(), true, false);
+		albumIV.setImageBitmap(nextBitmap);
+		Drawable boxBlurFilter1 = GaussianBlurUtil.BoxBlurFilter(nextBitmap);
+		playMusicBg.setBackgroundDrawable(boxBlurFilter1);
+		startAnim();
+	}
+
+	// 当是在我的下载的音乐列表点击下一首的时候调用的方法
+	private void downMusicNextOrPre() {
+		if (currentPositionDown == -1) {
+			return;
+		}
+		this.unbindService(connection);
+		Intent intent = new Intent(this, MusicPlayService.class);
+		bindService(intent, connection, Context.BIND_AUTO_CREATE);
+		Toast.makeText(this, "在我的下载列表下点击了下一首播放按钮", 0).show();
+		// musicPlayService.nextDownMusic();
+		intentMusicName = downMusicList.get(
+				musicPlayService.getCurrentPosition()).getDownMusicName();
+		// setLrc(intentMusicName);
+		btnPause.setVisibility(View.VISIBLE);
+		btnPlay.setVisibility(View.GONE);
+		// 切换数据
+		int nextPosition = musicPlayService.getCurrentPosition();
+		SharedPrefUtil.setInt(this, Constant.CLICKED_MUNSIC_NAME_DOWN,
+				nextPosition);
+		musicName.setText(downMusicList.get(nextPosition).getDownMusicName());
+		musicSinger.setText("一   "
+				+ downMusicList.get(nextPosition).getDownMusicArtist() + "  一");
+		musicTime.setText(MediaUtils.formatTime(MediaUtils
+				.getTrackLength(downMusicList.get(nextPosition)
+						.getDownMusicDuration())));
+		// 下载歌曲的文件夹
+		String MusicTarget = Environment.getExternalStorageDirectory() + "/"
+				+ "/下载的歌曲";
+		downMusicList = MediaUtils.GetMusicFiles(MusicTarget, ".mp3", true);
+		final String ImageTarget = Environment.getExternalStorageDirectory()
+				+ "/" + "/下载的图片" + "/";
+		// 得到当前播放的歌曲
+		int curr = musicPlayService.getCurrentPosition();
+		Bitmap albumBit = BitmapFactory.decodeFile(ImageTarget
+				+ downMusicList.get(curr).getDownMusicName().trim() + ".jpg",
+				null);
+		if (albumBit != null) {
+			albumIV.setImageBitmap(albumBit);
+			Drawable boxBlurFilter1 = GaussianBlurUtil.BoxBlurFilter(albumBit);
+			playMusicBg.setBackgroundDrawable(boxBlurFilter1);
+		}
+		startAnim();
 	}
 
 	private ServiceConnection connection = new ServiceConnection() {
@@ -529,6 +566,11 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 
 	};
 
+	/**
+	* @Description更新歌词 
+	* @return void 
+	* @author bai
+	*/
 	private void updateLRC() {
 		new Thread(new Runnable() {
 			// 初始化收藏歌曲的状态
@@ -546,7 +588,7 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 								@Override
 								public void onSearchResult(
 										ArrayList<SearchResult> results) {
-									if (results.size() != 0) {
+									if (results != null) {
 
 										SearchResult searchResult = results
 												.get(0);
@@ -569,6 +611,12 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 		}).start();
 	}
 
+	/**
+	* @Description:设置歌词 
+	* @param musicTitle
+	* @return void 
+	* @author bai
+	*/
 	private void setLrc(String musicTitle) {
 		String target = Environment.getExternalStorageDirectory() + "/"
 				+ "/下载的歌词" + "/" + intentMusicName.trim() + ".lrc";
@@ -576,6 +624,11 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 		mLrcViewOnFirstPage.setLrcPath(target);
 	}
 
+	/**
+	* @Description:初始化播放模式 
+	* @return void 
+	* @author bai
+	*/
 	private void initPlayMode() {
 		switch (musicPlayService.getPlayMode()) {
 		case MusicPlayService.PLAY_ORDER:
