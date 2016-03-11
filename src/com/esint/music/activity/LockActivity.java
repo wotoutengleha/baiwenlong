@@ -17,9 +17,11 @@ import com.esint.music.view.LockButtonRelativeLayout;
 import com.esint.music.view.LockPalyOrPauseButtonRelativeLayout;
 import com.esint.music.view.LrcView;
 import android.annotation.TargetApi;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -74,12 +76,16 @@ public class LockActivity extends SwipeBackActivity implements OnClickListener {
 	private ArrayList<DownMucicInfo> downMusicList;// 我的下载的音乐的列表
 	private int recordDownMusicPosition;// 记录点击我的下载歌曲里边的列表
 	private String downMusicSongTime;// 下载的音乐的歌曲时间 设置锁屏进度条
+	private String imageTarget;// 下载音乐图片保存的路径
+	private String musicFlag;// ；是本地音乐还是下载的音乐
+	private MyBroadCast broadCast;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		setContentView(R.layout.activity_lock);
+		
 		// 加入此flag是为了在有密码的锁屏界面上，此音乐播放器的锁屏界面是为了覆盖在系统解锁界面上面
 		this.getWindow().addFlags(
 				WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD
@@ -92,6 +98,7 @@ public class LockActivity extends SwipeBackActivity implements OnClickListener {
 	protected void onDestroy() {
 		super.onDestroy();
 		unbindService(connection);
+		unregisterReceiver(broadCast);
 	}
 
 	@Override
@@ -130,14 +137,27 @@ public class LockActivity extends SwipeBackActivity implements OnClickListener {
 		// 绑定服务
 		Intent intent = new Intent(this, MusicPlayService.class);
 		bindService(intent, connection, Context.BIND_AUTO_CREATE);
+		broadCast = new MyBroadCast();
+		IntentFilter intentFilter = new IntentFilter();
+		intentFilter.addAction("updateText");
+		registerReceiver(broadCast, intentFilter);
+		
 		// 排序MP3文件列表
 		mp3List = MediaUtils.getMp3Info(this);
 		mp3List = new SortListUtil().initMyLocalMusic(mp3List);
+		imageTarget = Environment.getExternalStorageDirectory() + "/"
+				+ "/下载的图片" + "/";
+		String MusicTarget = Environment.getExternalStorageDirectory() + "/"
+				+ "/下载的歌曲";
+		downMusicList = MediaUtils.GetMusicFiles(MusicTarget, ".mp3", true);
+
 		currentPosition = SharedPrefUtil.getInt(this,
 				Constant.CLICKED_MUNSIC_NAME, -1);
 		recordDownMusicPosition = SharedPrefUtil.getInt(this,
 				Constant.CLICKED_MUNSIC_NAME_DOWN, -1);
-		if (currentPosition != -1) {
+		musicFlag = SharedPrefUtil.getString(this, Constant.MUSIC_FLAG,
+				"The music Flag is Empty");
+		if (currentPosition != -1 && musicFlag.equals("local_music")) {
 			songNameTextView.setText(mp3List.get(currentPosition).getTitle());
 			songerTextView.setText(mp3List.get(currentPosition).getArtist());
 			setLrc(songNameTextView.getText().toString());
@@ -147,20 +167,16 @@ public class LockActivity extends SwipeBackActivity implements OnClickListener {
 			Drawable drawable = new BitmapDrawable(bitmap);
 			// lockBackGround.setBackground(drawable);
 		}
-		if (recordDownMusicPosition != -1) {
-			// 下载歌曲的文件夹
-			String MusicTarget = Environment.getExternalStorageDirectory()
-					+ "/" + "/下载的歌曲";
-			downMusicList = MediaUtils.GetMusicFiles(MusicTarget, ".mp3", true);
+		if (recordDownMusicPosition != -1 && musicFlag.equals("down_music")) {
+
 			downMusicSongTime = downMusicList.get(recordDownMusicPosition)
 					.getDownMusicDuration();
 			songNameTextView.setText(downMusicList.get(recordDownMusicPosition)
 					.getDownMusicName());
 			songerTextView.setText(downMusicList.get(recordDownMusicPosition)
 					.getDownMusicArtist());
-			final String ImageTarget = Environment
-					.getExternalStorageDirectory() + "/" + "/下载的图片" + "/";
-			Bitmap albumBit = BitmapFactory.decodeFile(ImageTarget
+
+			Bitmap albumBit = BitmapFactory.decodeFile(imageTarget
 					+ downMusicList.get(recordDownMusicPosition)
 							.getDownMusicName().trim() + ".jpg", null);
 			Drawable downDraw = new BitmapDrawable(albumBit);
@@ -181,12 +197,16 @@ public class LockActivity extends SwipeBackActivity implements OnClickListener {
 				case Constant.UPDATE_LOCKTIME: {
 					setTime();
 					int timeProgress = (Integer) msg.obj;
-					if (downMusicSongTime != null) {
+					if (musicFlag.equals("down_music")) {
 						playOrPauseButton.setMaxProgress((int) MediaUtils
-								.getTrackLength(downMusicSongTime));
-					} else {
+								.getTrackLength(downMusicList.get(
+										musicPlayService.getCurrentPosition())
+										.getDownMusicDuration()));
+
+					} else if (musicFlag.equals("local_music")) {
 						playOrPauseButton.setMaxProgress((int) mp3List.get(
-								currentPosition).getDuration());
+								musicPlayService.getCurrentPosition())
+								.getDuration());
 					}
 					playOrPauseButton.setPlayingProgress(timeProgress);
 					playOrPauseButton.invalidate();
@@ -296,6 +316,7 @@ public class LockActivity extends SwipeBackActivity implements OnClickListener {
 		}
 
 	};
+	
 
 	/**
 	* @Description:设置歌词 
@@ -304,7 +325,6 @@ public class LockActivity extends SwipeBackActivity implements OnClickListener {
 	private void setLrc(String musicTitle) {
 		String target = Environment.getExternalStorageDirectory() + "/"
 				+ "/下载的歌词" + "/" + musicTitle.trim() + ".lrc";
-		Log.e("target", target);
 		lrcView.setLrcPath(target);
 
 	}
@@ -314,63 +334,118 @@ public class LockActivity extends SwipeBackActivity implements OnClickListener {
 	public void onClick(View v) {
 		switch (v.getId()) {
 		case R.id.prev_button:
-			Toast.makeText(this, "点击了上一首", 0).show();
-			musicPlayService.previous();
-			pauseImageView.setVisibility(View.VISIBLE);
-			playImageView.setVisibility(View.GONE);
-			int prePosition = musicPlayService.getCurrentPosition();
-			SharedPrefUtil.setInt(this, Constant.CLICKED_MUNSIC_NAME,
-					prePosition);
-			setLrc(songNameTextView.getText().toString());
-			songNameTextView.setText(mp3List.get(prePosition).getTitle());
-			songerTextView.setText(mp3List.get(prePosition).getArtist());
-			Bitmap preBitmap = MediaUtils.getArtwork(this,
-					mp3List.get(prePosition).getId(), mp3List.get(prePosition)
-							.getAlbumId(), true, false);
-			@SuppressWarnings("deprecation")
-			Drawable drawable = new BitmapDrawable(preBitmap);
-			// lockBackGround.setBackground(drawable);
-			break;
-		case R.id.next_button:
-			Toast.makeText(this, "点击了下一首", 0).show();
-			musicPlayService.next();
-			pauseImageView.setVisibility(View.VISIBLE);
-			playImageView.setVisibility(View.GONE);
-			// 切换数据
-			int nextPosition = musicPlayService.getCurrentPosition();
-			SharedPrefUtil.setInt(this, Constant.CLICKED_MUNSIC_NAME,
-					nextPosition);
-			songNameTextView.setText(mp3List.get(nextPosition).getTitle());
-			songerTextView.setText(mp3List.get(nextPosition).getArtist());
-			Bitmap nextBitmap = MediaUtils.getArtwork(this,
-					mp3List.get(nextPosition).getId(), mp3List
-							.get(nextPosition).getAlbumId(), true, false);
-			Drawable drawableNext = new BitmapDrawable(nextBitmap);
-			// lockBackGround.setBackground(drawableNext);
-			setLrc(songNameTextView.getText().toString());
+
+			if (musicFlag.equals("local_music")) {
+				musicPlayService.previous();
+				localMusicNextOrPre();
+			} else if (musicFlag.equals("down_music")) {
+				musicPlayService.previousDown();
+				downMusicNextOrPre();
+			}
 
 			break;
-		case R.id.play_pause_button:
-			boolean isPlaying = musicPlayService.isPlaying();
-			if (isPlaying) {
-				Toast.makeText(this, "点击了暂停", 0).show();
-				musicPlayService.pause();
-				pauseImageView.setVisibility(View.GONE);
-				playImageView.setVisibility(View.VISIBLE);
-				// 发送更新暂停按钮的广播
-				Intent pauseIntent = new Intent(Constant.PAUSEBUTTON_BROAD);
-				this.sendBroadcast(pauseIntent);
-			} else if (!isPlaying) {
-				Toast.makeText(this, "点击了播放", 0).show();
-				musicPlayService.start();
-				pauseImageView.setVisibility(View.VISIBLE);
-				playImageView.setVisibility(View.GONE);
-				// 发送更新暂停按钮的广播
-				Intent playIntent = new Intent(Constant.PLAYBUTTON_BROAD);
-				this.sendBroadcast(playIntent);
+		case R.id.next_button:
+			if (musicFlag.equals("local_music")) {
+				musicPlayService.next();
+				localMusicNextOrPre();
+			} else if (musicFlag.equals("down_music")) {
+				musicPlayService.nextDownMusic();
+				downMusicNextOrPre();
 			}
+			break;
+		case R.id.play_pause_button:
+			playOrPause();
 			break;
 		}
 	}
 
+	// 在本地音乐列表下点击下一首时调用的方法
+	private void localMusicNextOrPre() {
+
+		pauseImageView.setVisibility(View.VISIBLE);
+		playImageView.setVisibility(View.GONE);
+		// 切换数据
+		int nextPosition = musicPlayService.getCurrentPosition();
+		SharedPrefUtil.setInt(this, Constant.CLICKED_MUNSIC_NAME, nextPosition);
+		songNameTextView.setText(mp3List.get(nextPosition).getTitle());
+		songerTextView.setText(mp3List.get(nextPosition).getArtist());
+		Bitmap nextBitmap = MediaUtils.getArtwork(this,
+				mp3List.get(nextPosition).getId(), mp3List.get(nextPosition)
+						.getAlbumId(), true, false);
+		if (nextBitmap != null) {
+			Drawable drawableNext = new BitmapDrawable(nextBitmap);
+		}
+		// lockBackGround.setBackground(drawableNext);
+		setLrc(songNameTextView.getText().toString());
+	}
+
+	// 在下载的音乐点击下一首的时候调用的方法
+	private void downMusicNextOrPre() {
+
+		pauseImageView.setVisibility(View.VISIBLE);
+		playImageView.setVisibility(View.GONE);
+		// 切换数据
+		int nextPosition = musicPlayService.getCurrentPosition();
+		SharedPrefUtil.setInt(this, Constant.CLICKED_MUNSIC_NAME_DOWN,
+				nextPosition);
+		songNameTextView.setText(downMusicList.get(nextPosition)
+				.getDownMusicName());
+		songerTextView.setText(downMusicList.get(nextPosition)
+				.getDownMusicArtist());
+		Bitmap albumBit = BitmapFactory.decodeFile(imageTarget
+				+ downMusicList.get(recordDownMusicPosition).getDownMusicName()
+						.trim() + ".jpg", null);
+		if (albumBit != null) {
+			Drawable drawableNext = new BitmapDrawable(albumBit);
+		}
+		// lockBackGround.setBackground(drawableNext);
+		setLrc(songNameTextView.getText().toString());
+	}
+
+	// 点击暂停或者播放按钮 的时候调用的方法
+	private void playOrPause() {
+		boolean isPlaying = musicPlayService.isPlaying();
+		if (isPlaying) {
+			musicPlayService.pause();
+			pauseImageView.setVisibility(View.GONE);
+			playImageView.setVisibility(View.VISIBLE);
+			// 发送更新暂停按钮的广播
+			Intent pauseIntent = new Intent(Constant.PAUSEBUTTON_BROAD);
+			this.sendBroadcast(pauseIntent);
+		} else if (!isPlaying) {
+			musicPlayService.start();
+			pauseImageView.setVisibility(View.VISIBLE);
+			playImageView.setVisibility(View.GONE);
+			// 发送更新暂停按钮的广播
+			Intent playIntent = new Intent(Constant.PLAYBUTTON_BROAD);
+			this.sendBroadcast(playIntent);
+		}
+	}
+
+	// 接受到广播更新数据
+	public class MyBroadCast extends BroadcastReceiver {
+
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			if (intent.getAction().equals("updateText")) {
+				Log.e("在锁屏界面接受到了广播", "在锁屏界面接受到了广播");
+				if (musicFlag.equals("local_music")) {
+					songNameTextView.setText(mp3List.get(
+							musicPlayService.getCurrentPosition()).getTitle());
+					songerTextView.setText(mp3List.get(
+							musicPlayService.getCurrentPosition()).getArtist());
+					setLrc(songNameTextView.getText().toString());
+				} else if (musicFlag.equals("down_music")) {
+					songNameTextView.setText(downMusicList.get(
+							musicPlayService.getCurrentPosition())
+							.getDownMusicName());
+					songerTextView.setText(downMusicList.get(
+							musicPlayService.getCurrentPosition())
+							.getDownMusicArtist());
+					setLrc(songNameTextView.getText().toString());
+				}
+			}
+		}
+
+	}
 }

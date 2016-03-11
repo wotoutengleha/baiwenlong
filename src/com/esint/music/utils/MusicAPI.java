@@ -63,7 +63,6 @@ public class MusicAPI {
 					JSONObject response = new JSONObject(EntityUtils
 							.toString(httpResponse.getEntity()));
 					result[0] = response.getJSONObject("result");
-					Log.e("11111111111", result[0].toString());
 				} catch (Exception e) {
 					e.printStackTrace();
 				}

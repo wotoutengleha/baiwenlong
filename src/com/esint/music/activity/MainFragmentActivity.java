@@ -35,6 +35,7 @@ import android.support.v4.view.ViewPager;
 import android.support.v4.view.ViewPager.OnPageChangeListener;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.Display;
 import android.view.Gravity;
 import android.view.KeyEvent;
@@ -66,6 +67,7 @@ import com.esint.music.fragment.NetMusicFragment;
 import com.esint.music.model.DownMucicInfo;
 import com.esint.music.model.Mp3Info;
 import com.esint.music.model.SearchMusicInfo;
+import com.esint.music.service.MusicPlayService;
 import com.esint.music.slidemenu.SlidingMenu;
 import com.esint.music.utils.Constant;
 import com.esint.music.utils.MediaUtils;
@@ -133,6 +135,8 @@ public class MainFragmentActivity extends BaseActivity implements
 		super.onDestroy();
 		// 解绑服务
 		unBindService();
+		int playMode = musicPlayService.getPlayMode();
+		SharedPrefUtil.setInt(this, Constant.PLAY_MODE, playMode);
 	}
 
 	// 换背景
@@ -277,14 +281,13 @@ public class MainFragmentActivity extends BaseActivity implements
 		// 下载歌曲的文件夹
 		String MusicTarget = Environment.getExternalStorageDirectory() + "/"
 				+ "/下载的歌曲";
-		downMusicList = MediaUtils.GetMusicFiles(MusicTarget, ".mp3", true);
+			downMusicList = MediaUtils.GetMusicFiles(MusicTarget, ".mp3", true);
 	}
 
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
 		case R.id.action_search:
-			Toast.makeText(this, "点击了按钮", 0).show();
 			initSearch();
 			break;
 
@@ -329,7 +332,6 @@ public class MainFragmentActivity extends BaseActivity implements
 			mMianVp.setCurrentItem(1, true);
 			break;
 		case R.id.main_more_functions:
-			Toast.makeText(MainFragmentActivity.this, "点击了功能键", 0).show();
 
 			break;
 		case R.id.ib_menu:
@@ -554,6 +556,11 @@ public class MainFragmentActivity extends BaseActivity implements
 			case R.id.menuAbout:
 				break;
 			case R.id.menuPlayMode:
+				
+				
+				
+				
+				
 				break;
 			case R.id.menuSetting:
 				startActivity(new Intent(MainFragmentActivity.this,
@@ -570,6 +577,31 @@ public class MainFragmentActivity extends BaseActivity implements
 		}
 
 	};
+	
+	/**
+	* @Description:初始化播放模式 
+	* @return void 
+	* @author bai
+	*/
+//	private void initPlayMode() {
+//		switch (musicPlayService.getPlayMode()) {
+//		case MusicPlayService.PLAY_ORDER:
+//			btnPlayMode
+//					.setImageResource(R.drawable.player_btn_repeat_highlight);
+//			btnPlayMode.setTag(MusicPlayService.PLAY_ORDER);
+//			break;
+//		case MusicPlayService.PLAY_RANDOM:
+//			btnPlayMode.setImageResource(R.drawable.player_btn_random_normal);
+//			btnPlayMode.setTag(MusicPlayService.PLAY_RANDOM);
+//			break;
+//
+//		case MusicPlayService.PLAY_SINGLE:
+//			btnPlayMode
+//					.setImageResource(R.drawable.player_btn_repeatone_highlight);
+//			btnPlayMode.setTag(MusicPlayService.PLAY_SINGLE);
+//			break;
+//		}
+//	}
 
 	// 退出程序的dialog
 

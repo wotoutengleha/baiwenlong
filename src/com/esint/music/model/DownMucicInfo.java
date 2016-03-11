@@ -8,6 +8,8 @@ public class DownMucicInfo {
 	private String downMusicSize;
 	private String downMusicPicUrl;
 	private String downMusicDuration;
+	private int downMusicId;
+	private String myLikeDownMusicName;
 
 	public DownMucicInfo() {
 		super();
@@ -64,6 +66,22 @@ public class DownMucicInfo {
 
 	public void setDownMusicDuration(String downMusicDuration) {
 		this.downMusicDuration = downMusicDuration;
+	}
+
+	public int getDownMusicId() {
+		return downMusicId;
+	}
+
+	public void setDownMusicId(int downMusicId) {
+		this.downMusicId = downMusicId;
+	}
+
+	public String getMyLikeDownMusicName() {
+		return myLikeDownMusicName;
+	}
+
+	public void setMyLikeDownMusicName(String myLikeDownMusicName) {
+		this.myLikeDownMusicName = myLikeDownMusicName;
 	}
 
 }

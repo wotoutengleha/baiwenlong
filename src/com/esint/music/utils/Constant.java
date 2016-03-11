@@ -33,6 +33,7 @@ public class Constant {
 	public static final int FAILED = 0x006;
 	public static final int UPDATE_LOCKTIME  = 0x009;//更新锁屏页面的进度条
 	public static final int page = 1;// 搜索歌曲的时候搜索的页数
+	public static final String  PLAY_MODE = "play_mode";//播放模式 默认是1  顺序播放
 	public static boolean isFirst = true;
 	public static boolean ISFirst_PLAY = true;
 	public static long exitTime = 0;

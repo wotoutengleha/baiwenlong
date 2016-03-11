@@ -2,21 +2,15 @@ package com.esint.music.service;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import java.util.Random;
 
 import com.esint.music.R;
-import com.esint.music.activity.LockActivity;
 import com.esint.music.activity.MainFragmentActivity;
 import com.esint.music.fragment.MyTabMusic;
 import com.esint.music.model.Mp3Info;
 import com.esint.music.model.DownMucicInfo;
-import com.esint.music.sortlistview.CharacterParser;
-import com.esint.music.sortlistview.PinyinComparator;
 import com.esint.music.utils.Constant;
 import com.esint.music.utils.MediaUtils;
-import com.esint.music.utils.MyApplication;
 import com.esint.music.utils.SharedPrefUtil;
 import com.esint.music.utils.SortListUtil;
 
@@ -30,15 +24,10 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Bitmap;
 import android.media.MediaPlayer;
-import android.media.MediaPlayer.OnCompletionListener;
-import android.media.MediaPlayer.OnErrorListener;
 import android.net.Uri;
 import android.os.Binder;
 import android.os.Environment;
-import android.os.Handler;
 import android.os.IBinder;
-import android.os.Message;
-import android.util.Log;
 import android.widget.RemoteViews;
 
 /*   
@@ -49,8 +38,7 @@ import android.widget.RemoteViews;
  * 创建时间：2016-1-10 下午9:53:16   
  *        
  */
-public class MusicPlayService extends Service implements OnCompletionListener,
-		OnErrorListener {
+public class MusicPlayService extends Service {
 
 	private MediaPlayer mPlayer;// 播放音乐的类
 	private int currentPlayPosition;// 当前播放的位置
@@ -75,7 +63,6 @@ public class MusicPlayService extends Service implements OnCompletionListener,
 	private static final int NEXT_FLAG = 0x2;
 	private static final int PRE_FLAG = 0x3;
 	private int NOTIFICATION_ID = 0x1;
-	private static final String START_NOTIFITION = "start_notifition";
 	private String musicPlayOrPause;
 
 	public class PlayBinder extends Binder {
@@ -91,11 +78,11 @@ public class MusicPlayService extends Service implements OnCompletionListener,
 		// 排序MP3列表的数据
 		mp3Infos = MediaUtils.getMp3Info(this);
 		mp3Infos = new SortListUtil().initMyLocalMusic(mp3Infos);
-		// mPlayer.setOnCompletionListener(this);
-		// mPlayer.setOnErrorListener(this);
 		target = Environment.getExternalStorageDirectory() + "/" + "/下载的歌曲";
-		downMusicList = MediaUtils.GetMusicFiles(target, ".mp3", true);
+			downMusicList = MediaUtils.GetMusicFiles(target, ".mp3", true);
 		notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+		
+		playMode = SharedPrefUtil.getInt(this, Constant.PLAY_MODE, 1);
 
 		// 注册监听锁屏界面的广播
 		sOnBroadcastReciver = new ScreenBroadcastReceiver();
@@ -310,8 +297,7 @@ public class MusicPlayService extends Service implements OnCompletionListener,
 
 	// 下一首 本地音乐列表
 	public void next() {
-		int currentPlayMode = getPlayMode();
-		switch (currentPlayMode) {
+		switch (playMode) {
 		case PLAY_ORDER: {
 			if (currentPlayPosition + 1 >= mp3Infos.size()) {
 				currentPlayPosition = 0;// 回到第一首歌
@@ -326,11 +312,11 @@ public class MusicPlayService extends Service implements OnCompletionListener,
 			break;
 		}
 		case PLAY_SINGLE: {
-			if (currentPlayPosition + 1 >= mp3Infos.size()) {
-				currentPlayPosition = 0;// 回到第一首歌
-			} else {
-				currentPlayPosition++;
-			}
+//			if (currentPlayPosition + 1 >= mp3Infos.size()) {
+//				currentPlayPosition = 0;// 回到第一首歌
+//			} else {
+//				currentPlayPosition++;
+//			}
 			playLocalMusic(currentPlayPosition);
 			break;
 		}
@@ -339,8 +325,7 @@ public class MusicPlayService extends Service implements OnCompletionListener,
 
 	// 下一首 播放下载音乐的下一首歌曲
 	public void nextDownMusic() {
-		int currentPlayMode = getPlayMode();
-		switch (currentPlayMode) {
+		switch (playMode) {
 		case PLAY_ORDER: {
 			if (currentPlayPosition + 1 >= downMusicList.size()) {
 				currentPlayPosition = 0;// 回到第一首歌
@@ -355,11 +340,11 @@ public class MusicPlayService extends Service implements OnCompletionListener,
 			break;
 		}
 		case PLAY_SINGLE: {
-			if (currentPlayPosition + 1 >= downMusicList.size()) {
-				currentPlayPosition = 0;// 回到第一首歌
-			} else {
-				currentPlayPosition++;
-			}
+//			if (currentPlayPosition + 1 >= downMusicList.size()) {
+//				currentPlayPosition = 0;// 回到第一首歌
+//			} else {
+//				currentPlayPosition++;
+//			}
 			playMyDown(currentPlayPosition);
 			break;
 		}
@@ -375,8 +360,9 @@ public class MusicPlayService extends Service implements OnCompletionListener,
 		}
 		playLocalMusic(currentPlayPosition);
 	}
-	//上一首  下载音乐列表
-	public void previousDown(){
+
+	// 上一首 下载音乐列表
+	public void previousDown() {
 		if (currentPlayPosition - 1 < 0) {
 			currentPlayPosition = downMusicList.size() - 1;// 回到最后一首
 		} else {
@@ -442,28 +428,4 @@ public class MusicPlayService extends Service implements OnCompletionListener,
 		this.playMode = playMode;
 	}
 
-	@Override
-	public boolean onError(MediaPlayer mp, int what, int extra) {
-		mPlayer.reset();
-		return false;
-	}
-
-	@Override
-	public void onCompletion(MediaPlayer mp) {
-
-		switch (playMode) {
-		case PLAY_ORDER: {
-			next();
-			break;
-		}
-		case PLAY_RANDOM: {
-			playLocalMusic(random.nextInt(mp3Infos.size()));
-			break;
-		}
-		case PLAY_SINGLE: {
-			playLocalMusic(currentPlayPosition);
-			break;
-		}
-		}
-	}
 }

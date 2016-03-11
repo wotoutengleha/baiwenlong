@@ -173,15 +173,11 @@ public class HotMusicListAdapter extends BaseAdapter {
 									@Override
 									public void onSuccess(
 											ResponseInfo<File> arg0) {
-										Toast.makeText(context, "Õº∆¨œ¬‘ÿ≥…π¶", 0)
-												.show();
 									}
 
 									@Override
 									public void onFailure(HttpException arg0,
 											String arg1) {
-										Toast.makeText(context, "Õº∆¨œ¬‘ÿ ß∞‹", 0)
-												.show();
 									}
 								});
 
@@ -189,8 +185,6 @@ public class HotMusicListAdapter extends BaseAdapter {
 
 					@Override
 					public void onFailure(HttpException arg0, String arg1) {
-						Toast.makeText(context, "“Ù¿÷œ¬‘ÿ ß∞‹", 0).show();
-						Log.e("œ¬‘ÿ ß∞‹", arg1);
 
 					}
 
@@ -198,7 +192,6 @@ public class HotMusicListAdapter extends BaseAdapter {
 					public void onLoading(long total, long current,
 							boolean isUploading) {
 						super.onLoading(total, current, isUploading);
-						Log.e("current", current + "  /  " + total);
 					}
 				});
 

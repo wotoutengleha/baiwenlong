@@ -106,7 +106,6 @@ public class PlayListPopuWindow implements OnItemClickListener {
 			holder.musicNumber.setText(position+"");
 			holder.musicName.setText(mp3List.get(position).getTitle());
 			holder.musicSinger.setText(mp3List.get(position).getArtist());
-			Log.e("111111", mp3List.get(position).getArtist());
 			return convertView;
 		}
 

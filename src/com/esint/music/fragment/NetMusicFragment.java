@@ -214,8 +214,6 @@ public class NetMusicFragment extends Fragment implements OnClickListener {
 			public void onItemClick(AdapterView<?> parent, View view,
 					final int position, long id) {
 				final int currnetPoi = position - 1;
-				Toast.makeText(mainFragmentActivity,
-						"点击了第" + (currnetPoi) + "个", 0).show();
 				progressBar = null;
 
 				mainFragmentActivity.musicPlayService.pause();
@@ -291,8 +289,6 @@ public class NetMusicFragment extends Fragment implements OnClickListener {
 			public void onItemClick(AdapterView<?> parent, View view,
 					final int position, long id) {
 				final int currnetPoi = position - 1;
-				Toast.makeText(mainFragmentActivity,
-						"点击了第" + (currnetPoi) + "个", 0).show();
 				progressBar = null;
 
 				mainFragmentActivity.musicPlayService.pause();

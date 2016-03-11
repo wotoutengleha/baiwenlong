@@ -242,7 +242,6 @@ public class MyHttpUtils {
 					@Override
 					public void onSuccess(ResponseInfo<String> arg0) {
 						String hotMusicJson = arg0.result;
-						Log.e("hotMusicJson", hotMusicJson);
 						try {
 							parseHotMusicJson(hotMusicJson);
 						} catch (JSONException e) {

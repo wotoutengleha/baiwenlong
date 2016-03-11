@@ -183,11 +183,8 @@ public class DownMusicUtils {
 
 						@Override
 						public void onSuccess(ResponseInfo<File> arg0) {
-							Toast.makeText(MyApplication.getContext(),
-									"歌词下载成功了", 0).show();
 							handler.obtainMessage(SUCCESS_LRC, musicName)
 									.sendToTarget();
-							Log.e("target下载的时候", target);
 						}
 
 						@Override

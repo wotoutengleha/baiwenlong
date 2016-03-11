@@ -7,9 +7,11 @@ import java.util.List;
 
 import name.teze.layout.lib.SwipeBackActivity;
 import android.annotation.SuppressLint;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -41,14 +43,12 @@ import android.widget.Toast;
 
 import com.esint.music.R;
 import com.esint.music.fragment.MyTabMusic;
-import com.esint.music.model.DownImageInfo;
+import com.esint.music.fragment.MyTabMusic.MyBroadCast;
 import com.esint.music.model.DownMucicInfo;
 import com.esint.music.model.Mp3Info;
 import com.esint.music.model.SearchResult;
 import com.esint.music.service.MusicPlayService;
 import com.esint.music.service.MusicPlayService.PlayBinder;
-import com.esint.music.sortlistview.CharacterParser;
-import com.esint.music.sortlistview.PinyinComparator;
 import com.esint.music.utils.Constant;
 import com.esint.music.utils.DownMusicUtils;
 import com.esint.music.utils.GaussianBlurUtil;
@@ -82,7 +82,7 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 	private int currentPosition;
 	private int currentPositionDown;// 记录我的下载的音乐里边的标志
 	private String musicFlag;
-	private Handler mHandler;
+	private  Handler mHandler;
 	private MusicPlayService musicPlayService;
 	private RelativeLayout playMusicBg;
 	private MyApplication myApp;
@@ -92,6 +92,7 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 	private String downMusicSongTime;// 从主界面传递过来下载音乐的歌曲的时长
 	private ArrayList<DownMucicInfo> downMusicList;// 我的下载的音乐的列表
 	private int recordDownMusicPosition;// 记录点击我的下载歌曲里边的列表
+	private MyBroadCast broadCast;
 
 	@Override
 	protected void onCreate(Bundle arg0) {
@@ -106,6 +107,7 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 	protected void onDestroy() {
 		super.onDestroy();
 		unbindService(connection);
+		unregisterReceiver(broadCast);
 	}
 
 	@Override
@@ -174,6 +176,12 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 		myApp = (MyApplication) getApplication();
 		Intent intent = new Intent(this, MusicPlayService.class);
 		bindService(intent, connection, Context.BIND_AUTO_CREATE);
+		
+		broadCast = new MyBroadCast();
+		IntentFilter intentFilter = new IntentFilter();
+		intentFilter.addAction("updateText");
+		registerReceiver(broadCast, intentFilter);
+		
 		mPlayViewPager.setAdapter(new MyAdapter());
 		mPlayViewPager.setOnPageChangeListener(new MyListener());
 		currentPosition = SharedPrefUtil.getInt(this,
@@ -258,6 +266,42 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 					int progress = (Integer) msg.obj;
 					String formatTime = MediaUtils.formatTime(progress);
 					startMusicTime.setText(formatTime);
+					if (musicFlag.equals("local_music")) {
+						if (seekBar.getProgress() <= mp3List.get(
+								musicPlayService.getCurrentPosition())
+								.getDuration()
+								&& seekBar.getProgress() >= mp3List.get(
+										musicPlayService.getCurrentPosition())
+										.getDuration() - 1500) {
+							
+							musicPlayService.next();
+//							localMusicNextOrPre();
+							Log.e("走到了发送本地音乐", "走到了发送本地音乐");
+							// 发送更新播放按钮的广播
+							Intent intent = new Intent("updateText");
+							sendBroadcast(intent);
+							
+						}
+					} else if (musicFlag.equals("down_music")) {
+						if (seekBar.getProgress() <= (MediaUtils
+								.getTrackLength(downMusicList.get(
+										musicPlayService.getCurrentPosition())
+										.getDownMusicDuration()))
+								&& seekBar.getProgress() >= (MediaUtils
+										.getTrackLength(downMusicList.get(
+												musicPlayService
+														.getCurrentPosition())
+												.getDownMusicDuration()) - 1500)) {
+							musicPlayService.nextDownMusic();
+//							downMusicNextOrPre();
+							Log.e("走到了发送下载音乐", "走到了发送下载音乐");
+							// 发送更新播放按钮的广播
+							Intent intent = new Intent("updateText");
+							sendBroadcast(intent);
+						
+						}
+					}
+
 					break;
 				case DownMusicUtils.SUCCESS_LRC:
 					String targrt1 = (String) msg.obj;
@@ -313,7 +357,6 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 				// 发送更新播放按钮的广播
 				Intent intent = new Intent(Constant.PLAYBUTTON_BROAD);
 				this.sendBroadcast(intent);
-				Toast.makeText(this, "点击了播放按钮", 0).show();
 				musicPlayService.start();
 				btnPause.setVisibility(View.VISIBLE);
 				btnPlay.setVisibility(View.GONE);
@@ -322,7 +365,6 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 				// 发送更新播放按钮的广播
 				Intent intent = new Intent(Constant.PLAYBUTTON_BROAD);
 				this.sendBroadcast(intent);
-				Toast.makeText(this, "点击了播放按钮", 0).show();
 				musicPlayService.start();
 				btnPause.setVisibility(View.VISIBLE);
 				btnPlay.setVisibility(View.GONE);
@@ -330,7 +372,6 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 			break;
 		}
 		case R.id.ib_play_pause: {
-			Toast.makeText(this, "点击了暂停按钮", 0).show();
 			musicPlayService.pause();
 			// 发送更新暂停按钮的广播
 			Intent pauseIntent = new Intent(Constant.PAUSEBUTTON_BROAD);
@@ -393,24 +434,54 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 		}
 			break;
 		case R.id.ivLikeNormal: {
-			Mp3Info mp3Info = mp3List
-					.get(musicPlayService.getCurrentPosition());
-			try {
-				Mp3Info myLikeMp3Info = myApp.dbUtils
-						.findFirst(Selector.from(Mp3Info.class).where(
-								"mp3InfoId", "=", mp3Info.getId()));
-				if (myLikeMp3Info == null) {
-					mp3Info.setMp3InfoId(mp3Info.getId());
-					myApp.dbUtils.save(mp3Info);
-					btnLike.setImageResource(R.drawable.player_btn_favorited_normal);
-				} else {
-					myApp.dbUtils.deleteById(Mp3Info.class,
-							myLikeMp3Info.getId());
-					btnLike.setImageResource(R.drawable.player_btn_favorite_highlight);
+
+			if (musicFlag.equals("local_music")) {
+				Mp3Info mp3Info = mp3List.get(musicPlayService
+						.getCurrentPosition());
+				try {
+					Mp3Info myLikeMp3Info = myApp.dbUtils.findFirst(Selector
+							.from(Mp3Info.class).where("mp3InfoId", "=",
+									mp3Info.getId()));
+					if (myLikeMp3Info == null) {
+						mp3Info.setMp3InfoId(mp3Info.getId());
+						myApp.dbUtils.save(mp3Info);
+						btnLike.setImageResource(R.drawable.player_btn_favorited_normal);
+					} else {
+						myApp.dbUtils.deleteById(Mp3Info.class,
+								myLikeMp3Info.getId());
+
+						btnLike.setImageResource(R.drawable.player_btn_favorite_highlight);
+					}
+				} catch (DbException e) {
+					e.printStackTrace();
 				}
-			} catch (DbException e) {
-				e.printStackTrace();
 			}
+			// else if (musicFlag.equals("down_music")) {
+			// DownMucicInfo downMucicInfo = downMusicList
+			// .get(musicPlayService.getCurrentPosition());
+			// try {
+			//
+			// DownMucicInfo myLikeDownMp3Info = myApp.dbUtils
+			// .findFirst(Selector.from(DownMucicInfo.class)
+			// .where("downMp3InfoName",
+			// "=",
+			// downMucicInfo
+			// .getMyLikeDownMusicName()));
+			// if (myLikeDownMp3Info == null) {
+			// downMucicInfo.setMyLikeDownMusicName(downMucicInfo
+			// .getMyLikeDownMusicName());
+			// myApp.dbUtils.save(downMucicInfo);
+			// btnLike.setImageResource(R.drawable.player_btn_favorited_normal);
+			// } else {
+			// myApp.dbUtils.deleteById(DownMucicInfo.class,
+			// downMucicInfo.getMyLikeDownMusicName());
+			// btnLike.setImageResource(R.drawable.player_btn_favorite_highlight);
+			// }
+			// } catch (DbException e) {
+			// e.printStackTrace();
+			// }
+			// }
+
 		}
 			break;
 		}
@@ -421,14 +492,11 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 		if (currentPosition == -1) {
 			return;
 		}
-		this.unbindService(connection);
-		Intent intent = new Intent(this, MusicPlayService.class);
-		bindService(intent, connection, Context.BIND_AUTO_CREATE);
-		Toast.makeText(this, "在本地音乐下点击了下一首播放按钮", 0).show();
-		// musicPlayService.next();
+
 		intentMusicName = mp3List.get(musicPlayService.getCurrentPosition())
 				.getTitle();
-		// setLrc(intentMusicName);
+		updateProgress();
+		 setLrc(intentMusicName);
 		btnPause.setVisibility(View.VISIBLE);
 		btnPlay.setVisibility(View.GONE);
 		// 切换数据
@@ -453,14 +521,10 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 		if (currentPositionDown == -1) {
 			return;
 		}
-		this.unbindService(connection);
-		Intent intent = new Intent(this, MusicPlayService.class);
-		bindService(intent, connection, Context.BIND_AUTO_CREATE);
-		Toast.makeText(this, "在我的下载列表下点击了下一首播放按钮", 0).show();
-		// musicPlayService.nextDownMusic();
 		intentMusicName = downMusicList.get(
 				musicPlayService.getCurrentPosition()).getDownMusicName();
-		// setLrc(intentMusicName);
+		 updateProgress();
+		 setLrc(intentMusicName);
 		btnPause.setVisibility(View.VISIBLE);
 		btnPlay.setVisibility(View.GONE);
 		// 切换数据
@@ -503,39 +567,7 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 
 			PlayBinder playBinder = (PlayBinder) service;
 			musicPlayService = playBinder.getPlayService();
-			new Thread(new Runnable() {
-				@Override
-				public void run() {
-					while (true) {
-						try {
-
-							if (downMusicSongTime != null) {
-								seekBar.setMax((int) MediaUtils
-										.getTrackLength(downMusicSongTime));
-								seekBar.setProgress(musicPlayService
-										.getCurrentProgress());
-							} else {
-								seekBar.setMax((int) mp3List.get(
-										currentPosition).getDuration());
-								seekBar.setProgress(musicPlayService
-										.getCurrentProgress());
-							}
-							Message message1 = mHandler.obtainMessage(
-									Constant.UPDATA_TIME,
-									musicPlayService.getCurrentProgress());
-							Message message2 = mHandler.obtainMessage(
-									Constant.UPTATE_LRC,
-									musicPlayService.getCurrentProgress());
-							message1.sendToTarget();
-							message2.sendToTarget();
-							Thread.sleep(1000);
-						} catch (Exception e) {
-							e.printStackTrace();
-						}
-					}
-				}
-			}).start();
-
+			updateProgress();
 			// 拿到是否播放了
 			boolean isPlaying = musicPlayService.isPlaying();
 			if (isPlaying == true) {
@@ -545,6 +577,7 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 				btnPause.setVisibility(View.GONE);
 				btnPlay.setVisibility(View.VISIBLE);
 			}
+
 			initPlayMode();
 			// 初始化收藏歌曲的状态
 			Mp3Info mp3Info = mp3List
@@ -562,9 +595,56 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 				e.printStackTrace();
 			}
 			updateLRC();
+			Log.e("重新绑定了", "重新绑定了");
 		}
 
 	};
+
+
+
+	// 开启线程 更新进度条
+	private void updateProgress() {
+
+		new Thread(new Runnable() {
+			@Override
+			public void run() {
+				while (true) {
+					try {
+
+						if (downMusicSongTime != null) {
+							seekBar.setMax((int) MediaUtils
+									.getTrackLength(downMusicList.get(
+											musicPlayService
+													.getCurrentPosition())
+											.getDownMusicDuration()));
+							seekBar.setProgress(musicPlayService
+									.getCurrentProgress());
+
+						} else {
+							// 设置的是当前播放歌曲的最大值
+							seekBar.setMax((int) mp3List.get(
+									musicPlayService.getCurrentPosition())
+									.getDuration());
+							seekBar.setProgress(musicPlayService
+									.getCurrentProgress());
+						}
+
+						Message message1 = mHandler.obtainMessage(
+								Constant.UPDATA_TIME,
+								musicPlayService.getCurrentProgress());
+						Message message2 = mHandler.obtainMessage(
+								Constant.UPTATE_LRC,
+								musicPlayService.getCurrentProgress());
+						message1.sendToTarget();
+						message2.sendToTarget();
+						Thread.sleep(1000);
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
+			}
+		}).start();
+	}
 
 	/**
 	* @Description更新歌词 
@@ -588,7 +668,7 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 								@Override
 								public void onSearchResult(
 										ArrayList<SearchResult> results) {
-									if (results != null) {
+									if (results != null && results.size() != 0) {
 
 										SearchResult searchResult = results
 												.get(0);
@@ -740,6 +820,21 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 			// 记录的页面
 			oldPage = arg0;
 		}
+	}
+	
+	// 接受到广播更新数据
+	public class MyBroadCast extends BroadcastReceiver {
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			if (intent.getAction().equals("updateText")) {
+				if (musicFlag.equals("local_music")) {
+					localMusicNextOrPre();
+				} else if (musicFlag.equals("down_music")) {
+					downMusicNextOrPre();
+				}
+			}
+		}
+
 	}
 
 }
