@@ -2,6 +2,7 @@ package com.esint.music.activity;
 
 import com.esint.music.R;
 import com.esint.music.service.MusicPlayService;
+import com.esint.music.utils.ActivityCollectUtil;
 import com.esint.music.utils.Constant;
 
 import android.os.Bundle;
@@ -25,9 +26,16 @@ public class SplashActivity extends BaseActivity {
 		super.onCreate(savedInstanceState);
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		setContentView(R.layout.activity_splash);
+		ActivityCollectUtil.addActivity(this);
 		// 3S后进入到主界面
 		mHandler.sendEmptyMessageDelayed(Constant.START_ACTIVITY, 100);
 		startService(new Intent(this, MusicPlayService.class));
+	}
+
+	@Override
+	protected void onDestroy() {
+		super.onDestroy();
+		ActivityCollectUtil.removeActivity(this);
 	}
 
 	private Handler mHandler = new Handler() {

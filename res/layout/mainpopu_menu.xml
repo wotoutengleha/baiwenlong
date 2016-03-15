@@ -131,10 +131,11 @@
                 android:onClick="menuOnClick" >
 
                 <RelativeLayout
-                    android:id="@+id/menuShuffleParent"
+                    android:id="@+id/menuRandomParent"
                     android:layout_width="fill_parent"
                     android:layout_height="fill_parent"
-                    android:background="@drawable/play_bottom_scan" >
+                    android:background="@drawable/play_bottom_scan"
+                    android:visibility="invisible" >
 
                     <ImageView
                         android:id="@+id/menuShufflePic"
@@ -145,6 +146,7 @@
                         android:src="@drawable/ic_player_mode_random1_meitu_6" />
 
                     <TextView
+                        android:id="@+id/tv_play_random"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_below="@+id/menuShufflePic"
@@ -154,11 +156,11 @@
                 </RelativeLayout>
 
                 <RelativeLayout
-                    android:id="@+id/menuSequenceParent"
+                    android:id="@+id/menuOrderParent"
                     android:layout_width="fill_parent"
                     android:layout_height="fill_parent"
                     android:background="@drawable/play_bottom_scan"
-                    android:visibility="invisible" >
+                     >
 
                     <ImageView
                         android:id="@+id/menuSequencePic"
@@ -174,7 +176,7 @@
                         android:layout_below="@+id/menuSequencePic"
                         android:layout_centerInParent="true"
                         android:layout_marginTop="10dp"
-                        android:text="顺序播放" />
+                        android:text="列表循环" />
                 </RelativeLayout>
 
                 <RelativeLayout
@@ -189,7 +191,8 @@
                         android:layout_width="35dp"
                         android:layout_height="35dp"
                         android:layout_centerHorizontal="true"
-                        android:layout_marginTop="10dp" />
+                        android:layout_marginTop="10dp"
+                        android:src="@drawable/ic_player_mode_single1_meitu_7" />
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -197,7 +200,6 @@
                         android:layout_below="@+id/menuRepeatonePic"
                         android:layout_centerInParent="true"
                         android:layout_marginTop="10dp"
-                        android:src="@drawable/ic_player_mode_single1_meitu_7"
                         android:text="单曲循环" />
                 </RelativeLayout>
 

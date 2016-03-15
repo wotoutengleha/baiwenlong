@@ -8,6 +8,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v4.app.Fragment;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -183,12 +184,16 @@ public class NetMusicFragment extends Fragment implements OnClickListener {
 			public void onClick(View v) {
 				Toast.makeText(mainFragmentActivity, "点击了功能键", 0).show();
 
-				player.pause();
-				player.stop();
+//				player.pause();
+//				player.stop();
 			}
 		});
 		lv_netnewmusic.addHeaderView(headerView);
+		
 		myHttpUtils.netNewMusicList(Constant.API_NET_NEWMUSIC_LIST);
+		
+		
+		
 		// 通过handler传递过来的集合
 		MyHttpUtils.handler = new Handler() {
 			@Override

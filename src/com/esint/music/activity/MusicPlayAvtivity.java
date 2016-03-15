@@ -49,6 +49,7 @@ import com.esint.music.model.Mp3Info;
 import com.esint.music.model.SearchResult;
 import com.esint.music.service.MusicPlayService;
 import com.esint.music.service.MusicPlayService.PlayBinder;
+import com.esint.music.utils.ActivityCollectUtil;
 import com.esint.music.utils.Constant;
 import com.esint.music.utils.DownMusicUtils;
 import com.esint.music.utils.GaussianBlurUtil;
@@ -60,7 +61,9 @@ import com.esint.music.utils.SearchMusicUtil.onSearchResultListener;
 import com.esint.music.utils.SharedPrefUtil;
 import com.esint.music.view.AlwaysMarqueeTextView;
 import com.esint.music.view.LrcView;
+import com.esint.music.view.PlayListDownPopu;
 import com.esint.music.view.PlayListPopuWindow;
+import com.esint.music.view.PlayListPopuWindow.OnItemClickListener;
 import com.lidroid.xutils.db.sqlite.Selector;
 import com.lidroid.xutils.exception.DbException;
 
@@ -82,7 +85,7 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 	private int currentPosition;
 	private int currentPositionDown;// 记录我的下载的音乐里边的标志
 	private String musicFlag;
-	private  Handler mHandler;
+	private Handler mHandler;
 	private MusicPlayService musicPlayService;
 	private RelativeLayout playMusicBg;
 	private MyApplication myApp;
@@ -99,6 +102,7 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 		super.onCreate(arg0);
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		setContentView(R.layout.activity_music_play);
+		ActivityCollectUtil.addActivity(this);
 		initView();
 		initData();
 	}
@@ -108,6 +112,7 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 		super.onDestroy();
 		unbindService(connection);
 		unregisterReceiver(broadCast);
+		ActivityCollectUtil.removeActivity(this);
 	}
 
 	@Override
@@ -176,12 +181,12 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 		myApp = (MyApplication) getApplication();
 		Intent intent = new Intent(this, MusicPlayService.class);
 		bindService(intent, connection, Context.BIND_AUTO_CREATE);
-		
+
 		broadCast = new MyBroadCast();
 		IntentFilter intentFilter = new IntentFilter();
 		intentFilter.addAction("updateText");
 		registerReceiver(broadCast, intentFilter);
-		
+
 		mPlayViewPager.setAdapter(new MyAdapter());
 		mPlayViewPager.setOnPageChangeListener(new MyListener());
 		currentPosition = SharedPrefUtil.getInt(this,
@@ -190,6 +195,12 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 				Constant.CLICKED_MUNSIC_NAME_DOWN, -1);
 		mp3List = MediaUtils.getMp3Info(this);
 		mp3List = new SortListUtil().initMyLocalMusic(mp3List);
+
+		// 下载歌曲的文件夹
+		String MusicTarget = Environment.getExternalStorageDirectory() + "/"
+				+ "/下载的歌曲";
+		downMusicList = MediaUtils.GetMusicFiles(MusicTarget, ".mp3", true);
+
 		intentMusicName = getIntent().getStringExtra("Music_name");
 		if (currentPosition != -1 && musicFlag.equals("local_music")) {
 			musicName.setText(intentMusicName);
@@ -228,10 +239,6 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 			}
 		}
 		if (recordDownMusicPosition != -1 && musicFlag.equals("down_music")) {
-			// 下载歌曲的文件夹
-			String MusicTarget = Environment.getExternalStorageDirectory()
-					+ "/" + "/下载的歌曲";
-			downMusicList = MediaUtils.GetMusicFiles(MusicTarget, ".mp3", true);
 			String artist = getIntent().getStringExtra("Music_artist");
 			downMusicSongTime = downMusicList.get(recordDownMusicPosition)
 					.getDownMusicDuration();
@@ -273,14 +280,14 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 								&& seekBar.getProgress() >= mp3List.get(
 										musicPlayService.getCurrentPosition())
 										.getDuration() - 1500) {
-							
+
 							musicPlayService.next();
-//							localMusicNextOrPre();
+							// localMusicNextOrPre();
 							Log.e("走到了发送本地音乐", "走到了发送本地音乐");
 							// 发送更新播放按钮的广播
 							Intent intent = new Intent("updateText");
 							sendBroadcast(intent);
-							
+
 						}
 					} else if (musicFlag.equals("down_music")) {
 						if (seekBar.getProgress() <= (MediaUtils
@@ -293,12 +300,12 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 														.getCurrentPosition())
 												.getDownMusicDuration()) - 1500)) {
 							musicPlayService.nextDownMusic();
-//							downMusicNextOrPre();
+							// downMusicNextOrPre();
 							Log.e("走到了发送下载音乐", "走到了发送下载音乐");
 							// 发送更新播放按钮的广播
 							Intent intent = new Intent("updateText");
 							sendBroadcast(intent);
-						
+
 						}
 					}
 
@@ -344,14 +351,49 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 			break;
 		}
 		case R.id.play_list:
-			PlayListPopuWindow popuWindow = new PlayListPopuWindow(this);
-			popuWindow.showAsDropDown(v);
+
+			if (musicFlag.equals("local_music")) {
+
+				int isPlayingPosi = musicPlayService.getCurrentPosition();
+
+				PlayListPopuWindow popuWindow = new PlayListPopuWindow(this,
+						isPlayingPosi);
+				Log.e("isPlayingPosi", isPlayingPosi + "");
+				popuWindow.showAsDropDown(v);
+				popuWindow.setOnItemClickListener(new OnItemClickListener() {
+					@Override
+					public void onItemClick(int index) {
+						musicPlayService.playLocalMusic(index);
+						localMusicNextOrPre();
+
+					}
+				});
+			} else if (musicFlag.equals("down_music")) {
+
+				int isPlayingPosi = musicPlayService.getCurrentPosition();
+
+				PlayListDownPopu popuWindow = new PlayListDownPopu(this,
+						isPlayingPosi);
+				Log.e("isPlayingPosi", isPlayingPosi + "");
+				popuWindow.showAsDropDown(v);
+				popuWindow
+						.setOnItemClickListener(new PlayListDownPopu.OnItemClickListener() {
+
+							@Override
+							public void onItemClick(int index) {
+								musicPlayService.playMyDown(index);
+								downMusicNextOrPre();
+							}
+						});
+			}
+
 			break;
 		case R.id.ib_play_start: {
 			if (currentPosition == -1) {
 				return;
 			}
-			if (currentPosition != -1 && Constant.ISFirst_PLAY) {
+			if (currentPosition != -1 && Constant.ISFirst_PLAY
+					&& musicFlag.equals("local_music")) {
 				Constant.isFirst = false;
 				musicPlayService.playLocalMusic(currentPosition);
 				// 发送更新播放按钮的广播
@@ -361,7 +403,20 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 				btnPause.setVisibility(View.VISIBLE);
 				btnPlay.setVisibility(View.GONE);
 				Constant.ISFirst_PLAY = false;
-			} else if (!Constant.ISFirst_PLAY) {
+			} else if (currentPositionDown != -1 && Constant.ISFirst_PLAY
+					&& musicFlag.equals("down_music")) {
+				Constant.isFirst = false;
+				musicPlayService.playMyDown(currentPositionDown);
+				// 发送更新播放按钮的广播
+				Intent intent = new Intent(Constant.PLAYBUTTON_BROAD);
+				this.sendBroadcast(intent);
+				musicPlayService.start();
+				btnPause.setVisibility(View.VISIBLE);
+				btnPlay.setVisibility(View.GONE);
+				Constant.ISFirst_PLAY = false;
+			}
+
+			else if (!Constant.ISFirst_PLAY) {
 				// 发送更新播放按钮的广播
 				Intent intent = new Intent(Constant.PLAYBUTTON_BROAD);
 				this.sendBroadcast(intent);
@@ -369,6 +424,8 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 				btnPause.setVisibility(View.VISIBLE);
 				btnPlay.setVisibility(View.GONE);
 			}
+
+			updateProgress();
 			break;
 		}
 		case R.id.ib_play_pause: {
@@ -428,6 +485,7 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 				Toast.makeText(this, "列表循环", 0).show();
 				break;
 			}
+			MainFragmentActivity.mHandler.sendEmptyMessage(0000);
 		}
 			break;
 		case R.id.play_shared: {
@@ -496,12 +554,11 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 		intentMusicName = mp3List.get(musicPlayService.getCurrentPosition())
 				.getTitle();
 		updateProgress();
-		 setLrc(intentMusicName);
+		setLrc(intentMusicName);
 		btnPause.setVisibility(View.VISIBLE);
 		btnPlay.setVisibility(View.GONE);
 		// 切换数据
 		int nextPosition = musicPlayService.getCurrentPosition();
-		SharedPrefUtil.setInt(this, Constant.CLICKED_MUNSIC_NAME, nextPosition);
 		musicName.setText(mp3List.get(nextPosition).getTitle());
 		musicSinger.setText("一   " + mp3List.get(nextPosition).getArtist()
 				+ "  一");
@@ -514,6 +571,10 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 		Drawable boxBlurFilter1 = GaussianBlurUtil.BoxBlurFilter(nextBitmap);
 		playMusicBg.setBackgroundDrawable(boxBlurFilter1);
 		startAnim();
+		// 更新通知栏
+		musicPlayService.updateNotification(nextBitmap,
+				mp3List.get(nextPosition).getTitle(), mp3List.get(nextPosition)
+						.getArtist());
 	}
 
 	// 当是在我的下载的音乐列表点击下一首的时候调用的方法
@@ -523,8 +584,8 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 		}
 		intentMusicName = downMusicList.get(
 				musicPlayService.getCurrentPosition()).getDownMusicName();
-		 updateProgress();
-		 setLrc(intentMusicName);
+		updateProgress();
+		setLrc(intentMusicName);
 		btnPause.setVisibility(View.VISIBLE);
 		btnPlay.setVisibility(View.GONE);
 		// 切换数据
@@ -537,10 +598,7 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 		musicTime.setText(MediaUtils.formatTime(MediaUtils
 				.getTrackLength(downMusicList.get(nextPosition)
 						.getDownMusicDuration())));
-		// 下载歌曲的文件夹
-		String MusicTarget = Environment.getExternalStorageDirectory() + "/"
-				+ "/下载的歌曲";
-		downMusicList = MediaUtils.GetMusicFiles(MusicTarget, ".mp3", true);
+
 		final String ImageTarget = Environment.getExternalStorageDirectory()
 				+ "/" + "/下载的图片" + "/";
 		// 得到当前播放的歌曲
@@ -554,6 +612,9 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 			playMusicBg.setBackgroundDrawable(boxBlurFilter1);
 		}
 		startAnim();
+		musicPlayService.updateNotification(albumBit,
+				downMusicList.get(nextPosition).getDownMusicName(),
+				downMusicList.get(nextPosition).getDownMusicArtist());
 	}
 
 	private ServiceConnection connection = new ServiceConnection() {
@@ -567,10 +628,10 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 
 			PlayBinder playBinder = (PlayBinder) service;
 			musicPlayService = playBinder.getPlayService();
-			updateProgress();
 			// 拿到是否播放了
 			boolean isPlaying = musicPlayService.isPlaying();
 			if (isPlaying == true) {
+				updateProgress();
 				btnPause.setVisibility(View.VISIBLE);
 				btnPlay.setVisibility(View.GONE);
 			} else {
@@ -595,12 +656,9 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 				e.printStackTrace();
 			}
 			updateLRC();
-			Log.e("重新绑定了", "重新绑定了");
 		}
 
 	};
-
-
 
 	// 开启线程 更新进度条
 	private void updateProgress() {
@@ -611,7 +669,7 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 				while (true) {
 					try {
 
-						if (downMusicSongTime != null) {
+						if (musicFlag.equals("down_music")) {
 							seekBar.setMax((int) MediaUtils
 									.getTrackLength(downMusicList.get(
 											musicPlayService
@@ -620,13 +678,16 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 							seekBar.setProgress(musicPlayService
 									.getCurrentProgress());
 
-						} else {
+							// Log.e("下载音乐的进度条", "下载音乐的进度条");
+
+						} else if (musicFlag.equals("local_music")) {
 							// 设置的是当前播放歌曲的最大值
 							seekBar.setMax((int) mp3List.get(
 									musicPlayService.getCurrentPosition())
 									.getDuration());
 							seekBar.setProgress(musicPlayService
 									.getCurrentProgress());
+							// Log.e("本地音乐的进度条", "下载音乐的进度条");
 						}
 
 						Message message1 = mHandler.obtainMessage(
@@ -821,7 +882,7 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 			oldPage = arg0;
 		}
 	}
-	
+
 	// 接受到广播更新数据
 	public class MyBroadCast extends BroadcastReceiver {
 		@Override

@@ -111,6 +111,7 @@ public class MyTabMusic extends Fragment implements OnClickListener {
 	private DownMusicAdapter adapter_down;// 我的下载列表的适配器
 	private String imageTarget;// 下载的图片存放的路径
 	private MyBroadCast broadCast;
+	public static Handler mHandler;
 
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -185,8 +186,7 @@ public class MyTabMusic extends Fragment implements OnClickListener {
 		// 根据a-z进行排序源数据
 		Collections.sort(mp3List, pinyinComparator);
 		musicnNmber.setText(mp3List.size() + "首歌曲");
-		
-		
+
 		broadCast = new MyBroadCast();
 		IntentFilter intentFilter = new IntentFilter();
 		intentFilter.addAction("updateText");
@@ -195,9 +195,7 @@ public class MyTabMusic extends Fragment implements OnClickListener {
 		// 下载歌曲的文件夹
 		String MusicTarget = Environment.getExternalStorageDirectory() + "/"
 				+ "/下载的歌曲";
-		if (downMusicList != null) {
-			downMusicList = MediaUtils.GetMusicFiles(MusicTarget, ".mp3", true);
-		}
+		downMusicList = MediaUtils.GetMusicFiles(MusicTarget, ".mp3", true);
 		imageTarget = Environment.getExternalStorageDirectory() + "/"
 				+ "/下载的图片" + "/";
 
@@ -208,6 +206,22 @@ public class MyTabMusic extends Fragment implements OnClickListener {
 		getActivity().registerReceiver(broadcastReceiver, filter);
 		musicFlag = SharedPrefUtil.getString(mainActivity, Constant.MUSIC_FLAG,
 				"");
+
+		mHandler = new Handler() {
+			@Override
+			public void handleMessage(Message msg) {
+				super.handleMessage(msg);
+
+				if (msg.what == 6666) {
+					Log.e("接收到了消息啊啊啊啊", "2211");
+					// 点击item的时候 存入播放的位置
+					SharedPrefUtil.setInt(getActivity(),
+							Constant.CLICKED_MUNSIC_NAME,
+							musicPlayService.getCurrentPosition());
+					changeUIStatusOnPlay(musicPlayService.getCurrentPosition());
+				}
+			}
+		};
 	}
 
 	@Override
@@ -230,9 +244,10 @@ public class MyTabMusic extends Fragment implements OnClickListener {
 			playButton.setVisibility(View.INVISIBLE);
 			pauseButton.setVisibility(View.VISIBLE);
 			// 点击item的时候 存入播放的位置
-			SharedPrefUtil.setInt(getActivity(),
-					Constant.CLICKED_MUNSIC_NAME, musicPlayService.getCurrentPosition());
+			SharedPrefUtil.setInt(getActivity(), Constant.CLICKED_MUNSIC_NAME,
+					musicPlayService.getCurrentPosition());
 			changeUIStatusOnPlay(musicPlayService.getCurrentPosition());
+
 			break;
 		case R.id.ib_pause: {
 			Toast.makeText(mainActivity, "点击了暂停按钮", 0).show();
@@ -249,7 +264,7 @@ public class MyTabMusic extends Fragment implements OnClickListener {
 					Constant.CLICKED_MUNSIC_NAME, -1);
 			int recordDownMusicPosition = SharedPrefUtil.getInt(getActivity(),
 					Constant.CLICKED_MUNSIC_NAME_DOWN, -1);
-			if (currentPlayPosition == -1) {
+			if (currentPlayPosition == -1 && recordDownMusicPosition == -1) {
 				return;
 			}
 
@@ -270,6 +285,7 @@ public class MyTabMusic extends Fragment implements OnClickListener {
 					updateProgress();
 					Constant.isFirst = false;
 				}
+				Log.e("点击的播放进入的是本地的音乐", "点击播放进入的是本地的音乐");
 			} else if (Constant.isFirst && musicFlag.equals("like_music")) {
 				Constant.ISFirst_PLAY = false;
 				// 得到记录的位置
@@ -296,11 +312,13 @@ public class MyTabMusic extends Fragment implements OnClickListener {
 					// // 设置进度条
 					progressBar.setMax((int) MediaUtils
 							.getTrackLength(downMusicList.get(
-									recordDownMusicPosition)
+									musicPlayService.getCurrentPosition())
 									.getDownMusicDuration()));
+					Log.e("进入到了这里的条件", "进入到了这里的条件");
 					updateProgress();
 					Constant.isFirst = false;
 				}
+				Log.e("点击的播放进入的是下载的音乐", "点击播放进入的是下载的音乐");
 			}
 
 			else if (!Constant.isFirst) {
@@ -309,6 +327,7 @@ public class MyTabMusic extends Fragment implements OnClickListener {
 				playButton.setVisibility(View.INVISIBLE);
 				startAnim();
 			}
+
 
 			break;
 		}
@@ -400,6 +419,9 @@ public class MyTabMusic extends Fragment implements OnClickListener {
 		Bitmap bitmap = MediaUtils.getArtwork(mainActivity,
 				mp3List.get(position).getId(), mp3List.get(position)
 						.getAlbumId(), true, true);
+		Bitmap notifiBitmap = MediaUtils.getArtwork(mainActivity,
+				mp3List.get(position).getId(), mp3List.get(position)
+						.getAlbumId(), true, false);
 		albumImg.setImageBitmap(bitmap);
 		// 开始旋转专辑图片的动画
 		Animation operatingAnim = AnimationUtils.loadAnimation(getActivity(),
@@ -417,6 +439,8 @@ public class MyTabMusic extends Fragment implements OnClickListener {
 		// 设置进度条
 		progressBar.setMax((int) mp3List.get(position).getDuration());
 		updateProgress();
+		musicPlayService.updateNotification(notifiBitmap, singer.getText()
+				.toString(), songName.getText().toString());
 
 	}
 
@@ -511,6 +535,7 @@ public class MyTabMusic extends Fragment implements OnClickListener {
 						.get(position).getId(), mp3List.get(position)
 						.getAlbumId(), true, true);
 				albumImg.setImageBitmap(bitmap);
+
 				// 开始旋转专辑图片的动画
 				Animation operatingAnim = AnimationUtils.loadAnimation(
 						getActivity(), R.anim.tip);
@@ -528,6 +553,12 @@ public class MyTabMusic extends Fragment implements OnClickListener {
 				// // 图标改成暂停状态
 				playButton.setVisibility(View.GONE);
 				pauseButton.setVisibility(View.VISIBLE);
+				Bitmap notifyBitmap = MediaUtils.getArtwork(mainActivity,
+						mp3List.get(position).getId(), mp3List.get(position)
+								.getAlbumId(), true, false);
+				// 更新通知栏
+				musicPlayService.updateNotification(notifyBitmap, singer
+						.getText().toString(), songName.getText().toString());
 
 			}
 		});
@@ -683,6 +714,14 @@ public class MyTabMusic extends Fragment implements OnClickListener {
 					playButton.setVisibility(View.GONE);
 					pauseButton.setVisibility(View.VISIBLE);
 
+					Bitmap notifyBitmap = MediaUtils.getArtwork(mainActivity,
+							mp3List.get(position).getId(), mp3List
+									.get(position).getAlbumId(), true, false);
+					// 更新通知栏
+					musicPlayService.updateNotification(notifyBitmap, singer
+							.getText().toString(), songName.getText()
+							.toString());
+
 				}
 			});
 
@@ -790,6 +829,11 @@ public class MyTabMusic extends Fragment implements OnClickListener {
 				if (albumBit != null) {
 					albumImg.setImageBitmap(albumBit);
 				}
+
+				// 更新通知栏
+				musicPlayService.updateNotification(albumBit, singer.getText()
+						.toString(), songName.getText().toString());
+
 				// 开始旋转专辑图片的动画
 				Animation operatingAnim = AnimationUtils.loadAnimation(
 						getActivity(), R.anim.tip);
@@ -1064,10 +1108,15 @@ public class MyTabMusic extends Fragment implements OnClickListener {
 		public void onReceive(Context context, Intent intent) {
 			if (intent.getAction().equals("updateText")) {
 				if (musicFlag.equals("local_music")) {
+					SharedPrefUtil.setInt(mainActivity,
+							Constant.CLICKED_MUNSIC_NAME,
+							musicPlayService.getCurrentPosition());
 					changeUIStatusOnPlay(musicPlayService.getCurrentPosition());
 					Log.e("接收到了本地的音乐", "接收到了本地的音乐");
 				} else if (musicFlag.equals("down_music")) {
-					
+					SharedPrefUtil.setInt(mainActivity,
+							Constant.CLICKED_MUNSIC_NAME_DOWN,
+							musicPlayService.getCurrentPosition());
 					Log.e("接收到了下载音乐", "接收到了下载音乐");
 					changeUIStatusOnPlayDown(musicPlayService
 							.getCurrentPosition());

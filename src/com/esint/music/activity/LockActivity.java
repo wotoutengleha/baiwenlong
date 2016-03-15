@@ -1,13 +1,20 @@
 package com.esint.music.activity;
 
+import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import com.esint.music.R;
 import com.esint.music.model.DownMucicInfo;
 import com.esint.music.model.Mp3Info;
 import com.esint.music.service.MusicPlayService;
 import com.esint.music.service.MusicPlayService.PlayBinder;
+import com.esint.music.utils.ActivityCollectUtil;
 import com.esint.music.utils.AniUtil;
 import com.esint.music.utils.Constant;
 import com.esint.music.utils.MediaUtils;
@@ -16,6 +23,13 @@ import com.esint.music.utils.SortListUtil;
 import com.esint.music.view.LockButtonRelativeLayout;
 import com.esint.music.view.LockPalyOrPauseButtonRelativeLayout;
 import com.esint.music.view.LrcView;
+import com.lidroid.xutils.BitmapUtils;
+import com.lidroid.xutils.HttpUtils;
+import com.lidroid.xutils.exception.HttpException;
+import com.lidroid.xutils.http.ResponseInfo;
+import com.lidroid.xutils.http.callback.RequestCallBack;
+import com.lidroid.xutils.http.client.HttpRequest.HttpMethod;
+
 import android.annotation.TargetApi;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
@@ -23,6 +37,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.AnimationDrawable;
@@ -42,6 +57,7 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import name.teze.layout.lib.SwipeBackActivity;
@@ -65,27 +81,30 @@ public class LockActivity extends SwipeBackActivity implements OnClickListener {
 	private LockButtonRelativeLayout prewButton;
 	private LockButtonRelativeLayout nextButton;
 	private LockPalyOrPauseButtonRelativeLayout playOrPauseButton;
+	private RelativeLayout lockBackGround;// 锁屏的界面背景
 	private ImageView playImageView;
 	private ImageView pauseImageView;
 	private LrcView lrcView;
 	private Handler mHandler;
 	private ArrayList<Mp3Info> mp3List;// 本地音乐的list
-	private LinearLayout lockBackGround;// 锁屏界面的背景 要设置成歌手写真
 	private MusicPlayService musicPlayService;
 	private int currentPosition;
 	private ArrayList<DownMucicInfo> downMusicList;// 我的下载的音乐的列表
 	private int recordDownMusicPosition;// 记录点击我的下载歌曲里边的列表
-	private String downMusicSongTime;// 下载的音乐的歌曲时间 设置锁屏进度条
 	private String imageTarget;// 下载音乐图片保存的路径
 	private String musicFlag;// ；是本地音乐还是下载的音乐
 	private MyBroadCast broadCast;
+	private HttpUtils httpUtils = new HttpUtils();
+	private ImageView backImg;
+	private BitmapUtils bitmapUtils;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		setContentView(R.layout.activity_lock);
-		
+		ActivityCollectUtil.addActivity(this);
+
 		// 加入此flag是为了在有密码的锁屏界面上，此音乐播放器的锁屏界面是为了覆盖在系统解锁界面上面
 		this.getWindow().addFlags(
 				WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD
@@ -99,6 +118,7 @@ public class LockActivity extends SwipeBackActivity implements OnClickListener {
 		super.onDestroy();
 		unbindService(connection);
 		unregisterReceiver(broadCast);
+		ActivityCollectUtil.removeActivity(this);
 	}
 
 	@Override
@@ -117,10 +137,19 @@ public class LockActivity extends SwipeBackActivity implements OnClickListener {
 		songerTextView = (TextView) findViewById(R.id.songer);
 		prewButton = (LockButtonRelativeLayout) findViewById(R.id.prev_button);
 		nextButton = (LockButtonRelativeLayout) findViewById(R.id.next_button);
-		lockBackGround = (LinearLayout) findViewById(R.id.kscManyLineLyricsViewParent);
+		lockBackGround = (RelativeLayout) findViewById(R.id.kscManyLineLyricsViewParent);
 		lrcView = (LrcView) findViewById(R.id.locklrcview);
 		lockImageView = (ImageView) findViewById(R.id.tip_image);
 		playOrPauseButton = (LockPalyOrPauseButtonRelativeLayout) findViewById(R.id.play_pause_button);
+		backImg = (ImageView) findViewById(R.id.backImg);
+
+		// backImg.setImageAlpha(200);
+		// View v =
+		// findViewById(R.id.kscManyLineLyricsViewParent);//找到你要设透明背景的layout 的id
+		// v.getBackground().setAlpha(100);//0~255透明度值
+
+		// lockBackGround.getBackground().setAlpha(100);
+
 		aniLoading = (AnimationDrawable) lockImageView.getBackground();
 		playOrPauseButton.setPlayingProgress(0);
 		playOrPauseButton.setMaxProgress(0);
@@ -141,7 +170,9 @@ public class LockActivity extends SwipeBackActivity implements OnClickListener {
 		IntentFilter intentFilter = new IntentFilter();
 		intentFilter.addAction("updateText");
 		registerReceiver(broadCast, intentFilter);
-		
+
+		bitmapUtils = new BitmapUtils(this);
+
 		// 排序MP3文件列表
 		mp3List = MediaUtils.getMp3Info(this);
 		mp3List = new SortListUtil().initMyLocalMusic(mp3List);
@@ -166,11 +197,12 @@ public class LockActivity extends SwipeBackActivity implements OnClickListener {
 					mp3List.get(currentPosition).getAlbumId(), true, false);
 			Drawable drawable = new BitmapDrawable(bitmap);
 			// lockBackGround.setBackground(drawable);
+			Log.e("本地音乐的歌手", songerTextView.getText().toString());
+			downLoadArtistImag(songerTextView.getText().toString());
+
 		}
 		if (recordDownMusicPosition != -1 && musicFlag.equals("down_music")) {
 
-			downMusicSongTime = downMusicList.get(recordDownMusicPosition)
-					.getDownMusicDuration();
 			songNameTextView.setText(downMusicList.get(recordDownMusicPosition)
 					.getDownMusicName());
 			songerTextView.setText(downMusicList.get(recordDownMusicPosition)
@@ -182,6 +214,9 @@ public class LockActivity extends SwipeBackActivity implements OnClickListener {
 			Drawable downDraw = new BitmapDrawable(albumBit);
 			// lockBackGround.setBackgroundDrawable(downDraw);
 			setLrc(songNameTextView.getText().toString());
+
+			Log.e("下载音乐的歌手", songerTextView.getText().toString());
+			downLoadArtistImag(songerTextView.getText().toString());
 		}
 
 		mHandler = new Handler() {
@@ -197,13 +232,17 @@ public class LockActivity extends SwipeBackActivity implements OnClickListener {
 				case Constant.UPDATE_LOCKTIME: {
 					setTime();
 					int timeProgress = (Integer) msg.obj;
-					if (musicFlag.equals("down_music")) {
+					if (musicFlag.equals("down_music")
+							&& musicPlayService.getCurrentPosition() <= downMusicList
+									.size()) {
 						playOrPauseButton.setMaxProgress((int) MediaUtils
 								.getTrackLength(downMusicList.get(
 										musicPlayService.getCurrentPosition())
 										.getDownMusicDuration()));
 
-					} else if (musicFlag.equals("local_music")) {
+					} else if (musicFlag.equals("local_music")
+							&& musicPlayService.getCurrentPosition() <= mp3List
+									.size()) {
 						playOrPauseButton.setMaxProgress((int) mp3List.get(
 								musicPlayService.getCurrentPosition())
 								.getDuration());
@@ -316,7 +355,8 @@ public class LockActivity extends SwipeBackActivity implements OnClickListener {
 		}
 
 	};
-	
+	private String wpurl;
+	private String bkurl;
 
 	/**
 	* @Description:设置歌词 
@@ -377,6 +417,8 @@ public class LockActivity extends SwipeBackActivity implements OnClickListener {
 		}
 		// lockBackGround.setBackground(drawableNext);
 		setLrc(songNameTextView.getText().toString());
+		Log.e("点击本地音乐下一首的时候歌手的名字", songerTextView.getText().toString());
+		downLoadArtistImag(songerTextView.getText().toString());
 	}
 
 	// 在下载的音乐点击下一首的时候调用的方法
@@ -400,6 +442,8 @@ public class LockActivity extends SwipeBackActivity implements OnClickListener {
 		}
 		// lockBackGround.setBackground(drawableNext);
 		setLrc(songNameTextView.getText().toString());
+		Log.e("点击下载的音乐下一首的时候歌手的名字", songerTextView.getText().toString());
+		downLoadArtistImag(songerTextView.getText().toString());
 	}
 
 	// 点击暂停或者播放按钮 的时候调用的方法
@@ -430,12 +474,18 @@ public class LockActivity extends SwipeBackActivity implements OnClickListener {
 			if (intent.getAction().equals("updateText")) {
 				Log.e("在锁屏界面接受到了广播", "在锁屏界面接受到了广播");
 				if (musicFlag.equals("local_music")) {
+					SharedPrefUtil.setInt(LockActivity.this,
+							Constant.CLICKED_MUNSIC_NAME,
+							musicPlayService.getCurrentPosition());
 					songNameTextView.setText(mp3List.get(
 							musicPlayService.getCurrentPosition()).getTitle());
 					songerTextView.setText(mp3List.get(
 							musicPlayService.getCurrentPosition()).getArtist());
 					setLrc(songNameTextView.getText().toString());
 				} else if (musicFlag.equals("down_music")) {
+					SharedPrefUtil.setInt(LockActivity.this,
+							Constant.CLICKED_MUNSIC_NAME_DOWN,
+							musicPlayService.getCurrentPosition());
 					songNameTextView.setText(downMusicList.get(
 							musicPlayService.getCurrentPosition())
 							.getDownMusicName());
@@ -447,5 +497,77 @@ public class LockActivity extends SwipeBackActivity implements OnClickListener {
 			}
 		}
 
+	}
+
+	/**
+	* @Description: 根据歌手的名字下载歌手的写真
+	* @return void 
+	* @author bai
+	*/
+	private void downLoadArtistImag(String musicName) {
+
+		String URL = "http://artistpicserver.kuwo.cn/pic.web?type=big_artist_pic&pictype=url&content=list&&id=0&name="
+				+ musicName.trim()
+				+ "&from=pc&json=1&version=1&width=480&height=800";
+
+		Log.e("musicName", musicName);
+		Log.e("URL11111111", URL);
+		httpUtils.send(HttpMethod.GET, URL, new RequestCallBack<String>() {
+
+			@Override
+			public void onFailure(HttpException arg0, String arg1) {
+				Toast.makeText(LockActivity.this, "请求失败了" + arg1, 0).show();
+				bitmapUtils.display(backImg,
+						"assets/img/profile_default_bg.jpg");
+			}
+
+			@Override
+			public void onSuccess(ResponseInfo<String> arg0) {
+				String result = arg0.result;
+				Log.e("请求的地址是", this.getRequestUrl());
+				parseJsonResult(result);
+			}
+		});
+	}
+
+	/**
+	* @Description:解析图片地址 下载图片 
+	* @param result
+	* @return void 
+	* @author bai
+	*/
+	protected void parseJsonResult(String result) {
+
+		try {
+			JSONObject object = new JSONObject(result);
+			String array = object.getString("array");
+			JSONArray jsonArray = new JSONArray(array);
+
+			Log.e("进入了解析的方法", "进入了解析的方法");
+
+			for (int i = 0; i < jsonArray.length(); i++) {
+
+				JSONObject objectUrl = (JSONObject) jsonArray.get(i);
+				if (!objectUrl.isNull("wpurl")) {
+					Log.e("wpurl", wpurl + "");
+					wpurl = objectUrl.getString("wpurl");
+				} else if (!objectUrl.isNull("bkurl")) {
+					bkurl = objectUrl.getString("bkurl");
+					Log.e("wpurl", bkurl + "");
+				}
+			}
+			if (wpurl != null) {
+				bitmapUtils.display(backImg, wpurl);
+				Log.e("wpurl设置的", "wpurl设置的");
+			}
+
+			if (bkurl != null) {
+				Log.e("bkurl设置的", "bkurl设置的");
+				bitmapUtils.display(backImg, bkurl);
+			}
+
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
 	}
 }

@@ -15,8 +15,10 @@ import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
@@ -27,6 +29,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
+import android.os.IBinder;
 import android.os.Message;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -68,7 +71,9 @@ import com.esint.music.model.DownMucicInfo;
 import com.esint.music.model.Mp3Info;
 import com.esint.music.model.SearchMusicInfo;
 import com.esint.music.service.MusicPlayService;
+import com.esint.music.service.MusicPlayService.PlayBinder;
 import com.esint.music.slidemenu.SlidingMenu;
+import com.esint.music.utils.ActivityCollectUtil;
 import com.esint.music.utils.Constant;
 import com.esint.music.utils.MediaUtils;
 import com.esint.music.utils.MyApplication;
@@ -78,6 +83,7 @@ import com.esint.music.utils.SortListUtil;
 import com.esint.music.utils.SharedPrefUtil;
 import com.esint.music.view.AlwaysMarqueeTextView;
 import com.esint.music.view.MainFunctionPop;
+import com.lidroid.xutils.db.sqlite.Selector;
 import com.lidroid.xutils.exception.DbException;
 
 @SuppressLint("DefaultLocale")
@@ -109,13 +115,19 @@ public class MainFragmentActivity extends BaseActivity implements
 	private AlwaysMarqueeTextView musicSinger;
 	private int currentPlayPosition;// 得到记录的位置
 	private String musciFlag;// 是本地音乐还是我的最爱
-
 	// 汉字转换成拼音的类
 	private ArrayList<Mp3Info> mp3Infos;// 本地音乐
 	private List<Mp3Info> myLikeMp3Infos;// 我的最爱的list
 	private MyApplication myApp;
 	private ArrayList<DownMucicInfo> downMusicList;// 下载的歌曲
 	private MyHttpUtils myHttpUtils;// 请求网络的工具类
+	public MusicPlayService musicPlayService;
+
+	private RelativeLayout randomLayout;
+	private RelativeLayout orderLayout;
+	private RelativeLayout singleLayout;
+	public static Handler mHandler;
+	private TextView tvPlayMode;
 
 	// 注意 布局设置选择器 需要设置 android:clickable="true" 成可点击的状态
 
@@ -124,6 +136,7 @@ public class MainFragmentActivity extends BaseActivity implements
 		super.onCreate(arg0);
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		setContentView(R.layout.activity_main_music);
+		ActivityCollectUtil.addActivity(this);
 		bindService();// 绑定服务
 		initView();
 		initSlidingMenu();
@@ -134,9 +147,10 @@ public class MainFragmentActivity extends BaseActivity implements
 	public void onDestroy() {
 		super.onDestroy();
 		// 解绑服务
-		unBindService();
-		int playMode = musicPlayService.getPlayMode();
+		unbindService(connection);
+		int playMode = MusicPlayService.getPlayMode();
 		SharedPrefUtil.setInt(this, Constant.PLAY_MODE, playMode);
+		ActivityCollectUtil.removeActivity(this);
 	}
 
 	// 换背景
@@ -251,9 +265,26 @@ public class MainFragmentActivity extends BaseActivity implements
 		bottomLayout = (LinearLayout) findViewById(R.id.musiccontent);
 		searchButton.setOnClickListener(this);
 		bottomLayout.setOnClickListener(this);
+
+		// 找到popuwindow里的控件
+		View popuView = View.inflate(MainFragmentActivity.this,
+				R.layout.mainpopu_menu, null);
+		tvPlayMode = (TextView) popuView.findViewById(R.id.tv_play_random);
+		randomLayout = (RelativeLayout) popuView
+				.findViewById(R.id.menuRandomParent);
+		orderLayout = (RelativeLayout) popuView
+				.findViewById(R.id.menuOrderParent);
+		singleLayout = (RelativeLayout) popuView
+				.findViewById(R.id.menuRepeatoneParent);
+
+		// btnPlayMode.setOnClickListener(this);
+
 	}
 
 	private void initData() {
+
+		Intent intent = new Intent(this, MusicPlayService.class);
+		bindService(intent, connection, Context.BIND_AUTO_CREATE);
 		mFragLists = new ArrayList<Fragment>();
 		myApp = (MyApplication) getApplication();
 		mp3Infos = MediaUtils.getMp3Info(MainFragmentActivity.this);
@@ -281,7 +312,43 @@ public class MainFragmentActivity extends BaseActivity implements
 		// 下载歌曲的文件夹
 		String MusicTarget = Environment.getExternalStorageDirectory() + "/"
 				+ "/下载的歌曲";
-			downMusicList = MediaUtils.GetMusicFiles(MusicTarget, ".mp3", true);
+		downMusicList = MediaUtils.GetMusicFiles(MusicTarget, ".mp3", true);
+
+		mHandler = new Handler() {
+			@Override
+			public void handleMessage(Message msg) {
+				super.handleMessage(msg);
+
+				Log.e("接受到了消息", "接收到了消息");
+
+				Log.e("当前的播放模式是", MusicPlayService.getPlayMode() + "");
+
+				switch (MusicPlayService.getPlayMode()) {
+				case MusicPlayService.PLAY_ORDER:
+					randomLayout.setVisibility(View.VISIBLE);
+					singleLayout.setVisibility(View.INVISIBLE);
+					orderLayout.setVisibility(View.INVISIBLE);
+					tvPlayMode.setText("随机播放");
+					Log.e("随机了", "随机了");
+					break;
+				case MusicPlayService.PLAY_RANDOM:
+					singleLayout.setVisibility(View.VISIBLE);
+					randomLayout.setVisibility(View.INVISIBLE);
+					orderLayout.setVisibility(View.INVISIBLE);
+					Log.e("单曲了", "单曲了");
+					tvPlayMode.setText("单曲循环");
+					break;
+				case MusicPlayService.PLAY_SINGLE:
+					orderLayout.setVisibility(View.INVISIBLE);
+					singleLayout.setVisibility(View.VISIBLE);
+					randomLayout.setVisibility(View.INVISIBLE);
+					tvPlayMode.setText("列表循环");
+					Log.e("列表了 ", "列表了");
+					break;
+				}
+
+			}
+		};
 	}
 
 	@Override
@@ -554,13 +621,30 @@ public class MainFragmentActivity extends BaseActivity implements
 				popMenuMain.dismiss();
 				break;
 			case R.id.menuAbout:
+				startActivity(new Intent(MainFragmentActivity.this,
+						AboutActivity.class));
+				overridePendingTransition(R.anim.in_from_right,
+						R.anim.out_to_left);
+				popMenuMain.dismiss();
 				break;
-			case R.id.menuPlayMode:
-				
-				
-				
-				
-				
+			case R.id.menuPlayMode: {
+				switch (MusicPlayService.getPlayMode()) {
+				case MusicPlayService.PLAY_ORDER:
+					musicPlayService.setPlayMode(MusicPlayService.PLAY_RANDOM);
+					Toast.makeText(MainFragmentActivity.this, "随机播放", 0).show();
+					break;
+				case MusicPlayService.PLAY_RANDOM:
+					musicPlayService.setPlayMode(MusicPlayService.PLAY_SINGLE);
+					Toast.makeText(MainFragmentActivity.this, "单曲循环", 0).show();
+					break;
+				case MusicPlayService.PLAY_SINGLE:
+					musicPlayService.setPlayMode(MusicPlayService.PLAY_ORDER);
+					Toast.makeText(MainFragmentActivity.this, "列表循环", 0).show();
+					break;
+				}
+				mHandler.sendEmptyMessage(0000);
+			}
+
 				break;
 			case R.id.menuSetting:
 				startActivity(new Intent(MainFragmentActivity.this,
@@ -577,31 +661,6 @@ public class MainFragmentActivity extends BaseActivity implements
 		}
 
 	};
-	
-	/**
-	* @Description:初始化播放模式 
-	* @return void 
-	* @author bai
-	*/
-//	private void initPlayMode() {
-//		switch (musicPlayService.getPlayMode()) {
-//		case MusicPlayService.PLAY_ORDER:
-//			btnPlayMode
-//					.setImageResource(R.drawable.player_btn_repeat_highlight);
-//			btnPlayMode.setTag(MusicPlayService.PLAY_ORDER);
-//			break;
-//		case MusicPlayService.PLAY_RANDOM:
-//			btnPlayMode.setImageResource(R.drawable.player_btn_random_normal);
-//			btnPlayMode.setTag(MusicPlayService.PLAY_RANDOM);
-//			break;
-//
-//		case MusicPlayService.PLAY_SINGLE:
-//			btnPlayMode
-//					.setImageResource(R.drawable.player_btn_repeatone_highlight);
-//			btnPlayMode.setTag(MusicPlayService.PLAY_SINGLE);
-//			break;
-//		}
-//	}
 
 	// 退出程序的dialog
 
@@ -613,16 +672,15 @@ public class MainFragmentActivity extends BaseActivity implements
 				R.style.dialog_untran);
 		dialogBuilder.withTitle("提示").withTitleColor("#FFFFFF")
 				.withDividerColor("#97E8F9").withMessage("确定要退出程序吗？")
-				.withMessageColor("#FFFFFF")
-				.withIcon(getResources().getDrawable(R.drawable.icon))
-				.isCancelableOnTouchOutside(true).withEffect(effect)
-				.withButton1Text("确定").withButton2Text("取消")
+				.withMessageColor("#FFFFFF").isCancelableOnTouchOutside(true)
+				.withEffect(effect).withButton1Text("确定").withButton2Text("取消")
 				.setCustomView(R.layout.custom_view, MainFragmentActivity.this)
 				.setButton1Click(new View.OnClickListener() {
 					@Override
 					public void onClick(View v) {
-						MainFragmentActivity.this.finish();
 						popMenuMain.dismiss();
+						// 退出APP
+						ActivityCollectUtil.finishAllActi();
 
 					}
 				}).setButton2Click(new OnClickListener() {
@@ -765,8 +823,7 @@ public class MainFragmentActivity extends BaseActivity implements
 		if (event.getAction() == KeyEvent.ACTION_DOWN
 				&& keyCode == KeyEvent.KEYCODE_BACK) {
 			if ((System.currentTimeMillis() - Constant.exitTime) > 2000) {
-				Toast.makeText(MainFragmentActivity.this, "再按一次返回键回到桌面", 0)
-						.show();
+				Toast.makeText(MainFragmentActivity.this, "再按一次回到桌面", 0).show();
 				Constant.exitTime = System.currentTimeMillis();
 				return false;
 			} else {
@@ -845,4 +902,42 @@ public class MainFragmentActivity extends BaseActivity implements
 		lv.stopLoadMore();
 		lv.setRefreshTime(d1.format(now));
 	}
+
+	private ServiceConnection connection = new ServiceConnection() {
+		@Override
+		public void onServiceDisconnected(ComponentName name) {
+			musicPlayService = null;
+		}
+
+		@Override
+		public void onServiceConnected(ComponentName name, IBinder service) {
+
+			PlayBinder playBinder = (PlayBinder) service;
+			musicPlayService = playBinder.getPlayService();
+			initPlatMode();
+		}
+	};
+
+	protected void initPlatMode() {
+
+		switch (MusicPlayService.getPlayMode()) {
+		case MusicPlayService.PLAY_ORDER:
+			randomLayout.setVisibility(View.VISIBLE);
+			singleLayout.setVisibility(View.INVISIBLE);
+			orderLayout.setVisibility(View.INVISIBLE);
+			break;
+		case MusicPlayService.PLAY_RANDOM:
+			singleLayout.setVisibility(View.VISIBLE);
+			randomLayout.setVisibility(View.INVISIBLE);
+			orderLayout.setVisibility(View.INVISIBLE);
+			break;
+		case MusicPlayService.PLAY_SINGLE:
+			orderLayout.setVisibility(View.INVISIBLE);
+			singleLayout.setVisibility(View.VISIBLE);
+			randomLayout.setVisibility(View.INVISIBLE);
+			break;
+		}
+
+	}
+
 }

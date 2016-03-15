@@ -2,58 +2,58 @@ package com.esint.music.view;
 
 import java.util.ArrayList;
 
-import android.R.color;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
-import android.os.Handler;
-import android.util.Log;
+import android.os.Environment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.AdapterView.OnItemClickListener;
 import android.widget.BaseAdapter;
 import android.widget.ListView;
 import android.widget.PopupWindow;
 import android.widget.TextView;
 
 import com.esint.music.R;
-import com.esint.music.model.Mp3Info;
-import com.esint.music.utils.Constant;
+import com.esint.music.model.DownMucicInfo;
 import com.esint.music.utils.MediaUtils;
-import com.esint.music.utils.SharedPrefUtil;
-import com.esint.music.utils.SortListUtil;
 
 /**   
-* 类名称：PlayListPopuWindow   
-* 类描述：  本地音乐的播放列表
+* 类名称：PlayListDownPopu   
+* 类描述： 下载的音乐的播放列表  
 * 创建人：bai   
-* 创建时间：2016-3-15 下午8:46:56         
+* 创建时间：2016-3-15 下午8:47:21         
 */
-public class PlayListPopuWindow implements OnItemClickListener {
+public class PlayListDownPopu implements android.widget.AdapterView.OnItemClickListener {
 
-	private ArrayList<Mp3Info> mp3List;
+	private ArrayList<DownMucicInfo> downMp3List;
 	private PopupWindow popupWindow;
 	private ListView mListView;
 	private LayoutInflater inflater;
 	private Context context;
 	private OnItemClickListener listener;
 	private PopAdapter popAdapter;
+	private String musicTarget;// 下载歌曲的文件夹
 
-	public PlayListPopuWindow(Context context, int posi) {
+	public PlayListDownPopu(Context context, int posi) {
 
 		this.context = context;
-		mp3List = MediaUtils.getMp3Info(context);
 
-		mp3List = new SortListUtil().initMyLocalMusic(mp3List);
+		initData(posi);
+	}
+
+	private void initData(int posi) {
+		musicTarget = Environment.getExternalStorageDirectory() + "/"
+				+ "/下载的歌曲";
+		downMp3List = MediaUtils.GetMusicFiles(musicTarget, ".mp3", true);
 
 		inflater = (LayoutInflater) context
 				.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 		View view = inflater.inflate(R.layout.play_list_popupwindow, null);
 		TextView playList = (TextView) view.findViewById(R.id.playList);
-		playList.setText("播放列表(" + mp3List.size() + ")");
+		playList.setText("播放列表(" + downMp3List.size() + ")");
 		mListView = (ListView) view.findViewById(R.id.listView1);
 		mListView.setOnItemClickListener(this);
 		popAdapter = new PopAdapter();
@@ -93,7 +93,7 @@ public class PlayListPopuWindow implements OnItemClickListener {
 	public final class PopAdapter extends BaseAdapter {
 		@Override
 		public int getCount() {
-			return mp3List.size();
+			return downMp3List.size();
 		}
 
 		private int selectItem = -1;
@@ -104,7 +104,7 @@ public class PlayListPopuWindow implements OnItemClickListener {
 
 		@Override
 		public Object getItem(int position) {
-			return mp3List.get(position);
+			return downMp3List.get(position);
 		}
 
 		@Override
@@ -131,8 +131,8 @@ public class PlayListPopuWindow implements OnItemClickListener {
 				holder = (ViewHolder) convertView.getTag();
 			}
 			holder.musicNumber.setText(position + 1 + "");
-			holder.musicName.setText(mp3List.get(position).getTitle());
-			holder.musicSinger.setText(mp3List.get(position).getArtist());
+			holder.musicName.setText(downMp3List.get(position).getDownMusicName());
+			holder.musicSinger.setText(downMp3List.get(position).getDownMusicArtist());
 
 			if (position == selectItem) {
 				holder.musicNumber.setTextColor(context.getResources()

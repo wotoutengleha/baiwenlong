@@ -44,7 +44,7 @@ public class SortAdapter extends BaseAdapter {
 	 */
 	public void updateListView(List<Mp3Info> list) {
 		this.list = list;
-		
+
 		notifyDataSetChanged();
 	}
 
@@ -104,7 +104,8 @@ public class SortAdapter extends BaseAdapter {
 			viewHolder.tvLetter.setVisibility(View.GONE);
 		}
 
-		int recordPosition = SharedPrefUtil.getInt(mContext, Constant.CLICKED_MUNSIC_NAME, -1);
+		int recordPosition = SharedPrefUtil.getInt(mContext,
+				Constant.CLICKED_MUNSIC_NAME, -1);
 		if (recordPosition == position) {
 			viewHolder.ivRecord.setVisibility(View.VISIBLE);
 			viewHolder.listBackGround
@@ -215,10 +216,8 @@ public class SortAdapter extends BaseAdapter {
 				.withMessage(
 						list.get(position).getArtist() + " - "
 								+ list.get(position).getTitle())
-				.withMessageColor("#FFFFFF")
-				.withIcon(mContext.getResources().getDrawable(R.drawable.icon))
-				.isCancelableOnTouchOutside(true).withEffect(effect)
-				.withButton1Text("确定").withButton2Text("取消")
+				.withMessageColor("#FFFFFF").isCancelableOnTouchOutside(true)
+				.withEffect(effect).withButton1Text("确定").withButton2Text("取消")
 				.setCustomView(R.layout.custom_view, mContext)
 				.setButton1Click(new View.OnClickListener() {
 					@Override

@@ -21,7 +21,8 @@ public class Mp3Info {
 	private String url;// 路径
 	private int isMusic;// 是否为音乐
 	private String sortLetters; // 显示数据拼音的首字母
-	private boolean isInflate;// 是否引入
+	private boolean isClick;// 是否被点了
+	
 
 	public long getId() {
 		return id;
@@ -113,11 +114,11 @@ public class Mp3Info {
 	}
 
 	public boolean isInflate() {
-		return isInflate;
+		return isClick;
 	}
 
 	public void setInflate(boolean isInflate) {
-		this.isInflate = isInflate;
+		this.isClick = isInflate;
 	}
 
 	@Override

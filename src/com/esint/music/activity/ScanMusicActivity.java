@@ -4,6 +4,7 @@ import name.teze.layout.lib.SwipeBackActivity;
 
 import com.esint.music.R;
 import com.esint.music.R.color;
+import com.esint.music.utils.ActivityCollectUtil;
 import com.esint.music.utils.Constant;
 import com.esint.music.utils.SharedPrefUtil;
 
@@ -40,8 +41,14 @@ public class ScanMusicActivity extends SwipeBackActivity implements
 		super.onCreate(arg0);
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		setContentView(R.layout.activity_scanmusic);
+		ActivityCollectUtil.addActivity(this);
 		initView();
 		initData();
+	}
+	@Override
+	protected void onDestroy() {
+		super.onDestroy();
+		ActivityCollectUtil.removeActivity(this);
 	}
 
 	@Override

@@ -13,6 +13,7 @@ import com.esint.music.adapter.BackImgAdapter;
 import com.esint.music.dialog.Effectstype;
 import com.esint.music.dialog.NiftyDialogBuilder;
 import com.esint.music.model.BackImg;
+import com.esint.music.utils.ActivityCollectUtil;
 import com.esint.music.utils.Constant;
 import com.esint.music.utils.SharedPrefUtil;
 
@@ -47,6 +48,7 @@ public class BackGroundActivity extends SwipeBackActivity implements
 		super.onCreate(arg0);
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		setContentView(R.layout.activity_background);
+		ActivityCollectUtil.addActivity(this);
 		initView();
 		initData();
 	}
@@ -79,6 +81,11 @@ public class BackGroundActivity extends SwipeBackActivity implements
 			backActionBar.setBackgroundResource(color.holo_blue_light);
 			break;
 		}
+	}
+	@Override
+	protected void onDestroy() {
+		super.onDestroy();
+		ActivityCollectUtil.removeActivity(this);
 	}
 
 	private void initView() {

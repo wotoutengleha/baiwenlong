@@ -1,5 +1,6 @@
 package com.esint.music.utils;
 
+
 import android.content.Context;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -79,7 +80,6 @@ public class ShakeDetector implements SensorEventListener {
 		if (mSensorManager == null) {
 			throw new UnsupportedOperationException();
 		}
-
 		// 第一个参数是Listener，第二个参数是所得传感器类型，第三个参数值获取传感器信息的频率
 		boolean success = mSensorManager
 				.registerListener(this, mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),

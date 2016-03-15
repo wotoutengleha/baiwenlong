@@ -19,7 +19,6 @@ public class MyApplication extends Application {
 		dbUtils = DbUtils.create(getApplicationContext(), Constant.DB_NAME);
 		context = getApplicationContext();
 	}
-
 	// 获取全局的context
 	public static Context getContext() {
 		return context;

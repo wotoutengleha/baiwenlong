@@ -49,19 +49,18 @@
                     android:layout_height="fill_parent"
                     android:layout_weight="1" >
 
-                    <ImageView
-                        android:id="@+id/item0"
+                    <com.esint.music.view.SetupWifiButton
+                        android:id="@+id/wifiBtn"
                         android:layout_width="70dp"
                         android:layout_height="70dp"
                         android:layout_centerHorizontal="true"
                         android:layout_marginTop="20dp"
-                        android:clickable="true"
-                        android:src="@drawable/bt_setup_wifi_nor" />
+                        android:clickable="true" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_below="@+id/item0"
+                        android:layout_below="@+id/wifiBtn"
                         android:layout_centerInParent="true"
                         android:layout_marginTop="10dp"
                         android:text="仅WiFi联网"
@@ -73,19 +72,18 @@
                     android:layout_height="fill_parent"
                     android:layout_weight="1" >
 
-                    <ImageView
-                        android:id="@+id/item1"
+                    <com.esint.music.view.SetupDesktoplyricsButton
+                        android:id="@+id/deskBtn"
                         android:layout_width="70dp"
                         android:layout_height="70dp"
                         android:layout_centerHorizontal="true"
                         android:layout_marginTop="20dp"
-                        android:clickable="true"
-                        android:src="@drawable/bt_setup_desktoplyrics_nor" />
+                        android:clickable="true" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_below="@+id/item1"
+                        android:layout_below="@+id/deskBtn"
                         android:layout_centerInParent="true"
                         android:layout_marginTop="10dp"
                         android:text="桌面歌词"
@@ -97,19 +95,18 @@
                     android:layout_height="fill_parent"
                     android:layout_weight="1" >
 
-                    <ImageView
-                        android:id="@+id/item2"
+                    <com.esint.music.view.SetupLockScreenButton
+                        android:id="@+id/lockBtn"
                         android:layout_width="70dp"
                         android:layout_height="70dp"
                         android:layout_centerHorizontal="true"
                         android:layout_marginTop="20dp"
-                        android:clickable="true"
-                        android:src="@drawable/bt_setup_lockscreen_nor" />
+                        android:clickable="true" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_below="@+id/item2"
+                        android:layout_below="@+id/lockBtn"
                         android:layout_centerInParent="true"
                         android:layout_marginTop="10dp"
                         android:text="锁屏歌词"
@@ -282,7 +279,7 @@
                     android:layout_weight="1" >
 
                     <com.esint.music.view.SetupBGButton
-                        android:id="@+id/wire"
+                        android:id="@+id/sleep"
                         android:layout_width="75dp"
                         android:layout_height="75dp"
                         android:layout_centerHorizontal="true"
@@ -303,7 +300,7 @@
                     android:layout_weight="1" >
 
                     <com.esint.music.view.SetupBGButton
-                        android:id="@+id/sayhello"
+                        android:id="@+id/shake"
                         android:layout_width="75dp"
                         android:layout_height="75dp"
                         android:layout_centerHorizontal="true"

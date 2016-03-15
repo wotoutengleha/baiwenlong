@@ -10,8 +10,9 @@ public class Constant {
 
 	public static final int START_ACTIVITY = 0x1;// 启动activity的消息
 	public static final String ALARM_CLOCK_BROADCAST = "alarm_clock_broadcast";// 设置闹钟的广播
-	public static final String BROADCAST_SHAKE = "com.ldw.music.shake";// 设置摇一摇切换歌曲的广播
+	public static final String BROADCAST_SHAKE = "com.esint.music.shake";// 设置摇一摇切换歌曲的广播
 	public static final String SP_SHAKE_CHANGE_SONG = "shake_change_song";// 摇一摇切换歌曲
+	public static final String BROADCAST_NAME = "com.esint.music.broadcast";
 	public static final String CLICKED_MUNSIC_NAME = "ClickPosition";// 点击歌曲的时候存入的位置
 	public static final String CLICKED_MUNSIC_NAME_DOWN = "ClickPositionDown";// 点击下载歌曲的时候存入的位置
 	public static final String COLOR_INDEX = "color_index";// 在设置界面中点击切换actionBar的颜色
@@ -31,18 +32,26 @@ public class Constant {
 	public static final int UPTATE_LRC_LOCK = 0x008;
 	public static final int SUCCESS = 0x005;
 	public static final int FAILED = 0x006;
-	public static final int UPDATE_LOCKTIME  = 0x009;//更新锁屏页面的进度条
+	public static final int UPDATE_LOCKTIME = 0x009;// 更新锁屏页面的进度条
 	public static final int page = 1;// 搜索歌曲的时候搜索的页数
-	public static final String  PLAY_MODE = "play_mode";//播放模式 默认是1  顺序播放
+	public static final String PLAY_MODE = "play_mode";// 播放模式 默认是1 顺序播放
 	public static boolean isFirst = true;
 	public static boolean ISFirst_PLAY = true;
 	public static long exitTime = 0;
-
+	public static int playModel = 1; // 1是 顺序播放 2是随机播放 3是单曲播放
 	public static final String ND = "http://www.5nd.com/";
 	public static final String ND_HOT = "paihang/liuxinggequ.htm";
+	public static final String SHAKE_FLAG = "shake_flag";
+	public static final int  WHAT_SHAKE = 0x011;//发送摇一摇的what
 
 	// 是否开启了振动模式
 	public static final String SHAKE_ON_OFF = "SHAKE_ON_OFF";
+	//wifi开关
+	public static final String IS_WIFI = "SHAKE_ON_OFF";
+	//桌面歌词
+	public static final String DESK_LRC = "desk_lrc";
+	//锁屏歌词
+	public static final String LOCK_LRC = "lock_lrc";
 
 	// sharedPreference名字
 	public static final String SP_NAME = "MUSIC";
@@ -51,7 +60,6 @@ public class Constant {
 	public static final int UPDATA_TIME = 0x008;
 	public static final String PLAYBUTTON_BROAD = "com.esint.music.broadcastreceiver.updateplaybutton";
 	public static final String PAUSEBUTTON_BROAD = "com.esint.music.broadcastreceiver.updatepausebutton";
-
 	public static String[] colorBGColorStr = { "#ff33b5e5", "#667e83",
 			"#f76f60", "#f57bb8", "#e7923d", "#b38684" };
 	public static int colorIndex = 0;

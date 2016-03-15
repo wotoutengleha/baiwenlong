@@ -1,19 +1,39 @@
 package com.esint.music.activity;
 
 import name.teze.layout.lib.SwipeBackActivity;
+import android.app.AlarmManager;
+import android.app.AlertDialog;
+import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
+import android.support.v4.app.FragmentActivity;
+import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.Window;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
+import android.widget.Toast;
 
 import com.esint.music.R;
 import com.esint.music.R.color;
+import com.esint.music.utils.ActivityCollectUtil;
 import com.esint.music.utils.Constant;
+import com.esint.music.utils.MyApplication;
 import com.esint.music.utils.SharedPrefUtil;
 import com.esint.music.view.SetupBGButton;
 import com.esint.music.view.SetupColorBGButton;
+import com.esint.music.view.SetupDesktoplyricsButton;
+import com.esint.music.view.SetupLockScreenButton;
+import com.esint.music.view.SetupWifiButton;
 
 public class SettingActivity extends SwipeBackActivity implements
 		OnClickListener {
@@ -23,27 +43,92 @@ public class SettingActivity extends SwipeBackActivity implements
 	private SetupColorBGButton[] colorBGButton;// 标题颜色
 	private String[] colorBGColorStr = Constant.colorBGColorStr;// 标题颜色集合
 	private int colorIndex = Constant.colorIndex;// 标题颜色索引
+	private SetupBGButton sleepButton;// 是否开启睡眠定时
+	private SetupBGButton shakeButton;// 是否开启摇一摇模式
+	private SetupBGButton otherControl;//辅助操作
+	private SetupWifiButton WifiButton;// 仅Wifi按钮
+	private SetupDesktoplyricsButton deskLrcButton;// 桌面歌词
+	private SetupLockScreenButton lockLrcButton;// 锁屏歌词
 
 	private ImageView backImv;
 	private RelativeLayout settingActionBar;
-
+	public static Handler mHandler = new Handler();
 	@Override
 	protected void onCreate(Bundle arg0) {
 		super.onCreate(arg0);
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		setContentView(R.layout.activity_setting);
+		ActivityCollectUtil.addActivity(this);
 		initView();
 		initData();
 		initComponent();
 	}
 
+	@Override
+	protected void onDestroy() {
+		super.onDestroy();
+		unregisterReceiver(mAlarmReceiver);
+		ActivityCollectUtil.removeActivity(this);
+	}
+
 	private void initView() {
 		backImv = (ImageView) findViewById(R.id.backBtn);
 		settingActionBar = (RelativeLayout) findViewById(R.id.actionbar);
+		sleepButton = (SetupBGButton) findViewById(R.id.sleep);
+		shakeButton = (SetupBGButton) findViewById(R.id.shake);
+		otherControl = (SetupBGButton) findViewById(R.id.easytouch);
+		WifiButton = (SetupWifiButton) findViewById(R.id.wifiBtn);
+		deskLrcButton = (SetupDesktoplyricsButton) findViewById(R.id.deskBtn);
+		lockLrcButton = (SetupLockScreenButton) findViewById(R.id.lockBtn);
+
 		backImv.setOnClickListener(this);
+		sleepButton.setOnClickListener(this);
+		shakeButton.setOnClickListener(this);
+		WifiButton.setOnClickListener(this);
+		otherControl.setOnClickListener(this);
+		deskLrcButton.setOnClickListener(this);
+		lockLrcButton.setOnClickListener(this);
+		if (MyApplication.mIsSleepClockSetting == true) {
+			sleepButton.setSelect(true);
+		}
+		boolean shakeFlag = SharedPrefUtil.getBoolean(SettingActivity.this,
+				Constant.SHAKE_ON_OFF, false);
+		boolean isWifi = SharedPrefUtil.getBoolean(SettingActivity.this,
+				Constant.IS_WIFI, false);
+		boolean isDeskLrc = SharedPrefUtil.getBoolean(SettingActivity.this,
+				Constant.DESK_LRC, false);
+		boolean isLockLrc = SharedPrefUtil.getBoolean(SettingActivity.this,
+				Constant.LOCK_LRC, false);
+
+		if (shakeFlag == true) {
+			shakeButton.setSelect(true);
+			Message message  = mHandler.obtainMessage(Constant.WHAT_SHAKE, true);
+			message.sendToTarget();
+		} else {
+			shakeButton.setSelect(false);
+		}
+		if (isWifi == true) {
+			WifiButton.setSelect(true);
+		} else {
+			WifiButton.setSelect(false);
+		}
+		if (isDeskLrc == true) {
+			deskLrcButton.setSelect(true);
+		} else {
+			deskLrcButton.setSelect(false);
+		}
+		if (isLockLrc == true) {
+			lockLrcButton.setSelect(true);
+		} else {
+			lockLrcButton.setSelect(false);
+		}
 	}
 
 	private void initData() {
+		// 注册广播
+		IntentFilter filter = new IntentFilter();
+		filter.addAction(Constant.ALARM_CLOCK_BROADCAST);
+		registerReceiver(mAlarmReceiver, filter);
 	}
 
 	@Override
@@ -93,8 +178,148 @@ public class SettingActivity extends SwipeBackActivity implements
 					R.anim.slide_out_right);
 			break;
 		}
+		case R.id.sleep: {
+			showSleepDialog();
+			break;
+		}
+		case R.id.shake: {
+			if (shakeButton.isSelect()) {
+				shakeButton.setSelect(false);
+				Toast.makeText(SettingActivity.this, "关闭摇一摇", 0).show();
+			} else {
+				Toast.makeText(SettingActivity.this, "开启摇一摇", 0).show();
+				shakeButton.setSelect(true);
+			}
+			SharedPrefUtil.setBoolean(SettingActivity.this,
+					Constant.SHAKE_ON_OFF, shakeButton.isSelect());
+			Message message  = mHandler.obtainMessage(Constant.WHAT_SHAKE, shakeButton.isSelect());
+			message.sendToTarget();
+			break;
+		}
+		case R.id.wifiBtn: {
+			if (WifiButton.isSelect()) {
+				WifiButton.setSelect(false);
+			} else {
+				WifiButton.setSelect(true);
+			}
+			SharedPrefUtil.setBoolean(SettingActivity.this,
+					Constant.IS_WIFI, WifiButton.isSelect());
+		}
+			break;
+		case R.id.deskBtn: {
+			if (deskLrcButton.isSelect()) {
+				deskLrcButton.setSelect(false);
+			} else {
+				deskLrcButton.setSelect(true);
+			}
+			SharedPrefUtil.setBoolean(SettingActivity.this,
+					Constant.DESK_LRC, deskLrcButton.isSelect());
+		}
+			break;
+		case R.id.lockBtn: {
+			if (lockLrcButton.isSelect()) {
+				lockLrcButton.setSelect(false);
+			} else {
+				lockLrcButton.setSelect(true);
+			}
+			SharedPrefUtil.setBoolean(SettingActivity.this,
+					Constant.LOCK_LRC, lockLrcButton.isSelect());
+		}
+			break;
+		case R.id.easytouch:{
+			if (otherControl.isSelect()) {
+				otherControl.setSelect(false);
+			} else {
+				otherControl.setSelect(true);
+			}
+			break;
+		}
 		}
 	}
+
+	private void showSleepDialog() {
+		if (MyApplication.mIsSleepClockSetting) {
+			cancleSleepTime();
+			Toast.makeText(SettingActivity.this, "已取消睡眠模式", 0).show();
+			return;
+		}
+
+		AlertDialog.Builder builder = new AlertDialog.Builder(
+				SettingActivity.this);
+		final AlertDialog dialog = builder.create();
+		View view = View.inflate(SettingActivity.this,
+				R.layout.dialog_sleep_time, null);
+		dialog.setView(view, 0, 0, 0, 0);
+		final EditText etTime = (EditText) view.findViewById(R.id.time_et);
+		Button btnOk = (Button) view.findViewById(R.id.ok_btn);
+		Button btnCancle = (Button) view.findViewById(R.id.cancle_btn);
+
+		btnOk.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				String sleepTime = etTime.getText().toString();
+				// 判断输入的内容
+				if (TextUtils.isEmpty(sleepTime)
+						|| Integer.parseInt(sleepTime) == 0) {
+					Toast.makeText(SettingActivity.this, "输入无效", 0).show();
+					return;
+				}
+				dialog.dismiss();
+				setSleepTime(sleepTime);
+				sleepButton.setSelect(true);
+			}
+
+		});
+		btnCancle.setOnClickListener(new OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				dialog.dismiss();
+			}
+		});
+		dialog.show();
+	}
+
+	// 设置睡眠的时间
+	private void setSleepTime(String sleepTime) {
+		Intent intent = new Intent(Constant.ALARM_CLOCK_BROADCAST);
+		PendingIntent pendingIntent = PendingIntent.getBroadcast(
+				SettingActivity.this, 0, intent, 0);
+		// 设置时间后退出程序
+		int time = Integer.parseInt(sleepTime);
+		long longTime = time * 60 * 1000L;
+		AlarmManager am = (AlarmManager) SettingActivity.this
+				.getSystemService(FragmentActivity.ALARM_SERVICE);
+		am.set(AlarmManager.RTC, System.currentTimeMillis() + longTime,
+				pendingIntent);
+		MyApplication.mIsSleepClockSetting = true;
+		Toast.makeText(SettingActivity.this, "将在" + sleepTime + "分钟后退出软件",
+				Toast.LENGTH_SHORT).show();
+
+	}
+
+	// 取消闹钟的时间
+	private void cancleSleepTime() {
+		Intent intent = new Intent(Constant.ALARM_CLOCK_BROADCAST);
+		PendingIntent pendingIntent = PendingIntent.getBroadcast(
+				SettingActivity.this, 0, intent, 0);
+		AlarmManager am = (AlarmManager) SettingActivity.this
+				.getSystemService(FragmentActivity.ALARM_SERVICE);
+		am.cancel(pendingIntent);
+		MyApplication.mIsSleepClockSetting = false;
+		sleepButton.setSelect(false);
+	}
+
+	// 接收到广播后退出程序
+	private BroadcastReceiver mAlarmReceiver = new BroadcastReceiver() {
+
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			// 退出APP
+			ActivityCollectUtil.finishAllActi();
+		}
+
+	};
 
 	private void initComponent() {
 		soundBGButton = new SetupBGButton[6];

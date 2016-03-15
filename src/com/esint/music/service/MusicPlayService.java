@@ -4,16 +4,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Random;
 
-import com.esint.music.R;
-import com.esint.music.activity.MainFragmentActivity;
-import com.esint.music.fragment.MyTabMusic;
-import com.esint.music.model.Mp3Info;
-import com.esint.music.model.DownMucicInfo;
-import com.esint.music.utils.Constant;
-import com.esint.music.utils.MediaUtils;
-import com.esint.music.utils.SharedPrefUtil;
-import com.esint.music.utils.SortListUtil;
-
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -27,8 +17,25 @@ import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Binder;
 import android.os.Environment;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Message;
+import android.util.Log;
 import android.widget.RemoteViews;
+import android.widget.Toast;
+
+import com.esint.music.R;
+import com.esint.music.activity.MainFragmentActivity;
+import com.esint.music.activity.SettingActivity;
+import com.esint.music.fragment.MyTabMusic;
+import com.esint.music.model.DownMucicInfo;
+import com.esint.music.model.Mp3Info;
+import com.esint.music.utils.Constant;
+import com.esint.music.utils.MediaUtils;
+import com.esint.music.utils.ShakeDetector;
+import com.esint.music.utils.ShakeDetector.OnShakeListener;
+import com.esint.music.utils.SharedPrefUtil;
+import com.esint.music.utils.SortListUtil;
 
 /*   
  *    
@@ -38,7 +45,7 @@ import android.widget.RemoteViews;
  * 创建时间：2016-1-10 下午9:53:16   
  *        
  */
-public class MusicPlayService extends Service {
+public class MusicPlayService extends Service implements OnShakeListener {
 
 	private MediaPlayer mPlayer;// 播放音乐的类
 	private int currentPlayPosition;// 当前播放的位置
@@ -48,7 +55,7 @@ public class MusicPlayService extends Service {
 	public static final int PLAY_ORDER = 1; // 顺序播放
 	public static final int PLAY_RANDOM = 2; // 随机播放
 	public static final int PLAY_SINGLE = 3; // 单曲循环
-	public int playMode = PLAY_ORDER;// 默认是顺序播放
+	public static int playMode = PLAY_ORDER;// 默认是顺序播放
 	private Random random = new Random();
 
 	// 下载歌曲的文件夹
@@ -63,7 +70,7 @@ public class MusicPlayService extends Service {
 	private static final int NEXT_FLAG = 0x2;
 	private static final int PRE_FLAG = 0x3;
 	private int NOTIFICATION_ID = 0x1;
-	private String musicPlayOrPause;
+	private ShakeDetector mShakeDetector;// 摇一摇切换音乐
 
 	public class PlayBinder extends Binder {
 		public MusicPlayService getPlayService() {
@@ -79,9 +86,9 @@ public class MusicPlayService extends Service {
 		mp3Infos = MediaUtils.getMp3Info(this);
 		mp3Infos = new SortListUtil().initMyLocalMusic(mp3Infos);
 		target = Environment.getExternalStorageDirectory() + "/" + "/下载的歌曲";
-			downMusicList = MediaUtils.GetMusicFiles(target, ".mp3", true);
+		downMusicList = MediaUtils.GetMusicFiles(target, ".mp3", true);
 		notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-		
+
 		playMode = SharedPrefUtil.getInt(this, Constant.PLAY_MODE, 1);
 
 		// 注册监听锁屏界面的广播
@@ -90,51 +97,61 @@ public class MusicPlayService extends Service {
 		recevierFilter.addAction(Intent.ACTION_SCREEN_ON);
 		recevierFilter.addAction(Intent.ACTION_SCREEN_OFF);
 		registerReceiver(sOnBroadcastReciver, recevierFilter);
-		// 注册通知栏的广播
-		ControlBroadcast controlBroadcast = new ControlBroadcast();
-		IntentFilter notifiFilter = new IntentFilter();
-		notifiFilter.addAction(PAUSE_BROADCAST_NAME);
-		notifiFilter.addAction(NEXT_BROADCAST_NAME);
-		notifiFilter.addAction(PRE_BROADCAST_NAME);
-		registerReceiver(controlBroadcast, notifiFilter);
+//		// 注册通知栏的广播
+//		ControlBroadcast controlBroadcast = new ControlBroadcast();
+//		IntentFilter notifiFilter = new IntentFilter();
+//		notifiFilter.addAction(PAUSE_BROADCAST_NAME);
+//		notifiFilter.addAction(NEXT_BROADCAST_NAME);
+//		notifiFilter.addAction(PRE_BROADCAST_NAME);
+//		registerReceiver(controlBroadcast, notifiFilter);
 
-	}
+		mShakeDetector = new ShakeDetector(this);
+		mShakeDetector.setOnShakeListener(this);
 
-	private class ControlBroadcast extends BroadcastReceiver {
+		//摇一摇的实现不断的在handler里边发送消息
+		SettingActivity.mHandler = new Handler() {
+			@Override
+			public void handleMessage(Message msg) {
+				super.handleMessage(msg);
 
-		@Override
-		public void onReceive(Context context, Intent intent) {
-			int flag = intent.getIntExtra("FLAG", -1);
-			switch (flag) {
-			case PAUSE_FLAG:
-				// MediaService.this.stopForeground(true);
-				pause();
-				break;
-			case NEXT_FLAG:
-				// next();
-				musicPlayOrPause = "next";
-				updateMusicInfo(musicPlayOrPause);
-				break;
-			case PRE_FLAG:
-				// previous();
-				musicPlayOrPause = "previous";
-				updateMusicInfo(musicPlayOrPause);
-				break;
+				if (msg.what == Constant.WHAT_SHAKE) {
+					Boolean isSelect = (Boolean) msg.obj;
+					if (isSelect == true) {
+						mShakeDetector.start();
+						Message message = SettingActivity.mHandler
+								.obtainMessage(Constant.WHAT_SHAKE, true);
+						message.sendToTarget();
+					} else {
+						mShakeDetector.stop();
+						SettingActivity.mHandler
+								.removeMessages(Constant.WHAT_SHAKE);
+					}
+				}
 			}
-		}
-	}
 
-	// 获取播放的音乐的信息
-	public void updateMusicInfo(String musicPlayOrPause) {
-
-		Bitmap bitmap = MediaUtils.getArtwork(MusicPlayService.this, mp3Infos
-				.get(currentPlayPosition).getId(),
-				mp3Infos.get(currentPlayPosition).getAlbumId(), true, false);
-		updateNotification(bitmap,
-				mp3Infos.get(currentPlayPosition).getTitle(),
-				mp3Infos.get(currentPlayPosition).getArtist(), musicPlayOrPause);
+		};
 
 	}
+
+//	private class ControlBroadcast extends BroadcastReceiver {
+//
+//		@Override
+//		public void onReceive(Context context, Intent intent) {
+//			int flag = intent.getIntExtra("FLAG", -1);
+//			switch (flag) {
+//			case PAUSE_FLAG:
+//				// MediaService.this.stopForeground(true);
+//				pause();
+//				break;
+//			case NEXT_FLAG:
+//				// next();
+//				break;
+//			case PRE_FLAG:
+//				// previous();
+//				break;
+//			}
+//		}
+//	}
 
 	/**
 	* @Description:更新通知栏 
@@ -142,7 +159,7 @@ public class MusicPlayService extends Service {
 	* @author bai
 	*/
 	public void updateNotification(Bitmap bitmap, String musicTitle,
-			String musicArtist, String playOrPause) {
+			String musicArtist) {
 		Intent intent = new Intent(getApplicationContext(),
 				MainFragmentActivity.class);
 		intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
@@ -152,7 +169,7 @@ public class MusicPlayService extends Service {
 		RemoteViews remoteViews = new RemoteViews(this.getPackageName(),
 				R.layout.notification);
 		Notification notification = new Notification();
-		notification.icon = R.drawable.ic_launcher;
+		notification.icon = R.drawable.myapplogo;
 		notification.tickerText = musicTitle;
 		notification.contentIntent = pendingIntent;
 		notification.contentView = remoteViews;
@@ -187,20 +204,12 @@ public class MusicPlayService extends Service {
 				preIntent, 0);
 		remoteViews.setOnClickPendingIntent(R.id.iv_previous, prePIntent);
 		startForeground(NOTIFICATION_ID, notification);
-		if (playOrPause.equals("next")) {
-			// next();
-		} else if (playOrPause.equals("play")) {
-			// start();
-		} else if (playOrPause.equals("previous")) {
-			// previous();
-		}
-
 	}
 
-	private void cancelNotification() {
-		stopForeground(true);
-		notificationManager.cancel(NOTIFICATION_ID);
-	}
+//	private void cancelNotification() {
+//		stopForeground(true);
+//		notificationManager.cancel(NOTIFICATION_ID);
+//	}
 
 	@Override
 	public void onDestroy() {
@@ -312,11 +321,11 @@ public class MusicPlayService extends Service {
 			break;
 		}
 		case PLAY_SINGLE: {
-//			if (currentPlayPosition + 1 >= mp3Infos.size()) {
-//				currentPlayPosition = 0;// 回到第一首歌
-//			} else {
-//				currentPlayPosition++;
-//			}
+			// if (currentPlayPosition + 1 >= mp3Infos.size()) {
+			// currentPlayPosition = 0;// 回到第一首歌
+			// } else {
+			// currentPlayPosition++;
+			// }
 			playLocalMusic(currentPlayPosition);
 			break;
 		}
@@ -340,11 +349,11 @@ public class MusicPlayService extends Service {
 			break;
 		}
 		case PLAY_SINGLE: {
-//			if (currentPlayPosition + 1 >= downMusicList.size()) {
-//				currentPlayPosition = 0;// 回到第一首歌
-//			} else {
-//				currentPlayPosition++;
-//			}
+			// if (currentPlayPosition + 1 >= downMusicList.size()) {
+			// currentPlayPosition = 0;// 回到第一首歌
+			// } else {
+			// currentPlayPosition++;
+			// }
 			playMyDown(currentPlayPosition);
 			break;
 		}
@@ -420,12 +429,21 @@ public class MusicPlayService extends Service {
 
 	// 设置播放的模式
 
-	public int getPlayMode() {
+	public static int getPlayMode() {
 		return playMode;
 	}
 
 	public void setPlayMode(int playMode) {
-		this.playMode = playMode;
+		MusicPlayService.playMode = playMode;
 	}
 
+	//摇一摇接口实现的方法
+	@Override
+	public void onShake() {
+		Toast.makeText(this, "摇一摇换歌了", 0).show();
+		Random random = new Random();
+		playLocalMusic(random.nextInt(mp3Infos.size()));
+		Message message  = MyTabMusic.mHandler.obtainMessage(6666);
+		message.sendToTarget();
+	}
 }
