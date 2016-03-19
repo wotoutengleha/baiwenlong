@@ -9,7 +9,7 @@ import android.widget.RelativeLayout;
 
 /**
  * 
- * 閿佸睆鎸夐挳
+ * 锁屏界面自定义布局
  * 
  */
 public class LockButtonRelativeLayout extends RelativeLayout {

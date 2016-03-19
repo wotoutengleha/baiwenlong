@@ -1,5 +1,6 @@
 package com.esint.music.activity;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -9,12 +10,15 @@ import name.teze.layout.lib.SwipeBackActivity;
 import android.annotation.SuppressLint;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.Environment;
@@ -24,14 +28,19 @@ import android.os.Message;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v4.view.ViewPager.OnPageChangeListener;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.View.OnClickListener;
+import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
+import android.view.animation.AnimationSet;
 import android.view.animation.AnimationUtils;
 import android.view.animation.LinearInterpolator;
+import android.view.animation.ScaleAnimation;
+import android.view.animation.TranslateAnimation;
 import android.view.Window;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -42,6 +51,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.esint.music.R;
+import com.esint.music.db.MySQLite;
 import com.esint.music.fragment.MyTabMusic;
 import com.esint.music.fragment.MyTabMusic.MyBroadCast;
 import com.esint.music.model.DownMucicInfo;
@@ -50,6 +60,7 @@ import com.esint.music.model.SearchResult;
 import com.esint.music.service.MusicPlayService;
 import com.esint.music.service.MusicPlayService.PlayBinder;
 import com.esint.music.utils.ActivityCollectUtil;
+import com.esint.music.utils.AniUtil;
 import com.esint.music.utils.Constant;
 import com.esint.music.utils.DownMusicUtils;
 import com.esint.music.utils.GaussianBlurUtil;
@@ -62,6 +73,7 @@ import com.esint.music.utils.SharedPrefUtil;
 import com.esint.music.view.AlwaysMarqueeTextView;
 import com.esint.music.view.LrcView;
 import com.esint.music.view.PlayListDownPopu;
+import com.esint.music.view.PlayListLikePopu;
 import com.esint.music.view.PlayListPopuWindow;
 import com.esint.music.view.PlayListPopuWindow.OnItemClickListener;
 import com.lidroid.xutils.db.sqlite.Selector;
@@ -78,12 +90,13 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 	private ViewPager mPlayViewPager;
 	private SeekBar seekBar;
 	private ArrayList<View> mViewList;
-	private int oldPage = 0;// ÉÏÒ»´ÎÏÔÊ¾µÄÒ³
-	private ArrayList<View> dots = null;// µã
-	private ArrayList<Mp3Info> mp3List;// ±¾µØÒôÀÖµÄlist
+	private int oldPage = 0;// ä¸Šä¸€æ¬¡æ˜¾ç¤ºçš„é¡µ
+	private ArrayList<View> dots = null;// ç‚¹
+	private ArrayList<Mp3Info> mp3List;// æœ¬åœ°éŸ³ä¹çš„list
 	private ImageView albumIV;
 	private int currentPosition;
-	private int currentPositionDown;// ¼ÇÂ¼ÎÒµÄÏÂÔØµÄÒôÀÖÀï±ßµÄ±êÖ¾
+	private int currentPositionDown;// è®°å½•æˆ‘çš„ä¸‹è½½çš„éŸ³ä¹é‡Œè¾¹çš„æ ‡å¿—
+	private int currentPositionLike;// è®°å½•æˆ‘çš„å–œæ¬¢çš„éŸ³ä¹é‡Œè¾¹çš„æ ‡å¿—
 	private String musicFlag;
 	private Handler mHandler;
 	private MusicPlayService musicPlayService;
@@ -91,11 +104,14 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 	private MyApplication myApp;
 	private LrcView mLrcViewOnSecondPage; // 7 lines lrc
 	private LrcView mLrcViewOnFirstPage; // single line lrc
-	private String intentMusicName;// ´ÓÖ÷½çÃæÍ¨¹ıintent´«µİ¹ıÀ´µÄ¸èÇúµÄÃû×Ö,Ä¿µÄÊÇÎªÁËÊ¹ÓÃ¸èÃûËÑË÷¸è´Ê
-	private String downMusicSongTime;// ´ÓÖ÷½çÃæ´«µİ¹ıÀ´ÏÂÔØÒôÀÖµÄ¸èÇúµÄÊ±³¤
-	private ArrayList<DownMucicInfo> downMusicList;// ÎÒµÄÏÂÔØµÄÒôÀÖµÄÁĞ±í
-	private int recordDownMusicPosition;// ¼ÇÂ¼µã»÷ÎÒµÄÏÂÔØ¸èÇúÀï±ßµÄÁĞ±í
+	private String intentMusicName;// ä»ä¸»ç•Œé¢é€šè¿‡intentä¼ é€’è¿‡æ¥çš„æ­Œæ›²çš„åå­—,ç›®çš„æ˜¯ä¸ºäº†ä½¿ç”¨æ­Œåæœç´¢æ­Œè¯
+	private String downMusicSongTime;// ä»ä¸»ç•Œé¢ä¼ é€’è¿‡æ¥ä¸‹è½½éŸ³ä¹çš„æ­Œæ›²çš„æ—¶é•¿
+	private ArrayList<DownMucicInfo> downMusicList;// æˆ‘çš„ä¸‹è½½çš„éŸ³ä¹çš„åˆ—è¡¨
+	private int recordDownMusicPosition;// è®°å½•ç‚¹å‡»æˆ‘çš„ä¸‹è½½æ­Œæ›²é‡Œè¾¹çš„åˆ—è¡¨
+	private int recordLikeMusicPosition;// è®°å½•æˆ‘çš„å–œæ¬¢çš„æ­Œæ›²é‡Œè¾¹çš„åˆ—è¡¨
 	private MyBroadCast broadCast;
+	private ImageView mMoveIv;// æ·»åŠ å–œæ¬¢çš„éŸ³ä¹æ—¶çš„åŠ¨ç”»å›¾ç‰‡
+	private String imageTarget;// ä¸‹è½½çš„å›¾ç‰‡çš„æ–‡ä»¶è·¯å¾„
 
 	@Override
 	protected void onCreate(Bundle arg0) {
@@ -141,7 +157,8 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 		btnPlayShared = (ImageButton) findViewById(R.id.play_shared);
 		btnLike = (ImageButton) findViewById(R.id.ivLikeNormal);
 		seekBar = (SeekBar) findViewById(R.id.play_progress);
-		// »ñÈ¡ÏÔÊ¾µÄµã£¨¼´ÎÄ×ÖÏÂ·½µÄµã£¬±íÊ¾µ±Ç°ÊÇµÚ¼¸ÕÅ£©
+		mMoveIv = (ImageView) findViewById(R.id.move_iv);
+		// è·å–æ˜¾ç¤ºçš„ç‚¹ï¼ˆå³æ–‡å­—ä¸‹æ–¹çš„ç‚¹ï¼Œè¡¨ç¤ºå½“å‰æ˜¯ç¬¬å‡ å¼ ï¼‰
 		dots = new ArrayList<View>();
 		dots.add(findViewById(R.id.dot1));
 		dots.add(findViewById(R.id.dot2));
@@ -177,6 +194,8 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 				Constant.MY_LIKE_MUSIC);
 		recordDownMusicPosition = SharedPrefUtil.getInt(this,
 				Constant.CLICKED_MUNSIC_NAME_DOWN, -1);
+		recordLikeMusicPosition = SharedPrefUtil.getInt(this,
+				Constant.CLICKED_MUNSIC_NAME_LIKE, -1);
 
 		myApp = (MyApplication) getApplication();
 		Intent intent = new Intent(this, MusicPlayService.class);
@@ -184,7 +203,9 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 
 		broadCast = new MyBroadCast();
 		IntentFilter intentFilter = new IntentFilter();
-		intentFilter.addAction("updateText");
+		intentFilter.addAction("updateLocalText");
+		intentFilter.addAction("updateDownText");
+		intentFilter.addAction("updateLikeText");
 		registerReceiver(broadCast, intentFilter);
 
 		mPlayViewPager.setAdapter(new MyAdapter());
@@ -193,19 +214,23 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 				Constant.CLICKED_MUNSIC_NAME, -1);
 		currentPositionDown = SharedPrefUtil.getInt(this,
 				Constant.CLICKED_MUNSIC_NAME_DOWN, -1);
+		currentPositionLike = SharedPrefUtil.getInt(this,
+				Constant.CLICKED_MUNSIC_NAME_LIKE, -1);
 		mp3List = MediaUtils.getMp3Info(this);
 		mp3List = new SortListUtil().initMyLocalMusic(mp3List);
 
-		// ÏÂÔØ¸èÇúµÄÎÄ¼ş¼Ğ
+		// ä¸‹è½½æ­Œæ›²çš„æ–‡ä»¶å¤¹
 		String MusicTarget = Environment.getExternalStorageDirectory() + "/"
-				+ "/ÏÂÔØµÄ¸èÇú";
+				+ "/ä¸‹è½½çš„æ­Œæ›²";
 		downMusicList = MediaUtils.GetMusicFiles(MusicTarget, ".mp3", true);
+		imageTarget = Environment.getExternalStorageDirectory() + "/"
+				+ "/ä¸‹è½½çš„å›¾ç‰‡" + "/";
 
 		intentMusicName = getIntent().getStringExtra("Music_name");
 		if (currentPosition != -1 && musicFlag.equals("local_music")) {
 			musicName.setText(intentMusicName);
-			musicSinger.setText("Ò»   "
-					+ mp3List.get(currentPosition).getArtist() + "  Ò»");
+			musicSinger.setText("ä¸€   "
+					+ mp3List.get(currentPosition).getArtist() + "  ä¸€");
 			musicTime.setText(MediaUtils.formatTime(mp3List
 					.get(currentPosition).getDuration()));
 			Bitmap preBitmap = MediaUtils.getArtwork(this,
@@ -216,45 +241,47 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 			playMusicBg.setBackgroundDrawable(boxBlurFilter);
 			startAnim();
 		}
-		if (MyTabMusic.sortMyLikeMp3Infos != null) {
-			if (currentPosition != -1 && musicFlag.equals("like_music")) {
-				musicName.setText(MyTabMusic.sortMyLikeMp3Infos.get(
-						currentPosition).getTitle());
-				musicSinger.setText("Ò»   "
-						+ MyTabMusic.sortMyLikeMp3Infos.get(currentPosition)
-								.getArtist() + "  Ò»");
-				musicTime.setText(MediaUtils
-						.formatTime(MyTabMusic.sortMyLikeMp3Infos.get(
-								currentPosition).getDuration()));
-				Bitmap preBitmap = MediaUtils.getArtwork(this,
-						MyTabMusic.sortMyLikeMp3Infos.get(currentPosition)
-								.getId(),
-						MyTabMusic.sortMyLikeMp3Infos.get(currentPosition)
-								.getAlbumId(), true, false);
-				Drawable boxBlurFilter = GaussianBlurUtil
-						.BoxBlurFilter(preBitmap);
-				albumIV.setImageBitmap(preBitmap);
-				playMusicBg.setBackgroundDrawable(boxBlurFilter);
-				startAnim();
-			}
+		if (recordLikeMusicPosition != -1 && musicFlag.equals("like_music")&&MainFragmentActivity.likeMusciList.size()!=0) {
+			musicName.setText(MainFragmentActivity.likeMusciList.get(
+					recordLikeMusicPosition).getMusicName());
+			musicSinger.setText("ä¸€   "
+					+ MainFragmentActivity.likeMusciList.get(
+							recordLikeMusicPosition).getMusicArtist() + "  ä¸€");
+			Long musicTime2 = MainFragmentActivity.likeMusciList.get(
+					recordLikeMusicPosition).getMusicTime();
+			Log.e("musicTime2", musicTime2 + "");
+			musicTime.setText(MediaUtils
+					.formatTime(MainFragmentActivity.likeMusciList.get(
+							recordLikeMusicPosition).getMusicTime()));
+
+			// æ¨¡ç³Šæ•ˆæœ
+			Drawable boxBlurFilter = GaussianBlurUtil
+					.BoxBlurFilter(MainFragmentActivity.likeMusciList.get(
+							recordLikeMusicPosition).getBitmap());
+			playMusicBg.setBackgroundDrawable(boxBlurFilter);
+			albumIV.setImageBitmap(MainFragmentActivity.likeMusciList.get(
+					recordLikeMusicPosition).getBitmap());
+			startAnim();
 		}
 		if (recordDownMusicPosition != -1 && musicFlag.equals("down_music")) {
 			String artist = getIntent().getStringExtra("Music_artist");
 			downMusicSongTime = downMusicList.get(recordDownMusicPosition)
 					.getDownMusicDuration();
 			musicName.setText(intentMusicName);
-			musicSinger.setText("Ò»   " + artist + "  Ò»");
+			musicSinger.setText("ä¸€   " + artist + "  ä¸€");
 			musicTime.setText(downMusicSongTime);
-			final String ImageTarget = Environment
-					.getExternalStorageDirectory() + "/" + "/ÏÂÔØµÄÍ¼Æ¬" + "/";
 
-			Bitmap albumBit = BitmapFactory.decodeFile(ImageTarget
+			Bitmap albumBit = BitmapFactory.decodeFile(imageTarget
 					+ downMusicList.get(recordDownMusicPosition)
 							.getDownMusicName().trim() + ".jpg", null);
 			if (albumBit != null) {
 				albumIV.setImageBitmap(albumBit);
+				// æ¨¡ç³Šæ•ˆæœ
+				Drawable boxBlurFilter = GaussianBlurUtil
+						.BoxBlurFilter(albumBit);
+				playMusicBg.setBackgroundDrawable(boxBlurFilter);
 			}
-			// ¿ªÊ¼Ğı×ª×¨¼­Í¼Æ¬µÄ¶¯»­
+			// å¼€å§‹æ—‹è½¬ä¸“è¾‘å›¾ç‰‡çš„åŠ¨ç”»
 			Animation operatingAnim = AnimationUtils.loadAnimation(this,
 					R.anim.tip);
 			LinearInterpolator lin = new LinearInterpolator();
@@ -270,6 +297,9 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 				super.handleMessage(msg);
 				switch (msg.what) {
 				case Constant.UPDATA_TIME:
+
+					int a = musicPlayService.getCurrentPosition();
+
 					int progress = (Integer) msg.obj;
 					String formatTime = MediaUtils.formatTime(progress);
 					startMusicTime.setText(formatTime);
@@ -283,13 +313,14 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 
 							musicPlayService.next();
 							// localMusicNextOrPre();
-							Log.e("×ßµ½ÁË·¢ËÍ±¾µØÒôÀÖ", "×ßµ½ÁË·¢ËÍ±¾µØÒôÀÖ");
-							// ·¢ËÍ¸üĞÂ²¥·Å°´Å¥µÄ¹ã²¥
-							Intent intent = new Intent("updateText");
+							Log.e("èµ°åˆ°äº†å‘é€æœ¬åœ°éŸ³ä¹", "èµ°åˆ°äº†å‘é€æœ¬åœ°éŸ³ä¹");
+							// å‘é€æ›´æ–°æ’­æ”¾æŒ‰é’®çš„å¹¿æ’­
+							Intent intent = new Intent("updateLocalText");
 							sendBroadcast(intent);
 
 						}
-					} else if (musicFlag.equals("down_music")) {
+					} else if (musicFlag.equals("down_music")
+							&& a <= downMusicList.size()) {
 						if (seekBar.getProgress() <= (MediaUtils
 								.getTrackLength(downMusicList.get(
 										musicPlayService.getCurrentPosition())
@@ -301,9 +332,27 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 												.getDownMusicDuration()) - 1500)) {
 							musicPlayService.nextDownMusic();
 							// downMusicNextOrPre();
-							Log.e("×ßµ½ÁË·¢ËÍÏÂÔØÒôÀÖ", "×ßµ½ÁË·¢ËÍÏÂÔØÒôÀÖ");
-							// ·¢ËÍ¸üĞÂ²¥·Å°´Å¥µÄ¹ã²¥
-							Intent intent = new Intent("updateText");
+							Log.e("èµ°åˆ°äº†å‘é€ä¸‹è½½éŸ³ä¹", "èµ°åˆ°äº†å‘é€ä¸‹è½½éŸ³ä¹");
+							// å‘é€æ›´æ–°æ’­æ”¾æŒ‰é’®çš„å¹¿æ’­
+							Intent intent = new Intent("updateDownText");
+							sendBroadcast(intent);
+
+						}
+					} else if (musicFlag.equals("like_music")&&MainFragmentActivity.likeMusciList.size()!=0) {
+
+						if (seekBar.getProgress() <= MainFragmentActivity.likeMusciList
+								.get(musicPlayService.getCurrentPosition())
+								.getMusicTime()
+								&& seekBar.getProgress() >= MainFragmentActivity.likeMusciList
+										.get(musicPlayService
+												.getCurrentPosition())
+										.getMusicTime() - 1500) {
+
+							musicPlayService.nextLikeMusic();
+							// downMusicNextOrPre();
+							Log.e("èµ°åˆ°äº†å‘é€å–œæ¬¢éŸ³ä¹", "èµ°åˆ°äº†å‘é€å–œæ¬¢éŸ³ä¹");
+							// å‘é€æ›´æ–°æ’­æ”¾æŒ‰é’®çš„å¹¿æ’­
+							Intent intent = new Intent("updateLikeText");
 							sendBroadcast(intent);
 
 						}
@@ -322,7 +371,7 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 						mLrcViewOnFirstPage.changeCurrent(progress1);
 					break;
 				case DownMusicUtils.FAILED_LRC:
-					Toast.makeText(MusicPlayAvtivity.this, "¸è´ÊÏÂÔØÊ§°Ü", 0).show();
+					Toast.makeText(MusicPlayAvtivity.this, "æ­Œè¯ä¸‹è½½å¤±è´¥", 0).show();
 					break;
 				case Constant.SUCCESS:
 					String targrt = (String) msg.obj;
@@ -364,6 +413,7 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 					@Override
 					public void onItemClick(int index) {
 						musicPlayService.playLocalMusic(index);
+						setLrc(intentMusicName);
 						localMusicNextOrPre();
 
 					}
@@ -382,7 +432,25 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 							@Override
 							public void onItemClick(int index) {
 								musicPlayService.playMyDown(index);
+								setLrc(intentMusicName);
 								downMusicNextOrPre();
+							}
+						});
+			} else if (musicFlag.equals("like_music")&&MainFragmentActivity.likeMusciList.size()!=0) {
+
+				int isPlayingPosi = musicPlayService.getCurrentPosition();
+				PlayListLikePopu popuWindow = new PlayListLikePopu(this,
+						isPlayingPosi);
+				Log.e("isPlayingPosi", isPlayingPosi + "");
+				popuWindow.showAsDropDown(v);
+				popuWindow
+						.setOnItemClickListener(new PlayListLikePopu.OnItemClickListener() {
+
+							@Override
+							public void onItemClick(int index) {
+								musicPlayService.playMyFav(index);
+								setLrc(intentMusicName);
+								likeMusicNextOrPre();
 							}
 						});
 			}
@@ -396,28 +464,42 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 					&& musicFlag.equals("local_music")) {
 				Constant.isFirst = false;
 				musicPlayService.playLocalMusic(currentPosition);
-				// ·¢ËÍ¸üĞÂ²¥·Å°´Å¥µÄ¹ã²¥
+				// å‘é€æ›´æ–°æ’­æ”¾æŒ‰é’®çš„å¹¿æ’­
 				Intent intent = new Intent(Constant.PLAYBUTTON_BROAD);
 				this.sendBroadcast(intent);
 				musicPlayService.start();
 				btnPause.setVisibility(View.VISIBLE);
 				btnPlay.setVisibility(View.GONE);
 				Constant.ISFirst_PLAY = false;
+				updateLocalProgress();
 			} else if (currentPositionDown != -1 && Constant.ISFirst_PLAY
 					&& musicFlag.equals("down_music")) {
 				Constant.isFirst = false;
 				musicPlayService.playMyDown(currentPositionDown);
-				// ·¢ËÍ¸üĞÂ²¥·Å°´Å¥µÄ¹ã²¥
+				// å‘é€æ›´æ–°æ’­æ”¾æŒ‰é’®çš„å¹¿æ’­
 				Intent intent = new Intent(Constant.PLAYBUTTON_BROAD);
 				this.sendBroadcast(intent);
 				musicPlayService.start();
 				btnPause.setVisibility(View.VISIBLE);
 				btnPlay.setVisibility(View.GONE);
 				Constant.ISFirst_PLAY = false;
+				updateDownProgress();
+			} else if (currentPositionLike != -1 && Constant.ISFirst_PLAY
+					&& musicFlag.equals("like_music")&&MainFragmentActivity.likeMusciList.size()!=0) {
+				Constant.isFirst = false;
+				musicPlayService.playMyFav(currentPositionDown);
+				// å‘é€æ›´æ–°æ’­æ”¾æŒ‰é’®çš„å¹¿æ’­
+				Intent intent = new Intent(Constant.PLAYBUTTON_BROAD);
+				this.sendBroadcast(intent);
+				musicPlayService.start();
+				btnPause.setVisibility(View.VISIBLE);
+				btnPlay.setVisibility(View.GONE);
+				Constant.ISFirst_PLAY = false;
+				updateLikeProgress();
 			}
 
 			else if (!Constant.ISFirst_PLAY) {
-				// ·¢ËÍ¸üĞÂ²¥·Å°´Å¥µÄ¹ã²¥
+				// å‘é€æ›´æ–°æ’­æ”¾æŒ‰é’®çš„å¹¿æ’­
 				Intent intent = new Intent(Constant.PLAYBUTTON_BROAD);
 				this.sendBroadcast(intent);
 				musicPlayService.start();
@@ -425,12 +507,12 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 				btnPlay.setVisibility(View.GONE);
 			}
 
-			updateProgress();
+			// updateProgress();
 			break;
 		}
 		case R.id.ib_play_pause: {
 			musicPlayService.pause();
-			// ·¢ËÍ¸üĞÂÔİÍ£°´Å¥µÄ¹ã²¥
+			// å‘é€æ›´æ–°æš‚åœæŒ‰é’®çš„å¹¿æ’­
 			Intent pauseIntent = new Intent(Constant.PAUSEBUTTON_BROAD);
 			this.sendBroadcast(pauseIntent);
 			btnPause.setVisibility(View.GONE);
@@ -442,9 +524,15 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 			if (musicFlag.equals("local_music")) {
 				musicPlayService.previous();
 				localMusicNextOrPre();
+				Constant.isInsert = false;
 			} else if (musicFlag.equals("down_music")) {
 				musicPlayService.previousDown();
 				downMusicNextOrPre();
+				Constant.isInsert = false;
+			} else if (musicFlag.equals("like_music")&&MainFragmentActivity.likeMusciList.size()!=0) {
+				musicPlayService.previousLike();
+				likeMusicNextOrPre();
+				Constant.isInsert = false;
 			}
 			break;
 		}
@@ -452,10 +540,16 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 
 			if (musicFlag.equals("local_music")) {
 				musicPlayService.next();
+				Constant.isInsert = false;
 				localMusicNextOrPre();
 			} else if (musicFlag.equals("down_music")) {
 				musicPlayService.nextDownMusic();
+				Constant.isInsert = false;
 				downMusicNextOrPre();
+			} else if (musicFlag.equals("like_music")&&MainFragmentActivity.likeMusciList.size()!=0) {
+				musicPlayService.nextLikeMusic();
+				Constant.isInsert = false;
+				likeMusicNextOrPre();
 			}
 
 			break;
@@ -468,21 +562,21 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 						.setImageResource(R.drawable.player_btn_random_normal);
 				btnPlayMode.setTag(MusicPlayService.PLAY_RANDOM);
 				musicPlayService.setPlayMode(MusicPlayService.PLAY_RANDOM);
-				Toast.makeText(this, "Ëæ»ú²¥·Å", 0).show();
+				Toast.makeText(this, "éšæœºæ’­æ”¾", 0).show();
 				break;
 			case MusicPlayService.PLAY_RANDOM:
 				btnPlayMode
 						.setImageResource(R.drawable.player_btn_repeatone_highlight);
 				btnPlayMode.setTag(MusicPlayService.PLAY_SINGLE);
 				musicPlayService.setPlayMode(MusicPlayService.PLAY_SINGLE);
-				Toast.makeText(this, "µ¥ÇúÑ­»·", 0).show();
+				Toast.makeText(this, "å•æ›²å¾ªç¯", 0).show();
 				break;
 			case MusicPlayService.PLAY_SINGLE:
 				btnPlayMode
 						.setImageResource(R.drawable.player_btn_repeat_highlight);
 				btnPlayMode.setTag(MusicPlayService.PLAY_ORDER);
 				musicPlayService.setPlayMode(MusicPlayService.PLAY_ORDER);
-				Toast.makeText(this, "ÁĞ±íÑ­»·", 0).show();
+				Toast.makeText(this, "åˆ—è¡¨å¾ªç¯", 0).show();
 				break;
 			}
 			MainFragmentActivity.mHandler.sendEmptyMessage(0000);
@@ -492,76 +586,139 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 		}
 			break;
 		case R.id.ivLikeNormal: {
+			// å¾—åˆ°å½“å‰æ’­æ”¾çš„æ­Œæ›²
+			int playPosi = musicPlayService.getCurrentPosition();
+			boolean isInsert = Constant.isInsert;
+			if (isInsert == true) {
+				if (musicFlag.equals("local_music")) {
+					String title = mp3List.get(playPosi).getTitle();
+					// å–æ¶ˆå–œæ¬¢ åˆ é™¤æ•°æ®
+					String whereClause = "MusicTitle=?";// åˆ é™¤çš„æ¡ä»¶
+					String[] whereArgs = { title };// åˆ é™¤çš„æ¡ä»¶å‚æ•°
+					MainFragmentActivity.db.delete("Music", whereClause,
+							whereArgs);// æ‰§è¡Œåˆ é™¤
+					// å–æ¶ˆå–œæ¬¢æˆåŠŸ
+					Log.e("å–æ¶ˆæœ¬åœ°éŸ³ä¹å–œæ¬¢æˆåŠŸ", "å–æ¶ˆæœ¬åœ°éŸ³ä¹å–œæ¬¢æˆåŠŸ");
+					Toast.makeText(MusicPlayAvtivity.this, "å–æ¶ˆå–œæ¬¢", 0).show();
+					btnLike.setImageResource(R.drawable.player_btn_favorite_highlight);
+					Constant.isInsert = false;
 
-			if (musicFlag.equals("local_music")) {
-				Mp3Info mp3Info = mp3List.get(musicPlayService
-						.getCurrentPosition());
-				try {
-					Mp3Info myLikeMp3Info = myApp.dbUtils.findFirst(Selector
-							.from(Mp3Info.class).where("mp3InfoId", "=",
-									mp3Info.getId()));
-					if (myLikeMp3Info == null) {
-						mp3Info.setMp3InfoId(mp3Info.getId());
-						myApp.dbUtils.save(mp3Info);
-						btnLike.setImageResource(R.drawable.player_btn_favorited_normal);
-					} else {
-						myApp.dbUtils.deleteById(Mp3Info.class,
-								myLikeMp3Info.getId());
+				} else if (musicFlag.equals("down_music")) {
+					String title = downMusicList.get(playPosi)
+							.getDownMusicName();
+					// å–æ¶ˆå–œæ¬¢ åˆ é™¤æ•°æ®
+					String whereClause = "MusicTitle=?";// åˆ é™¤çš„æ¡ä»¶
+					String[] whereArgs = { title };// åˆ é™¤çš„æ¡ä»¶å‚æ•°
+					MainFragmentActivity.db.delete("Music", whereClause,
+							whereArgs);// æ‰§è¡Œåˆ é™¤
+					// å–æ¶ˆå–œæ¬¢æˆåŠŸ
+					Toast.makeText(MusicPlayAvtivity.this, "å–æ¶ˆå–œæ¬¢", 0).show();
+					Log.e("å–æ¶ˆä¸‹è½½éŸ³ä¹å–œæ¬¢æˆåŠŸ", "å–æ¶ˆä¸‹è½½éŸ³ä¹å–œæ¬¢æˆåŠŸ");
+					btnLike.setImageResource(R.drawable.player_btn_favorite_highlight);
+					Constant.isInsert = false;
+				}
 
-						btnLike.setImageResource(R.drawable.player_btn_favorite_highlight);
-					}
-				} catch (DbException e) {
-					e.printStackTrace();
+			} else {
+
+				ContentValues values = new ContentValues();
+				if (musicFlag.equals("local_music")
+						&& Constant.isInsert == false) {
+					String musicTitle = mp3List.get(playPosi).getTitle();
+					String MusicArtist = mp3List.get(playPosi).getArtist();
+					String musicTime = mp3List.get(playPosi).getDuration() + "";
+					String MusicUrl = mp3List.get(playPosi).getUrl();
+					// æ‰¾åˆ°å½“å‰æ’­æ”¾éŸ³ä¹çš„å¤§å›¾ å°†å›¾ç‰‡è½¬æ¢æˆå­—èŠ‚æ•°ç»„æ’å…¥åˆ°æ•°æ®åº“è¡¨
+					Bitmap bitmap = MediaUtils.getArtwork(this,
+							mp3List.get(playPosi).getId(), mp3List
+									.get(playPosi).getAlbumId(), true, false);
+					byte[] imgByte = MySQLite.img(bitmap);
+
+					values.put("MusicTitle", musicTitle);
+					values.put("MusicArtist", MusicArtist);
+					values.put("MusicTime", musicTime);
+					values.put("MusicUrl", MusicUrl);
+					values.put("MusicImg", imgByte);
+					MainFragmentActivity.db.insert("Music", null, values);
+					Log.e("æœ¬åœ°éŸ³ä¹æ’å…¥æ•°æ®åº“æˆåŠŸ", "æœ¬åœ°æ’å…¥æ•°æ®åº“æˆåŠŸ");
+					Toast.makeText(MusicPlayAvtivity.this, "æ·»åŠ å–œæ¬¢", 0).show();
+					AniUtil.startAnimationLike(mMoveIv);
+					btnLike.setImageResource(R.drawable.player_btn_favorited_normal);
+					Constant.isInsert = true;
+				} else if (musicFlag.equals("down_music")
+						&& Constant.isInsert == false) {
+
+					String downMusicName = downMusicList.get(playPosi)
+							.getDownMusicName();
+					String downMusicArtist = downMusicList.get(playPosi)
+							.getDownMusicArtist();
+					String downMusicUrl = downMusicList.get(playPosi)
+							.getDownMusicUrl();
+
+					Bitmap albumBit = BitmapFactory.decodeFile(imageTarget
+							+ downMusicList.get(playPosi).getDownMusicName()
+									.trim() + ".jpg", null);
+					byte[] imgByte = MySQLite.img(albumBit);
+					// è½¬æ¢ä¸€ä¸‹æ—¶é—´æ ¼å¼
+					long downMusicTime = MediaUtils
+							.getTrackLength(downMusicList.get(playPosi)
+									.getDownMusicDuration());
+					Log.e("æ’å…¥ä¸‹è½½éŸ³ä¹çš„æ—¶é—´", downMusicTime + "");
+					values.put("MusicTitle", downMusicName);
+					values.put("MusicArtist", downMusicArtist);
+					values.put("MusicTime", downMusicTime);
+					values.put("MusicUrl", downMusicUrl);
+					values.put("MusicImg", imgByte);
+					MainFragmentActivity.db.insert("Music", null, values);
+					Toast.makeText(MusicPlayAvtivity.this, "æ·»åŠ å–œæ¬¢", 0).show();
+					Log.e("ä¸‹è½½éŸ³ä¹æ’å…¥æ•°æ®åº“æˆåŠŸ", "ä¸‹è½½æ’å…¥æ•°æ®åº“æˆåŠŸ");
+					btnLike.setImageResource(R.drawable.player_btn_favorited_normal);
+					AniUtil.startAnimationLike(mMoveIv);
+					Constant.isInsert = true;
 				}
 			}
-			// else if (musicFlag.equals("down_music")) {
-			// DownMucicInfo downMucicInfo = downMusicList
-			// .get(musicPlayService.getCurrentPosition());
-			// try {
-			//
-			// DownMucicInfo myLikeDownMp3Info = myApp.dbUtils
-			// .findFirst(Selector.from(DownMucicInfo.class)
-			// .where("downMp3InfoName",
-			// "=",
-			// downMucicInfo
-			// .getMyLikeDownMusicName()));
-			// if (myLikeDownMp3Info == null) {
-			// downMucicInfo.setMyLikeDownMusicName(downMucicInfo
-			// .getMyLikeDownMusicName());
-			// myApp.dbUtils.save(downMucicInfo);
-			// btnLike.setImageResource(R.drawable.player_btn_favorited_normal);
-			// } else {
-			// myApp.dbUtils.deleteById(DownMucicInfo.class,
-			// downMucicInfo.getMyLikeDownMusicName());
-			// btnLike.setImageResource(R.drawable.player_btn_favorite_highlight);
-			// }
-			// } catch (DbException e) {
-			// e.printStackTrace();
-			// }
-			// }
-
 		}
 			break;
 		}
 	}
 
-	// µ±ÊÇÔÚ±¾µØÒôÀÖÁĞ±íµÄÊÇµã»÷ÏÂÒ»Ê×µ÷ÓÃµÄ·½·¨
+	// åˆ¤æ–­å½“å‰éŸ³ä¹æ˜¯å¦ä¸ºå–œæ¬¢çš„éŸ³ä¹
+	private boolean isLikeMusic(String isPlayMusicTitle) {
+
+		Cursor cursor = MainFragmentActivity.db.query("Music", null, null,
+				null, null, null, null);// æŸ¥è¯¢å¹¶è·å¾—æ¸¸æ ‡
+		if (cursor.moveToFirst()) {
+			do {
+				String musicTitle = cursor.getString(cursor
+						.getColumnIndex("MusicTitle"));
+				if (isPlayMusicTitle.trim().equals(musicTitle.trim())) {
+					cursor.close();
+					Constant.isInsert = true;
+					return true;
+				}
+			} while (cursor.moveToNext());
+
+		}
+		Constant.isInsert = false;
+		return false;
+	}
+
+	// å½“æ˜¯åœ¨æœ¬åœ°éŸ³ä¹åˆ—è¡¨çš„æ˜¯ç‚¹å‡»ä¸‹ä¸€é¦–è°ƒç”¨çš„æ–¹æ³•
 	private void localMusicNextOrPre() {
 		if (currentPosition == -1) {
 			return;
 		}
-
 		intentMusicName = mp3List.get(musicPlayService.getCurrentPosition())
 				.getTitle();
-		updateProgress();
+		updateLocalProgress();
 		setLrc(intentMusicName);
 		btnPause.setVisibility(View.VISIBLE);
 		btnPlay.setVisibility(View.GONE);
-		// ÇĞ»»Êı¾İ
+		// åˆ‡æ¢æ•°æ®
 		int nextPosition = musicPlayService.getCurrentPosition();
+		SharedPrefUtil.setInt(this, Constant.CLICKED_MUNSIC_NAME, nextPosition);
 		musicName.setText(mp3List.get(nextPosition).getTitle());
-		musicSinger.setText("Ò»   " + mp3List.get(nextPosition).getArtist()
-				+ "  Ò»");
+		musicSinger.setText("ä¸€   " + mp3List.get(nextPosition).getArtist()
+				+ "  ä¸€");
 		musicTime.setText(MediaUtils.formatTime(mp3List.get(nextPosition)
 				.getDuration()));
 		Bitmap nextBitmap = MediaUtils.getArtwork(this,
@@ -571,37 +728,43 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 		Drawable boxBlurFilter1 = GaussianBlurUtil.BoxBlurFilter(nextBitmap);
 		playMusicBg.setBackgroundDrawable(boxBlurFilter1);
 		startAnim();
-		// ¸üĞÂÍ¨ÖªÀ¸
+		// æ›´æ–°é€šçŸ¥æ 
 		musicPlayService.updateNotification(nextBitmap,
 				mp3List.get(nextPosition).getTitle(), mp3List.get(nextPosition)
 						.getArtist());
+		boolean likeMusic = isLikeMusic(musicName.getText().toString());
+		if (likeMusic == true) {
+			btnLike.setImageResource(R.drawable.player_btn_favorited_normal);
+		} else {
+			btnLike.setImageResource(R.drawable.player_btn_favorite_highlight);
+		}
 	}
 
-	// µ±ÊÇÔÚÎÒµÄÏÂÔØµÄÒôÀÖÁĞ±íµã»÷ÏÂÒ»Ê×µÄÊ±ºòµ÷ÓÃµÄ·½·¨
+	// å½“æ˜¯åœ¨æˆ‘çš„ä¸‹è½½çš„éŸ³ä¹åˆ—è¡¨ç‚¹å‡»ä¸‹ä¸€é¦–çš„æ—¶å€™è°ƒç”¨çš„æ–¹æ³•
 	private void downMusicNextOrPre() {
 		if (currentPositionDown == -1) {
 			return;
 		}
 		intentMusicName = downMusicList.get(
 				musicPlayService.getCurrentPosition()).getDownMusicName();
-		updateProgress();
+		updateDownProgress();
 		setLrc(intentMusicName);
 		btnPause.setVisibility(View.VISIBLE);
 		btnPlay.setVisibility(View.GONE);
-		// ÇĞ»»Êı¾İ
+		// åˆ‡æ¢æ•°æ®
 		int nextPosition = musicPlayService.getCurrentPosition();
 		SharedPrefUtil.setInt(this, Constant.CLICKED_MUNSIC_NAME_DOWN,
 				nextPosition);
 		musicName.setText(downMusicList.get(nextPosition).getDownMusicName());
-		musicSinger.setText("Ò»   "
-				+ downMusicList.get(nextPosition).getDownMusicArtist() + "  Ò»");
+		musicSinger.setText("ä¸€   "
+				+ downMusicList.get(nextPosition).getDownMusicArtist() + "  ä¸€");
 		musicTime.setText(MediaUtils.formatTime(MediaUtils
 				.getTrackLength(downMusicList.get(nextPosition)
 						.getDownMusicDuration())));
 
 		final String ImageTarget = Environment.getExternalStorageDirectory()
-				+ "/" + "/ÏÂÔØµÄÍ¼Æ¬" + "/";
-		// µÃµ½µ±Ç°²¥·ÅµÄ¸èÇú
+				+ "/" + "/ä¸‹è½½çš„å›¾ç‰‡" + "/";
+		// å¾—åˆ°å½“å‰æ’­æ”¾çš„æ­Œæ›²
 		int curr = musicPlayService.getCurrentPosition();
 		Bitmap albumBit = BitmapFactory.decodeFile(ImageTarget
 				+ downMusicList.get(curr).getDownMusicName().trim() + ".jpg",
@@ -615,6 +778,54 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 		musicPlayService.updateNotification(albumBit,
 				downMusicList.get(nextPosition).getDownMusicName(),
 				downMusicList.get(nextPosition).getDownMusicArtist());
+		boolean likeMusic = isLikeMusic(musicName.getText().toString());
+		if (likeMusic == true) {
+			btnLike.setImageResource(R.drawable.player_btn_favorited_normal);
+		} else {
+			btnLike.setImageResource(R.drawable.player_btn_favorite_highlight);
+		}
+	}
+
+	// å½“æ˜¯åœ¨æˆ‘çš„å–œæ¬¢çš„éŸ³ä¹åˆ—è¡¨ç‚¹å‡»ä¸‹ä¸€é¦–çš„æ—¶å€™è°ƒç”¨çš„æ–¹æ³•
+	private void likeMusicNextOrPre() {
+		if (currentPositionLike == -1) {
+			return;
+		}
+		intentMusicName = MainFragmentActivity.likeMusciList.get(
+				musicPlayService.getCurrentPosition()).getMusicName();
+		updateLikeProgress();
+		setLrc(intentMusicName);
+		btnPause.setVisibility(View.VISIBLE);
+		btnPlay.setVisibility(View.GONE);
+		// åˆ‡æ¢æ•°æ®
+		int nextPosition = musicPlayService.getCurrentPosition();
+		SharedPrefUtil.setInt(this, Constant.CLICKED_MUNSIC_NAME_LIKE,
+				nextPosition);
+		musicName.setText(MainFragmentActivity.likeMusciList.get(nextPosition)
+				.getMusicName());
+		musicSinger.setText("ä¸€   "
+				+ MainFragmentActivity.likeMusciList.get(nextPosition)
+						.getMusicArtist() + "  ä¸€");
+		musicTime.setText(MediaUtils
+				.formatTime(MainFragmentActivity.likeMusciList.get(
+						recordLikeMusicPosition).getMusicTime()));
+		int curr = musicPlayService.getCurrentPosition();
+		Drawable boxBlurFilter1 = GaussianBlurUtil.BoxBlurFilter(MainFragmentActivity.likeMusciList.get(
+				curr).getBitmap());
+		playMusicBg.setBackgroundDrawable(boxBlurFilter1);
+		albumIV.setImageBitmap(MainFragmentActivity.likeMusciList.get(
+				curr).getBitmap());
+		startAnim();
+		musicPlayService.updateNotification(null,
+				MainFragmentActivity.likeMusciList.get(nextPosition)
+						.getMusicName(), MainFragmentActivity.likeMusciList
+						.get(nextPosition).getMusicArtist());
+		boolean likeMusic = isLikeMusic(musicName.getText().toString());
+		if (likeMusic == true) {
+			btnLike.setImageResource(R.drawable.player_btn_favorited_normal);
+		} else {
+			btnLike.setImageResource(R.drawable.player_btn_favorite_highlight);
+		}
 	}
 
 	private ServiceConnection connection = new ServiceConnection() {
@@ -628,45 +839,100 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 
 			PlayBinder playBinder = (PlayBinder) service;
 			musicPlayService = playBinder.getPlayService();
-			// ÄÃµ½ÊÇ·ñ²¥·ÅÁË
+			// æ‹¿åˆ°æ˜¯å¦æ’­æ”¾äº†
 			boolean isPlaying = musicPlayService.isPlaying();
 			if (isPlaying == true) {
-				updateProgress();
+				if (musicFlag.equals("local_music")) {
+					updateLocalProgress();
+				} else if (musicFlag.equals("down_music")) {
+					updateDownProgress();
+				} else if (musicFlag.equals("like_music")&&MainFragmentActivity.likeMusciList.size()!=0) {
+					updateLikeProgress();
+				}
 				btnPause.setVisibility(View.VISIBLE);
 				btnPlay.setVisibility(View.GONE);
 			} else {
 				btnPause.setVisibility(View.GONE);
 				btnPlay.setVisibility(View.VISIBLE);
 			}
-
-			initPlayMode();
-			// ³õÊ¼»¯ÊÕ²Ø¸èÇúµÄ×´Ì¬
-			Mp3Info mp3Info = mp3List
-					.get(musicPlayService.getCurrentPosition());
-			try {
-				Mp3Info myLikeMp3Info = myApp.dbUtils
-						.findFirst(Selector.from(Mp3Info.class).where(
-								"mp3InfoId", "=", mp3Info.getId()));
-				if (myLikeMp3Info != null) {
+			if (musicFlag.equals("local_music")) {
+				boolean likeMusic = isLikeMusic(mp3List.get(
+						musicPlayService.getCurrentPosition()).getTitle());
+				if (likeMusic == true) {
 					btnLike.setImageResource(R.drawable.player_btn_favorited_normal);
 				} else {
 					btnLike.setImageResource(R.drawable.player_btn_favorite_highlight);
 				}
-			} catch (DbException e) {
-				e.printStackTrace();
+
+			} else if (musicFlag.equals("down_music")) {
+				boolean likeMusic = isLikeMusic(downMusicList.get(
+						musicPlayService.getCurrentPosition())
+						.getDownMusicName());
+				if (likeMusic == true) {
+					btnLike.setImageResource(R.drawable.player_btn_favorited_normal);
+				} else {
+					btnLike.setImageResource(R.drawable.player_btn_favorite_highlight);
+				}
+			} else if (musicFlag.equals("like_music")&&MainFragmentActivity.likeMusciList.size()!=0) {
+				boolean likeMusic = isLikeMusic(MainFragmentActivity.likeMusciList
+						.get(musicPlayService.getCurrentPosition())
+						.getMusicName());
+				if (likeMusic == true) {
+					btnLike.setImageResource(R.drawable.player_btn_favorited_normal);
+				} else {
+					btnLike.setImageResource(R.drawable.player_btn_favorite_highlight);
+				}
 			}
+
+			initPlayMode();
 			updateLRC();
 		}
 
 	};
 
-	// ¿ªÆôÏß³Ì ¸üĞÂ½ø¶ÈÌõ
-	private void updateProgress() {
+	// å¼€å¯çº¿ç¨‹ æ›´æ–°æœ¬åœ°éŸ³ä¹è¿›åº¦æ¡
+	private void updateLocalProgress() {
 
 		new Thread(new Runnable() {
 			@Override
 			public void run() {
-				while (true) {
+				while (Constant.isLocalStop) {
+					try {
+
+						if (musicFlag.equals("local_music")) {
+							// è®¾ç½®çš„æ˜¯å½“å‰æ’­æ”¾æ­Œæ›²çš„æœ€å¤§å€¼
+							seekBar.setMax((int) mp3List.get(
+									musicPlayService.getCurrentPosition())
+									.getDuration());
+							seekBar.setProgress(musicPlayService
+									.getCurrentProgress());
+							// Log.e("æœ¬åœ°éŸ³ä¹çš„è¿›åº¦æ¡", "æœ¬åœ°éŸ³ä¹çš„è¿›åº¦æ¡");
+						}
+						Message message1 = mHandler.obtainMessage(
+								Constant.UPDATA_TIME,
+								musicPlayService.getCurrentProgress());
+						Message message2 = mHandler.obtainMessage(
+								Constant.UPTATE_LRC,
+								musicPlayService.getCurrentProgress());
+						message1.sendToTarget();
+						message2.sendToTarget();
+						Thread.sleep(1000);
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
+			}
+		}).start();
+	}
+
+	// å¼€å¯çº¿ç¨‹ æ›´æ–°ä¸‹è½½éŸ³ä¹çš„è¿›åº¦æ¡
+	private void updateDownProgress() {
+
+		new Thread(new Runnable() {
+			@Override
+			public void run() {
+
+				while (Constant.isDownStop) {
 					try {
 
 						if (musicFlag.equals("down_music")) {
@@ -677,17 +943,7 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 											.getDownMusicDuration()));
 							seekBar.setProgress(musicPlayService
 									.getCurrentProgress());
-
-							// Log.e("ÏÂÔØÒôÀÖµÄ½ø¶ÈÌõ", "ÏÂÔØÒôÀÖµÄ½ø¶ÈÌõ");
-
-						} else if (musicFlag.equals("local_music")) {
-							// ÉèÖÃµÄÊÇµ±Ç°²¥·Å¸èÇúµÄ×î´óÖµ
-							seekBar.setMax((int) mp3List.get(
-									musicPlayService.getCurrentPosition())
-									.getDuration());
-							seekBar.setProgress(musicPlayService
-									.getCurrentProgress());
-							// Log.e("±¾µØÒôÀÖµÄ½ø¶ÈÌõ", "ÏÂÔØÒôÀÖµÄ½ø¶ÈÌõ");
+							// Log.e("ä¸‹è½½éŸ³ä¹çš„è¿›åº¦æ¡", "ä¸‹è½½éŸ³ä¹çš„è¿›åº¦æ¡");
 						}
 
 						Message message1 = mHandler.obtainMessage(
@@ -707,22 +963,61 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 		}).start();
 	}
 
+	// å¼€å¯çº¿ç¨‹ æ›´æ–°å–œæ¬¢çš„éŸ³ä¹çš„è¿›åº¦æ¡
+	private void updateLikeProgress() {
+
+		new Thread(new Runnable() {
+			@Override
+			public void run() {
+
+				while (Constant.isLikeStop) {
+					try {
+
+						if (musicFlag.equals("like_music")&&MainFragmentActivity.likeMusciList.size()!=0) {
+							seekBar.setMax(new Long(
+									MainFragmentActivity.likeMusciList.get(
+											musicPlayService
+													.getCurrentPosition())
+											.getMusicTime()).intValue());
+							seekBar.setProgress(musicPlayService
+									.getCurrentProgress());
+						}
+
+						// Log.e("å–œæ¬¢éŸ³ä¹çš„è¿›åº¦æ¡", "å–œæ¬¢éŸ³ä¹çš„è¿›åº¦æ¡");
+
+						Message message1 = mHandler.obtainMessage(
+								Constant.UPDATA_TIME,
+								musicPlayService.getCurrentProgress());
+						Message message2 = mHandler.obtainMessage(
+								Constant.UPTATE_LRC,
+								musicPlayService.getCurrentProgress());
+						message1.sendToTarget();
+						message2.sendToTarget();
+						Thread.sleep(1000);
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
+			}
+		}).start();
+	}
+
 	/**
-	* @Description¸üĞÂ¸è´Ê 
+	* @Descriptionæ›´æ–°æ­Œè¯ 
 	* @return void 
 	* @author bai
 	*/
 	private void updateLRC() {
 		new Thread(new Runnable() {
-			// ³õÊ¼»¯ÊÕ²Ø¸èÇúµÄ×´Ì¬
+			// åˆå§‹åŒ–æ”¶è—æ­Œæ›²çš„çŠ¶æ€
 			@Override
 			public void run() {
-				// ¸è´Ê
+				// æ­Œè¯
 				String LrcPath = Environment.getExternalStorageDirectory()
-						+ "/" + "/ÏÂÔØµÄ¸è´Ê" + "/" + intentMusicName + ".lrc";
+						+ "/" + "/ä¸‹è½½çš„æ­Œè¯" + "/" + intentMusicName + ".lrc";
 				File lrcFile = new File(LrcPath);
 				if (!lrcFile.exists()) {
-					// ÏÂÔØ
+					// ä¸‹è½½
 					SearchMusicUtil.getInstance()
 							.setListener(new onSearchResultListener() {
 
@@ -753,25 +1048,25 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 	}
 
 	/**
-	* @Description:ÉèÖÃ¸è´Ê 
+	* @Description:è®¾ç½®æ­Œè¯ 
 	* @param musicTitle
 	* @return void 
 	* @author bai
 	*/
 	private void setLrc(String musicTitle) {
 		String target = Environment.getExternalStorageDirectory() + "/"
-				+ "/ÏÂÔØµÄ¸è´Ê" + "/" + intentMusicName.trim() + ".lrc";
+				+ "/ä¸‹è½½çš„æ­Œè¯" + "/" + intentMusicName.trim() + ".lrc";
 		mLrcViewOnSecondPage.setLrcPath(target);
 		mLrcViewOnFirstPage.setLrcPath(target);
 	}
 
 	/**
-	* @Description:³õÊ¼»¯²¥·ÅÄ£Ê½ 
+	* @Description:åˆå§‹åŒ–æ’­æ”¾æ¨¡å¼ 
 	* @return void 
 	* @author bai
 	*/
 	private void initPlayMode() {
-		switch (musicPlayService.getPlayMode()) {
+		switch (MusicPlayService.getPlayMode()) {
 		case MusicPlayService.PLAY_ORDER:
 			btnPlayMode
 					.setImageResource(R.drawable.player_btn_repeat_highlight);
@@ -790,7 +1085,7 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 		}
 	}
 
-	// ÍÏ¶¯½ø¶ÈÌõÒªÊµÏÖµÄ·½·¨
+	// æ‹–åŠ¨è¿›åº¦æ¡è¦å®ç°çš„æ–¹æ³•
 	@Override
 	public void onProgressChanged(SeekBar seekBar, int progress,
 			boolean fromUser) {
@@ -798,7 +1093,7 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 			musicPlayService.seekTo(progress);
 			startMusicTime.setText(MediaUtils.formatTime(musicPlayService
 					.getCurrentProgress()));
-			// ÍÏ¶¯µÄÊ±ºòÔİÍ£
+			// æ‹–åŠ¨çš„æ—¶å€™æš‚åœ
 			musicPlayService.pause();
 		}
 	}
@@ -810,7 +1105,7 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 	@Override
 	public void onStopTrackingTouch(SeekBar seekBar) {
 		seekBar.setProgress(musicPlayService.getCurrentProgress());
-		// ÍÏ¶¯Íê³Éºó¼ÌĞø²¥·Å
+		// æ‹–åŠ¨å®Œæˆåç»§ç»­æ’­æ”¾
 		musicPlayService.start();
 		int progress = seekBar.getProgress();
 		mLrcViewOnSecondPage.onDrag(progress);
@@ -818,7 +1113,7 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 
 	}
 
-	// ¿ªÊ¼Ğı×ª×¨¼­Í¼Æ¬µÄ¶¯»­
+	// å¼€å§‹æ—‹è½¬ä¸“è¾‘å›¾ç‰‡çš„åŠ¨ç”»
 	private void startAnim() {
 		Animation operatingAnim = AnimationUtils.loadAnimation(this,
 				R.anim.tip_play);
@@ -875,27 +1170,34 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 				mPlayViewPager.setCurrentItem(1);
 				break;
 			}
-			// ¸Ä±äµãµÄ×´Ì¬
+			// æ”¹å˜ç‚¹çš„çŠ¶æ€
 			dots.get(arg0).setBackgroundResource(R.drawable.dot_focused);
 			dots.get(oldPage).setBackgroundResource(R.drawable.dot_normal);
-			// ¼ÇÂ¼µÄÒ³Ãæ
+			// è®°å½•çš„é¡µé¢
 			oldPage = arg0;
 		}
 	}
 
-	// ½ÓÊÜµ½¹ã²¥¸üĞÂÊı¾İ
+	// æ¥å—åˆ°å¹¿æ’­æ›´æ–°æ•°æ®
 	public class MyBroadCast extends BroadcastReceiver {
 		@Override
 		public void onReceive(Context context, Intent intent) {
-			if (intent.getAction().equals("updateText")) {
+			if (intent.getAction().equals("updateLocalText")) {
 				if (musicFlag.equals("local_music")) {
 					localMusicNextOrPre();
-				} else if (musicFlag.equals("down_music")) {
+				}
+			} else if (intent.getAction().equals("updateDownText")) {
+				if (musicFlag.equals("down_music")) {
 					downMusicNextOrPre();
 				}
-			}
-		}
 
+			} else if (intent.getAction().equals("updateLikeText")) {
+				if (musicFlag.equals("like_music")&&MainFragmentActivity.likeMusciList.size()!=0) {
+					likeMusicNextOrPre();
+				}
+			}
+
+		}
 	}
 
 }

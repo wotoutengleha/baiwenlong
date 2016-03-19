@@ -98,6 +98,8 @@ public class ScanMusicActivity extends SwipeBackActivity implements
 			public void handleMessage(Message msg) {
 				super.handleMessage(msg);
 				mDialog.dismiss();
+				finish();
+				overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right);
 			}
 		};
 

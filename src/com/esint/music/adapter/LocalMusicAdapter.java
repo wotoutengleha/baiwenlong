@@ -1,12 +1,18 @@
-package com.esint.music.sortlistview;
+package com.esint.music.adapter;
 
+import java.io.File;
 import java.text.DecimalFormat;
 import java.util.List;
 
 import android.R.color;
 import android.app.AlertDialog;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.os.Message;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -15,23 +21,29 @@ import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.esint.music.R;
+import com.esint.music.activity.MainFragmentActivity;
+import com.esint.music.activity.MusicPlayAvtivity;
+import com.esint.music.db.MySQLite;
 import com.esint.music.dialog.Effectstype;
 import com.esint.music.dialog.NiftyDialogBuilder;
+import com.esint.music.fragment.MyTabMusic;
 import com.esint.music.model.Mp3Info;
+import com.esint.music.utils.AniUtil;
 import com.esint.music.utils.Constant;
 import com.esint.music.utils.MediaUtils;
 import com.esint.music.utils.SharedPrefUtil;
 
-public class SortAdapter extends BaseAdapter {
+public class LocalMusicAdapter extends BaseAdapter {
 	private List<Mp3Info> list = null;
 	private Context mContext;
 	private SharedPreferences sp;
 	private Effectstype effect;
 	private NiftyDialogBuilder dialogBuilder;
 
-	public SortAdapter(Context mContext, List<Mp3Info> list) {
+	public LocalMusicAdapter(Context mContext, List<Mp3Info> list) {
 		this.mContext = mContext;
 		this.list = list;
 		sp = mContext.getSharedPreferences("ARROW", Context.MODE_PRIVATE);
@@ -134,16 +146,44 @@ public class SortAdapter extends BaseAdapter {
 
 			@Override
 			public void onClick(View v) {
-				spf = mContext.getSharedPreferences("LIKE",
-						Context.MODE_PRIVATE);
-				spf.edit().putInt("LIKE", position).commit();
+				
+				String musicTitle = list.get(position).getTitle();
+				String MusicArtist = list.get(position).getArtist();
+				String musicTime = list.get(position).getDuration() + "";
+				String MusicUrl = list.get(position).getUrl();
+				// 找到当前播放音乐的大图 将图片转换成字节数组插入到数据库表
+				Bitmap bitmap = MediaUtils.getArtwork(mContext,
+						list.get(position).getId(), list
+								.get(position).getAlbumId(), true, false);
+				byte[] imgByte = MySQLite.img(bitmap);
+				ContentValues values = new ContentValues();
+				values.put("MusicTitle", musicTitle);
+				values.put("MusicArtist", MusicArtist);
+				values.put("MusicTime", musicTime);
+				values.put("MusicUrl", MusicUrl);
+				values.put("MusicImg", imgByte);
+				MainFragmentActivity.db.insert("Music", null, values);
+				Log.e("本地音乐插入数据库成功", "本地插入数据库成功");
+				Toast.makeText(mContext, "添加喜欢", 0).show();
+				viewHolder.ivLikeNormal.setVisibility(View.GONE);
+				viewHolder.ivLikePress.setVisibility(View.VISIBLE);
 				notifyDataSetChanged();
 			}
 		});
 		viewHolder.ivLikePress.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				spf.edit().clear().commit();
+				
+				String musicTitle = list.get(position).getTitle();
+				String whereClause = "MusicTitle=?";
+				String [] whereArgs = {musicTitle};
+				MainFragmentActivity.db.delete("Music", whereClause, whereArgs);
+				Toast.makeText(mContext, "取消喜欢", 0).show();
+				viewHolder.ivLikeNormal.setVisibility(View.VISIBLE);
+				viewHolder.ivLikePress.setVisibility(View.GONE);
+				Message message = MyTabMusic.mHandler.obtainMessage(Constant.NEXT_LEKE_MUSIC, musicTitle);
+				message.sendToTarget();
+				sp.edit().clear().commit();
 				notifyDataSetChanged();
 			}
 		});
@@ -175,8 +215,8 @@ public class SortAdapter extends BaseAdapter {
 		}
 		SharedPreferences spf = mContext.getSharedPreferences("LIKE",
 				Context.MODE_PRIVATE);
-		int like = spf.getInt("LIKE", -1);
-		if (like == position) {
+		boolean isLikeMusic = isLikeMusic(list.get(position).getTitle());
+		if (isLikeMusic == true) {
 			viewHolder.ivLikePress.setVisibility(View.VISIBLE);
 			viewHolder.ivLikeNormal.setVisibility(View.GONE);
 		} else {
@@ -206,7 +246,7 @@ public class SortAdapter extends BaseAdapter {
 	}
 
 	// 删除歌曲的dialog
-	private void chooseDialog(int position) {
+	private void chooseDialog(final int position) {
 		effect = Effectstype.Shake;
 		dialogBuilder = new NiftyDialogBuilder(mContext, R.style.dialog_untran);
 		dialogBuilder
@@ -223,6 +263,12 @@ public class SortAdapter extends BaseAdapter {
 					@Override
 					public void onClick(View v) {
 						dialogBuilder.dismiss();
+						String musicUrl = list.get(position).getUrl();
+						new File(musicUrl).delete();
+						Toast.makeText(mContext, "删除成功", 0).show();
+						sp.edit().clear().commit();
+						list.remove(position);
+						notifyDataSetChanged();
 					}
 				}).setButton2Click(new OnClickListener() {
 
@@ -292,6 +338,27 @@ public class SortAdapter extends BaseAdapter {
 			}
 		}
 		return -1;
+	}
+
+	// 判断当前音乐是否为喜欢的音乐
+	private boolean isLikeMusic(String isPlayMusicTitle) {
+
+		Cursor cursor = MainFragmentActivity.db.query("Music", null, null,
+				null, null, null, null);// 查询并获得游标
+		if (cursor.moveToFirst()) {
+			do {
+				String musicTitle = cursor.getString(cursor
+						.getColumnIndex("MusicTitle"));
+				if (isPlayMusicTitle.trim().equals(musicTitle.trim())) {
+					cursor.close();
+					Constant.isInsert = true;
+					return true;
+				}
+			} while (cursor.moveToNext());
+
+		}
+		Constant.isInsert = false;
+		return false;
 	}
 
 }

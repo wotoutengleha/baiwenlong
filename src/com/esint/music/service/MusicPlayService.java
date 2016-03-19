@@ -29,6 +29,7 @@ import com.esint.music.activity.MainFragmentActivity;
 import com.esint.music.activity.SettingActivity;
 import com.esint.music.fragment.MyTabMusic;
 import com.esint.music.model.DownMucicInfo;
+import com.esint.music.model.LikeMusicModel;
 import com.esint.music.model.Mp3Info;
 import com.esint.music.utils.Constant;
 import com.esint.music.utils.MediaUtils;
@@ -97,18 +98,18 @@ public class MusicPlayService extends Service implements OnShakeListener {
 		recevierFilter.addAction(Intent.ACTION_SCREEN_ON);
 		recevierFilter.addAction(Intent.ACTION_SCREEN_OFF);
 		registerReceiver(sOnBroadcastReciver, recevierFilter);
-//		// 注册通知栏的广播
-//		ControlBroadcast controlBroadcast = new ControlBroadcast();
-//		IntentFilter notifiFilter = new IntentFilter();
-//		notifiFilter.addAction(PAUSE_BROADCAST_NAME);
-//		notifiFilter.addAction(NEXT_BROADCAST_NAME);
-//		notifiFilter.addAction(PRE_BROADCAST_NAME);
-//		registerReceiver(controlBroadcast, notifiFilter);
+		// // 注册通知栏的广播
+		// ControlBroadcast controlBroadcast = new ControlBroadcast();
+		// IntentFilter notifiFilter = new IntentFilter();
+		// notifiFilter.addAction(PAUSE_BROADCAST_NAME);
+		// notifiFilter.addAction(NEXT_BROADCAST_NAME);
+		// notifiFilter.addAction(PRE_BROADCAST_NAME);
+		// registerReceiver(controlBroadcast, notifiFilter);
 
 		mShakeDetector = new ShakeDetector(this);
 		mShakeDetector.setOnShakeListener(this);
 
-		//摇一摇的实现不断的在handler里边发送消息
+		// 摇一摇的实现不断的在handler里边发送消息
 		SettingActivity.mHandler = new Handler() {
 			@Override
 			public void handleMessage(Message msg) {
@@ -133,25 +134,25 @@ public class MusicPlayService extends Service implements OnShakeListener {
 
 	}
 
-//	private class ControlBroadcast extends BroadcastReceiver {
-//
-//		@Override
-//		public void onReceive(Context context, Intent intent) {
-//			int flag = intent.getIntExtra("FLAG", -1);
-//			switch (flag) {
-//			case PAUSE_FLAG:
-//				// MediaService.this.stopForeground(true);
-//				pause();
-//				break;
-//			case NEXT_FLAG:
-//				// next();
-//				break;
-//			case PRE_FLAG:
-//				// previous();
-//				break;
-//			}
-//		}
-//	}
+	// private class ControlBroadcast extends BroadcastReceiver {
+	//
+	// @Override
+	// public void onReceive(Context context, Intent intent) {
+	// int flag = intent.getIntExtra("FLAG", -1);
+	// switch (flag) {
+	// case PAUSE_FLAG:
+	// // MediaService.this.stopForeground(true);
+	// pause();
+	// break;
+	// case NEXT_FLAG:
+	// // next();
+	// break;
+	// case PRE_FLAG:
+	// // previous();
+	// break;
+	// }
+	// }
+	// }
 
 	/**
 	* @Description:更新通知栏 
@@ -206,10 +207,10 @@ public class MusicPlayService extends Service implements OnShakeListener {
 		startForeground(NOTIFICATION_ID, notification);
 	}
 
-//	private void cancelNotification() {
-//		stopForeground(true);
-//		notificationManager.cancel(NOTIFICATION_ID);
-//	}
+	// private void cancelNotification() {
+	// stopForeground(true);
+	// notificationManager.cancel(NOTIFICATION_ID);
+	// }
 
 	@Override
 	public void onDestroy() {
@@ -249,12 +250,14 @@ public class MusicPlayService extends Service implements OnShakeListener {
 
 	// 播放我的最爱的音乐 从头状态
 	public void playMyFav(int position) {
-		if (position >= 0 && position < MyTabMusic.sortMyLikeMp3Infos.size()) {
-			Mp3Info mp3Info = MyTabMusic.sortMyLikeMp3Infos.get(position);
+		if (position >= 0
+				&& position < MainFragmentActivity.likeMusciList.size()) {
+			LikeMusicModel mp3Info = MainFragmentActivity.likeMusciList
+					.get(position);
 			try {
 				mPlayer.reset();
 				// 设置播放的位置
-				mPlayer.setDataSource(this, Uri.parse(mp3Info.getUrl()));
+				mPlayer.setDataSource(this, Uri.parse(mp3Info.getMusicURL()));
 				mPlayer.prepare();
 				mPlayer.start();
 				currentPlayPosition = position;// 记录当前播放的位置
@@ -359,6 +362,33 @@ public class MusicPlayService extends Service implements OnShakeListener {
 		}
 		}
 	}
+	// 下一首 播放喜欢音乐的下一首歌曲
+		public void nextLikeMusic() {
+			switch (playMode) {
+			case PLAY_ORDER: {
+				if (currentPlayPosition + 1 >= MainFragmentActivity.likeMusciList.size()) {
+					currentPlayPosition = 0;// 回到第一首歌
+				} else {
+					currentPlayPosition++;
+				}
+				playMyFav(currentPlayPosition);
+				break;
+			}
+			case PLAY_RANDOM: {
+				playMyFav(random.nextInt(MainFragmentActivity.getFavMusicFromDB().size()));
+				break;
+			}
+			case PLAY_SINGLE: {
+				// if (currentPlayPosition + 1 >= downMusicList.size()) {
+				// currentPlayPosition = 0;// 回到第一首歌
+				// } else {
+				// currentPlayPosition++;
+				// }
+				playMyFav(currentPlayPosition);
+				break;
+			}
+			}
+		}
 
 	// 上一首 本地音乐列表
 	public void previous() {
@@ -379,6 +409,16 @@ public class MusicPlayService extends Service implements OnShakeListener {
 		}
 		playMyDown(currentPlayPosition);
 	}
+	
+	// 上一首 喜欢音乐列表
+		public void previousLike() {
+			if (currentPlayPosition - 1 < 0) {
+				currentPlayPosition = MainFragmentActivity.likeMusciList.size() - 1;// 回到最后一首
+			} else {
+				currentPlayPosition--;
+			}
+			playMyFav(currentPlayPosition);
+		}
 
 	// 开始
 	public void start() {
@@ -437,13 +477,13 @@ public class MusicPlayService extends Service implements OnShakeListener {
 		MusicPlayService.playMode = playMode;
 	}
 
-	//摇一摇接口实现的方法
+	// 摇一摇接口实现的方法
 	@Override
 	public void onShake() {
 		Toast.makeText(this, "摇一摇换歌了", 0).show();
 		Random random = new Random();
 		playLocalMusic(random.nextInt(mp3Infos.size()));
-		Message message  = MyTabMusic.mHandler.obtainMessage(6666);
+		Message message = MyTabMusic.mHandler.obtainMessage(Constant.SHAKE_MUSIC);
 		message.sendToTarget();
 	}
 }

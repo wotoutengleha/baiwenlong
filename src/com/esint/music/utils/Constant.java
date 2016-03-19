@@ -13,8 +13,9 @@ public class Constant {
 	public static final String BROADCAST_SHAKE = "com.esint.music.shake";// 设置摇一摇切换歌曲的广播
 	public static final String SP_SHAKE_CHANGE_SONG = "shake_change_song";// 摇一摇切换歌曲
 	public static final String BROADCAST_NAME = "com.esint.music.broadcast";
-	public static final String CLICKED_MUNSIC_NAME = "ClickPosition";// 点击歌曲的时候存入的位置
+	public static final String CLICKED_MUNSIC_NAME = "ClickPosition";// 点击本地歌曲的时候存入的位置
 	public static final String CLICKED_MUNSIC_NAME_DOWN = "ClickPositionDown";// 点击下载歌曲的时候存入的位置
+	public static final String CLICKED_MUNSIC_NAME_LIKE= "ClickPositionlike";// 点击下载歌曲的时候存入的位置
 	public static final String COLOR_INDEX = "color_index";// 在设置界面中点击切换actionBar的颜色
 	public static final String COLOR_INDEX_SELECT = "color_index_select";// 被选择的
 	public static final String MUSIC_FLAG = "music_flag";
@@ -34,6 +35,8 @@ public class Constant {
 	public static final int FAILED = 0x006;
 	public static final int UPDATE_LOCKTIME = 0x009;// 更新锁屏页面的进度条
 	public static final int page = 1;// 搜索歌曲的时候搜索的页数
+	public static final int NEXT_LEKE_MUSIC = 0x010;// 取消喜欢音乐的时候播放下一首的what
+	public static final int SHAKE_MUSIC = 0x011;// 摇一摇的时候播放下一首的what
 	public static final String PLAY_MODE = "play_mode";// 播放模式 默认是1 顺序播放
 	public static boolean isFirst = true;
 	public static boolean ISFirst_PLAY = true;
@@ -43,6 +46,12 @@ public class Constant {
 	public static final String ND_HOT = "paihang/liuxinggequ.htm";
 	public static final String SHAKE_FLAG = "shake_flag";
 	public static final int  WHAT_SHAKE = 0x011;//发送摇一摇的what
+	public static final int DOWN_LRC = 0x012;//在播放界面的时候下载歌词
+	public static boolean isDownStop=true;//控制下载音乐的进度条
+	public static  boolean isLocalStop=true;//控制本地音乐的进度条
+	public static  boolean isLikeStop=true;//控制喜欢音乐的进度条
+	public static boolean isInsert=false;//是否插入了数据
+	
 
 	// 是否开启了振动模式
 	public static final String SHAKE_ON_OFF = "SHAKE_ON_OFF";
@@ -73,4 +82,8 @@ public class Constant {
 	public static final int WHAT_HOT_SONGINFO = 0x114;
 	public static final int WHAT_NET_HOTMUSIC_LIST = 0x113;
 	public static final int WHAT_EXECEPTION = 0X114;
+	
+	
+	  public static final String YR_URL="http://music.163.com/api/song/media?id=";
+	  public static final String DIR_LRC="/youran_music/lrc";
 }

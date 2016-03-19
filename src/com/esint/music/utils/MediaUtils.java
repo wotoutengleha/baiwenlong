@@ -5,6 +5,7 @@ import java.io.FileDescriptor;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.RandomAccessFile;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -83,7 +84,7 @@ public class MediaUtils {
 					.getColumnIndex(MediaStore.Audio.Media.DATA));// 获取歌曲的路径
 			int isMusic = cursor.getInt(cursor
 					.getColumnIndex(MediaStore.Audio.Media.IS_MUSIC));// 是否为音乐
-			
+
 			// 把音乐添加到对象当中
 			if (isMusic == 0) {
 				mp3Info.setId(id);
@@ -452,16 +453,44 @@ public class MediaUtils {
 				String wholeName = f.getName();// 获得文件的名称
 				String target = Environment.getExternalStorageDirectory() + "/"
 						+ "/下载的歌曲" + "/" + wholeName;
+				
+				String saveTarget = Environment.getExternalStorageDirectory() + "/"
+						+ "/下载的歌曲" + "/";
 				String[] whole = wholeName.split("-");
 				String artist = whole[0];
 				String musicName = whole[1];
 				musicName = musicName.substring(0, musicName.lastIndexOf('.'));
 				DownMucicInfo netMucicInfo = new DownMucicInfo();
 
+
+//				Mp3File mp3file;
+//				try {
+//					mp3file = new Mp3File(target);
+//					Log.e("mp3file", mp3file.toString() + "");
+//					ID3v2 id3v2Tag;
+//					if (mp3file.hasId3v2Tag()) {
+//						Log.e("if", "if");
+//						id3v2Tag = mp3file.getId3v2Tag();
+//					} else {
+//						id3v2Tag = new ID3v24Tag();
+//						mp3file.setId3v2Tag(id3v2Tag);
+//						Log.e("else", "else");
+//					}
+//					id3v2Tag.setArtist(artist);
+//					id3v2Tag.setTitle(musicName);
+//					Log.e("id3v2Tag", "音乐名称" + id3v2Tag.getTitle() + "");
+//					Log.e("id3v2Tag", "artist" + id3v2Tag.getArtist() + "");
+//					id3v2Tag.setEncoder("UTF-8");
+//					mp3file.save(saveTarget +musicName+".mp3");
+//
+//				} catch (Exception e) {
+//					e.printStackTrace();
+//				}
+
 				File sourceFile = new File(target);
 				try {
-					MP3File mp3file = new MP3File(sourceFile);
-					MP3AudioHeader header = mp3file.getMP3AudioHeader();
+					MP3File mp3file2 = new MP3File(sourceFile);
+					MP3AudioHeader header = mp3file2.getMP3AudioHeader();
 					if (header == null) {
 						return null;
 					}

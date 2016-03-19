@@ -25,6 +25,7 @@ import com.esint.music.model.Mp3Info;
 import com.esint.music.model.DownMucicInfo;
 import com.esint.music.model.NewMusicInfo;
 import com.esint.music.utils.Constant;
+import com.esint.music.utils.MyHttpUtils;
 import com.esint.music.utils.SharedPrefUtil;
 import com.lidroid.xutils.HttpUtils;
 import com.lidroid.xutils.exception.HttpException;
@@ -139,7 +140,59 @@ public class HotMusicListAdapter extends BaseAdapter {
 				dialog.dismiss();
 			}
 		});
+		final MyHttpUtils myHttpUtils = new MyHttpUtils(context);
 		ok.setOnClickListener(new OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				dialog.dismiss();
+				
+				boolean isConnected = myHttpUtils.isConnnected(context);
+				if (isConnected == false) {
+					Toast.makeText(context, "当前网络没有连接", 0).show();
+					return;
+				}
+				// 判断网络类型
+				int networkType = myHttpUtils.getNetworkType();
+				Log.e("当前的网络是", networkType + "");
+				switch (networkType) {
+				case 0:// 流量网络
+					showNetAlert(position);
+					break;
+				case 1:// Wi-Fi网络
+					downloadMusic(position);
+					break;
+
+				}
+			}
+		});
+	}
+	
+	/**
+	* @Description:判断网络类型 ，在流量状态下提示 
+	* @param position
+	* @return void 
+	* @author bai
+	*/
+	private void showNetAlert(final int position) {
+
+		AlertDialog.Builder builder = new AlertDialog.Builder(context);
+		final AlertDialog dialog = builder.create();
+		View alertDialogView = View.inflate(context, R.layout.dialog_nettips,
+				null);
+		TextView okTv = (TextView) alertDialogView
+				.findViewById(R.id.tv_countinue);
+		TextView cancelTv = (TextView) alertDialogView
+				.findViewById(R.id.tv_stop);
+		dialog.show();
+		WindowManager.LayoutParams params = dialog.getWindow().getAttributes();
+		WindowManager m = ((Activity) context).getWindowManager();
+		Display d = m.getDefaultDisplay();
+		params.height = (int) (d.getHeight() * 0.286);
+		params.width = (int) (d.getWidth() * 0.8);
+		dialog.getWindow().setAttributes(params);
+		dialog.setContentView(alertDialogView);
+		okTv.setOnClickListener(new OnClickListener() {
 
 			@Override
 			public void onClick(View v) {
@@ -147,7 +200,17 @@ public class HotMusicListAdapter extends BaseAdapter {
 				downloadMusic(position);
 			}
 		});
+		cancelTv.setOnClickListener(new OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				dialog.dismiss();
+			}
+		});
+
 	}
+	
+
 
 	protected void downloadMusic(final int position) {
 

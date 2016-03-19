@@ -107,6 +107,7 @@ public class MyHttpUtils {
 	private final int NETTYPE_WIFI = 0x01;
 	private final int NETTYPE_CMWAP = 0x02;
 	private final int NETTYPE_CMNET = 0x03;
+	private SearchMusicInfo musicInfo;
 
 	/**
 	 * 获取当前网络类型
@@ -360,7 +361,7 @@ public class MyHttpUtils {
 			String resultObject = jsonObject.getString("songs");
 			JSONArray resultArray = new JSONArray(resultObject);
 			for (int i = 0; i < resultArray.length(); i++) {
-				SearchMusicInfo musicInfo = new SearchMusicInfo();
+				musicInfo = new SearchMusicInfo();
 				JSONObject musicObject = resultArray.getJSONObject(i);
 				String musicID = musicObject.getString("id");
 				String musicName = musicObject.getString("name");
@@ -380,6 +381,7 @@ public class MyHttpUtils {
 			Message message = handler.obtainMessage(
 					Constant.WHAT_NET_HOTMUSIC_LIST, searchMusicList);
 			message.sendToTarget();
+			
 		} catch (JSONException e) {
 			Message message = handler.obtainMessage(Constant.WHAT_EXECEPTION);
 			message.sendToTarget();

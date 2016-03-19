@@ -98,8 +98,8 @@
         android:layout_height="20dip"
         android:layout_alignParentLeft="true"
         android:layout_below="@+id/lrc"
-        android:layout_marginTop="10dp"
         android:layout_marginBottom="10dp"
+        android:layout_marginTop="10dp"
         android:gravity="center_horizontal|center"
         android:orientation="vertical" >
 
@@ -266,5 +266,13 @@
             android:contentDescription="@string/app_name"
             android:src="@drawable/player_btn_playlist_highlight" />
     </LinearLayout>
+
+    <ImageView
+        android:id="@+id/move_iv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:src="@drawable/icon_flaying_favorite"
+        android:visibility="invisible" />
 
 </RelativeLayout>

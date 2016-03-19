@@ -30,6 +30,12 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+/**   
+* 类名称：SearchResultAdapter   
+* 类描述：  搜索音乐列表的适配器 
+* 创建人：bai   
+* 创建时间：2016-3-17 下午4:16:41         
+*/
 public class SearchResultAdapter extends BaseAdapter {
 
 	private Context context;
@@ -142,7 +148,7 @@ public class SearchResultAdapter extends BaseAdapter {
 			public void onSuccess(ResponseInfo<String> arg0) {
 				String response = arg0.result;
 				Log.e("请求的网络地址", getRequestUrl());
-				parseJsonResult(position,response);
+				parseJsonResult(position, response);
 			}
 		});
 
@@ -153,7 +159,7 @@ public class SearchResultAdapter extends BaseAdapter {
 	 * @return void
 	 * @author bai
 	 */
-	protected void parseJsonResult(int position,String response) {
+	protected void parseJsonResult(int position, String response) {
 
 		try {
 			JSONObject result = new JSONObject(response);
@@ -165,7 +171,7 @@ public class SearchResultAdapter extends BaseAdapter {
 				String album = object.getString("album");
 				JSONObject picObject = new JSONObject(album);
 				String picUrl = picObject.getString("picUrl");
-				downloadMusic(position,mp3Url, picUrl);
+				downloadMusic(position, mp3Url, picUrl);
 			}
 
 		} catch (JSONException e) {
@@ -190,6 +196,7 @@ public class SearchResultAdapter extends BaseAdapter {
 		httpUtils.download(mp3Url, MusicTarget, new RequestCallBack<File>() {
 			@Override
 			public void onSuccess(ResponseInfo<File> arg0) {
+				
 				Toast.makeText(context, "音乐下载成功", 0).show();
 				// 音乐下载成功后把图片也下载下来
 				httpUtils.download(picUrl, ImageTarget,
@@ -199,7 +206,6 @@ public class SearchResultAdapter extends BaseAdapter {
 							public void onSuccess(ResponseInfo<File> arg0) {
 								Toast.makeText(context, "图片下载成功", 0).show();
 							}
-
 							@Override
 							public void onFailure(HttpException arg0,
 									String arg1) {

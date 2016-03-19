@@ -91,6 +91,7 @@ public class LockActivity extends SwipeBackActivity implements OnClickListener {
 	private int currentPosition;
 	private ArrayList<DownMucicInfo> downMusicList;// 我的下载的音乐的列表
 	private int recordDownMusicPosition;// 记录点击我的下载歌曲里边的列表
+	private int recordLikeMusicPosition;// 记录点击我的喜欢歌曲里边的列表
 	private String imageTarget;// 下载音乐图片保存的路径
 	private String musicFlag;// ；是本地音乐还是下载的音乐
 	private MyBroadCast broadCast;
@@ -168,7 +169,9 @@ public class LockActivity extends SwipeBackActivity implements OnClickListener {
 		bindService(intent, connection, Context.BIND_AUTO_CREATE);
 		broadCast = new MyBroadCast();
 		IntentFilter intentFilter = new IntentFilter();
-		intentFilter.addAction("updateText");
+		intentFilter.addAction("updateLocalText");
+		intentFilter.addAction("updateDownText");
+		intentFilter.addAction("updateLikeText");
 		registerReceiver(broadCast, intentFilter);
 
 		bitmapUtils = new BitmapUtils(this);
@@ -186,38 +189,41 @@ public class LockActivity extends SwipeBackActivity implements OnClickListener {
 				Constant.CLICKED_MUNSIC_NAME, -1);
 		recordDownMusicPosition = SharedPrefUtil.getInt(this,
 				Constant.CLICKED_MUNSIC_NAME_DOWN, -1);
+		recordLikeMusicPosition = SharedPrefUtil.getInt(this,
+				Constant.CLICKED_MUNSIC_NAME_LIKE, -1);
 		musicFlag = SharedPrefUtil.getString(this, Constant.MUSIC_FLAG,
 				"The music Flag is Empty");
 		if (currentPosition != -1 && musicFlag.equals("local_music")) {
 			songNameTextView.setText(mp3List.get(currentPosition).getTitle());
 			songerTextView.setText(mp3List.get(currentPosition).getArtist());
 			setLrc(songNameTextView.getText().toString());
-			Bitmap bitmap = MediaUtils.getArtwork(this,
-					mp3List.get(currentPosition).getId(),
-					mp3List.get(currentPosition).getAlbumId(), true, false);
-			Drawable drawable = new BitmapDrawable(bitmap);
-			// lockBackGround.setBackground(drawable);
 			Log.e("本地音乐的歌手", songerTextView.getText().toString());
 			downLoadArtistImag(songerTextView.getText().toString());
 
-		}
-		if (recordDownMusicPosition != -1 && musicFlag.equals("down_music")) {
+		} else if (recordDownMusicPosition != -1
+				&& musicFlag.equals("down_music")) {
 
 			songNameTextView.setText(downMusicList.get(recordDownMusicPosition)
 					.getDownMusicName());
 			songerTextView.setText(downMusicList.get(recordDownMusicPosition)
 					.getDownMusicArtist());
-
-			Bitmap albumBit = BitmapFactory.decodeFile(imageTarget
-					+ downMusicList.get(recordDownMusicPosition)
-							.getDownMusicName().trim() + ".jpg", null);
-			Drawable downDraw = new BitmapDrawable(albumBit);
-			// lockBackGround.setBackgroundDrawable(downDraw);
 			setLrc(songNameTextView.getText().toString());
 
 			Log.e("下载音乐的歌手", songerTextView.getText().toString());
 			downLoadArtistImag(songerTextView.getText().toString());
+		}else if (recordLikeMusicPosition != -1
+				&& musicFlag.equals("like_music")&&MainFragmentActivity.likeMusciList.size()!=0) {
+
+			songNameTextView.setText(MainFragmentActivity.likeMusciList.get(recordLikeMusicPosition)
+					.getMusicName());
+			songerTextView.setText(MainFragmentActivity.likeMusciList.get(recordLikeMusicPosition)
+					.getMusicArtist());
+			setLrc(songNameTextView.getText().toString());
+
+			Log.e("喜欢的音乐的歌手", songerTextView.getText().toString());
+			downLoadArtistImag(songerTextView.getText().toString());
 		}
+
 
 		mHandler = new Handler() {
 			@Override
@@ -381,6 +387,9 @@ public class LockActivity extends SwipeBackActivity implements OnClickListener {
 			} else if (musicFlag.equals("down_music")) {
 				musicPlayService.previousDown();
 				downMusicNextOrPre();
+			}else if (musicFlag.equals("like_music")&&MainFragmentActivity.likeMusciList.size()!=0) {
+				musicPlayService.previousLike();
+				likeMusicNextOrPre();
 			}
 
 			break;
@@ -391,6 +400,9 @@ public class LockActivity extends SwipeBackActivity implements OnClickListener {
 			} else if (musicFlag.equals("down_music")) {
 				musicPlayService.nextDownMusic();
 				downMusicNextOrPre();
+			}else if (musicFlag.equals("like_music")&&MainFragmentActivity.likeMusciList.size()!=0) {
+				musicPlayService.nextLikeMusic();
+				likeMusicNextOrPre();
 			}
 			break;
 		case R.id.play_pause_button:
@@ -409,13 +421,6 @@ public class LockActivity extends SwipeBackActivity implements OnClickListener {
 		SharedPrefUtil.setInt(this, Constant.CLICKED_MUNSIC_NAME, nextPosition);
 		songNameTextView.setText(mp3List.get(nextPosition).getTitle());
 		songerTextView.setText(mp3List.get(nextPosition).getArtist());
-		Bitmap nextBitmap = MediaUtils.getArtwork(this,
-				mp3List.get(nextPosition).getId(), mp3List.get(nextPosition)
-						.getAlbumId(), true, false);
-		if (nextBitmap != null) {
-			Drawable drawableNext = new BitmapDrawable(nextBitmap);
-		}
-		// lockBackGround.setBackground(drawableNext);
 		setLrc(songNameTextView.getText().toString());
 		Log.e("点击本地音乐下一首的时候歌手的名字", songerTextView.getText().toString());
 		downLoadArtistImag(songerTextView.getText().toString());
@@ -445,6 +450,32 @@ public class LockActivity extends SwipeBackActivity implements OnClickListener {
 		Log.e("点击下载的音乐下一首的时候歌手的名字", songerTextView.getText().toString());
 		downLoadArtistImag(songerTextView.getText().toString());
 	}
+	
+	// 在喜欢的的音乐点击下一首的时候调用的方法
+		private void likeMusicNextOrPre() {
+
+			pauseImageView.setVisibility(View.VISIBLE);
+			playImageView.setVisibility(View.GONE);
+			// 切换数据
+			int nextPosition = musicPlayService.getCurrentPosition();
+			SharedPrefUtil.setInt(this, Constant.CLICKED_MUNSIC_NAME_LIKE,
+					nextPosition);
+			songNameTextView.setText(MainFragmentActivity.likeMusciList.get(nextPosition)
+					.getMusicName());
+			songerTextView.setText(MainFragmentActivity.likeMusciList.get(nextPosition)
+					.getMusicArtist());
+//			Bitmap albumBit = BitmapFactory.decodeFile(imageTarget
+//					+ downMusicList.get(recordDownMusicPosition).getDownMusicName()
+//							.trim() + ".jpg", null);
+//			if (albumBit != null) {
+//				Drawable drawableNext = new BitmapDrawable(albumBit);
+//			}
+			// lockBackGround.setBackground(drawableNext);
+			setLrc(songNameTextView.getText().toString());
+			Log.e("点击喜欢的音乐下一首的时候歌手的名字", songerTextView.getText().toString());
+			downLoadArtistImag(songerTextView.getText().toString());
+		}
+
 
 	// 点击暂停或者播放按钮 的时候调用的方法
 	private void playOrPause() {
@@ -471,8 +502,8 @@ public class LockActivity extends SwipeBackActivity implements OnClickListener {
 
 		@Override
 		public void onReceive(Context context, Intent intent) {
-			if (intent.getAction().equals("updateText")) {
-				Log.e("在锁屏界面接受到了广播", "在锁屏界面接受到了广播");
+			if (intent.getAction().equals("updateLocalText")) {
+				Log.e("在锁屏界面接受到了本地音乐广播", "在锁屏界面接受到了本地音乐广播");
 				if (musicFlag.equals("local_music")) {
 					SharedPrefUtil.setInt(LockActivity.this,
 							Constant.CLICKED_MUNSIC_NAME,
@@ -481,8 +512,12 @@ public class LockActivity extends SwipeBackActivity implements OnClickListener {
 							musicPlayService.getCurrentPosition()).getTitle());
 					songerTextView.setText(mp3List.get(
 							musicPlayService.getCurrentPosition()).getArtist());
+					downLoadArtistImag(songNameTextView.getText().toString());
 					setLrc(songNameTextView.getText().toString());
-				} else if (musicFlag.equals("down_music")) {
+				}
+			} else if (intent.getAction().endsWith("updateDownText")) {
+				if (musicFlag.equals("down_music")) {
+					Log.e("在锁屏界面接受到了下载音乐广播", "在锁屏界面接受到了下载音乐广播");
 					SharedPrefUtil.setInt(LockActivity.this,
 							Constant.CLICKED_MUNSIC_NAME_DOWN,
 							musicPlayService.getCurrentPosition());
@@ -493,6 +528,22 @@ public class LockActivity extends SwipeBackActivity implements OnClickListener {
 							musicPlayService.getCurrentPosition())
 							.getDownMusicArtist());
 					setLrc(songNameTextView.getText().toString());
+					downLoadArtistImag(songNameTextView.getText().toString());
+				}
+			} else if (intent.getAction().endsWith("updateLikeText")) {
+				if (musicFlag.equals("like_music")&&MainFragmentActivity.likeMusciList.size()!=0) {
+					Log.e("在锁屏界面接受到了喜欢音乐广播", "在锁屏界面接受到了喜欢音乐广播");
+					SharedPrefUtil.setInt(LockActivity.this,
+							Constant.CLICKED_MUNSIC_NAME_LIKE,
+							musicPlayService.getCurrentPosition());
+					songNameTextView.setText(MainFragmentActivity.likeMusciList
+							.get(musicPlayService.getCurrentPosition())
+							.getMusicName());
+					songerTextView.setText(MainFragmentActivity.likeMusciList
+							.get(musicPlayService.getCurrentPosition())
+							.getMusicArtist());
+					setLrc(songNameTextView.getText().toString());
+					downLoadArtistImag(songNameTextView.getText().toString());
 				}
 			}
 		}

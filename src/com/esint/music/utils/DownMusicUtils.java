@@ -177,6 +177,7 @@ public class DownMusicUtils {
 						public void onLoading(long total, long current,
 								boolean isUploading) {
 							super.onLoading(total, current, isUploading);
+							Log.e("lrcUrl", this.getRequestUrl());
 							System.out.println("current:" + current + "/"
 									+ total);
 						}

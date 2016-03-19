@@ -11,9 +11,9 @@ import android.graphics.drawable.Drawable;
  */
 public class GaussianBlurUtil {
 	/** 水平方向模糊度 */
-	private static float hRadius = 10;
+	private static float hRadius = 45;
 	/** 竖直方向模糊度 */
-	private static float vRadius = 10;
+	private static float vRadius = 45;
 	/** 模糊迭代度 */
 	private static int iterations = 7;
 

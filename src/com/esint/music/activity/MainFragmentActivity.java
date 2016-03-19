@@ -12,7 +12,6 @@ import org.apache.http.message.BasicNameValuePair;
 
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.ComponentName;
@@ -21,6 +20,8 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.res.AssetManager;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
@@ -63,11 +64,13 @@ import com.esint.music.R.color;
 import com.esint.music.XListView.XListView;
 import com.esint.music.XListView.XListView.IXListViewListener;
 import com.esint.music.adapter.SearchResultAdapter;
+import com.esint.music.db.MySQLite;
 import com.esint.music.dialog.Effectstype;
 import com.esint.music.dialog.NiftyDialogBuilder;
 import com.esint.music.fragment.MyTabMusic;
 import com.esint.music.fragment.NetMusicFragment;
 import com.esint.music.model.DownMucicInfo;
+import com.esint.music.model.LikeMusicModel;
 import com.esint.music.model.Mp3Info;
 import com.esint.music.model.SearchMusicInfo;
 import com.esint.music.service.MusicPlayService;
@@ -128,6 +131,9 @@ public class MainFragmentActivity extends BaseActivity implements
 	private RelativeLayout singleLayout;
 	public static Handler mHandler;
 	private TextView tvPlayMode;
+	public static ArrayList<LikeMusicModel> likeMusciList = new ArrayList<LikeMusicModel>();
+	private MySQLite mySQLite;
+	public static SQLiteDatabase db;
 
 	// 注意 布局设置选择器 需要设置 android:clickable="true" 成可点击的状态
 
@@ -162,6 +168,8 @@ public class MainFragmentActivity extends BaseActivity implements
 				Constant.CLICKED_MUNSIC_NAME, -1);
 		int currentPlayPositionDown = SharedPrefUtil.getInt(this,
 				Constant.CLICKED_MUNSIC_NAME_DOWN, -1);
+		int currentPlayPositionLike = SharedPrefUtil.getInt(this,
+				Constant.CLICKED_MUNSIC_NAME_LIKE, -1);
 		musciFlag = SharedPrefUtil.getString(this, Constant.MUSIC_FLAG, "");
 
 		if (currentPlayPosition != -1 && musciFlag.equals("local_music")) {
@@ -171,17 +179,15 @@ public class MainFragmentActivity extends BaseActivity implements
 					mp3Infos.get(currentPlayPosition).getId(),
 					mp3Infos.get(currentPlayPosition).getAlbumId(), true, true);
 			albumImg.setImageBitmap(bitmap);
-		}
-		if (currentPlayPosition != -1 && musciFlag.equals("like_music")) {
-			musicName.setText(myLikeMp3Infos.get(currentPlayPosition)
-					.getTitle());
-			musicSinger.setText(myLikeMp3Infos.get(currentPlayPosition)
-					.getArtist());
-			Bitmap bitmap = MediaUtils.getArtwork(this,
-					myLikeMp3Infos.get(currentPlayPosition).getId(),
-					myLikeMp3Infos.get(currentPlayPosition).getAlbumId(), true,
-					true);
-			albumImg.setImageBitmap(bitmap);
+		} else if (currentPlayPositionLike != -1
+				&& musciFlag.equals("like_music")
+				&& MainFragmentActivity.likeMusciList.size() != 0) {
+			musicName.setText(MainFragmentActivity.likeMusciList.get(
+					currentPlayPositionLike).getMusicName());
+			musicSinger.setText(MainFragmentActivity.likeMusciList.get(
+					currentPlayPositionLike).getMusicArtist());
+			albumImg.setImageBitmap(MainFragmentActivity.likeMusciList.get(
+					currentPlayPositionLike).getBitmap());
 		} else {
 
 			if (currentPlayPositionDown != -1 && musciFlag.equals("down_music")) {
@@ -282,7 +288,9 @@ public class MainFragmentActivity extends BaseActivity implements
 	}
 
 	private void initData() {
-
+		mySQLite = new MySQLite(MainFragmentActivity.this, "Music.db", null, 1);
+		db = mySQLite.getWritableDatabase();
+		likeMusciList = getFavMusicFromDB();
 		Intent intent = new Intent(this, MusicPlayService.class);
 		bindService(intent, connection, Context.BIND_AUTO_CREATE);
 		mFragLists = new ArrayList<Fragment>();
@@ -415,7 +423,6 @@ public class MainFragmentActivity extends BaseActivity implements
 			intent.putExtra("Music_artist", musicSinger.getText().toString());
 			startActivity(intent);
 			overridePendingTransition(R.anim.in_from_right, R.anim.out_to_left);
-
 			break;
 		}
 		}
@@ -938,6 +945,42 @@ public class MainFragmentActivity extends BaseActivity implements
 			break;
 		}
 
+	}
+
+	// 从数据库中查询我最喜欢的歌曲
+	public static ArrayList<LikeMusicModel> getFavMusicFromDB() {
+
+		Cursor cursor = db.query("Music", null, null, null, null, null, null);// 查询并获得游标
+
+		if (likeMusciList != null) {
+			likeMusciList.clear();
+		}
+		if (cursor.moveToFirst()) {
+			do {
+				LikeMusicModel likeMusicModel = new LikeMusicModel();
+				String musicTitle = cursor.getString(cursor
+						.getColumnIndex("MusicTitle"));
+				String musicArtist = cursor.getString(cursor
+						.getColumnIndex("MusicArtist"));
+				Long musicTime = cursor.getLong(cursor
+						.getColumnIndex("MusicTime"));
+				String musicUrl = cursor.getString(cursor
+						.getColumnIndex("MusicUrl"));
+				// 本地音乐转换的图片
+				byte[] musicLocalImg = cursor.getBlob(cursor
+						.getColumnIndex("MusicImg"));
+				// 将数组转换成bitMap
+				Bitmap bmp = MySQLite.getBmp(musicLocalImg);
+				likeMusicModel.setMusicName(musicTitle);
+				likeMusicModel.setMusicArtist(musicArtist);
+				likeMusicModel.setMusicTime(musicTime);
+				likeMusicModel.setMusicURL(musicUrl);
+				likeMusicModel.setMusicLocalImg(musicLocalImg);
+				likeMusicModel.setBitmap(bmp);
+				likeMusciList.add(likeMusicModel);
+			} while (cursor.moveToNext());
+		}
+		return likeMusciList;
 	}
 
 }

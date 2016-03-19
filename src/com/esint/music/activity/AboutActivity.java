@@ -50,6 +50,7 @@ public class AboutActivity extends SwipeBackActivity implements OnClickListener 
 	}
 
 	private void initData() {
+		
 
 	}
 
