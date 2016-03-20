@@ -11,19 +11,23 @@ import com.esint.music.R;
 import com.esint.music.model.SearchMusicInfo;
 import com.esint.music.utils.DownMusicUtils;
 import com.esint.music.utils.DownMusicUtils.OnDownLoadListener;
+import com.esint.music.utils.MyHttpUtils;
 import com.lidroid.xutils.HttpUtils;
 import com.lidroid.xutils.exception.HttpException;
 import com.lidroid.xutils.http.ResponseInfo;
 import com.lidroid.xutils.http.callback.RequestCallBack;
 import com.lidroid.xutils.http.client.HttpRequest.HttpMethod;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.os.Environment;
 import android.util.Log;
+import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.view.View.OnClickListener;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
@@ -112,6 +116,12 @@ public class SearchResultAdapter extends BaseAdapter {
 				.findViewById(R.id.tv_dismiss);
 		TextView ok = (TextView) dialogDownload.findViewById(R.id.tv_ok);
 		dialog.show();
+		WindowManager m = ((Activity) context).getWindowManager();
+		WindowManager.LayoutParams params = dialog.getWindow().getAttributes();
+		Display d = m.getDefaultDisplay(); // 获取屏幕宽、高用
+		params.height = (int) (d.getHeight() * 0.286); // 高度设置为屏幕的0.6
+		params.width = (int) (d.getWidth() * 0.8); // 宽度设置为屏幕的0.65
+		dialog.getWindow().setAttributes(params);
 		dialog.setContentView(dialogDownload);
 		cancle.setOnClickListener(new OnClickListener() {
 
@@ -120,15 +130,74 @@ public class SearchResultAdapter extends BaseAdapter {
 				dialog.dismiss();
 			}
 		});
+		final MyHttpUtils myHttpUtils = new MyHttpUtils(context);
 		ok.setOnClickListener(new OnClickListener() {
 
 			@Override
 			public void onClick(View v) {
 				dialog.dismiss();
-				getDownUrl(position);
-				// downloadMusic(position);
+				// getDownUrl(position);
+				boolean isConnected = myHttpUtils.isConnnected(context);
+				if (isConnected == false) {
+					Toast.makeText(context, "当前网络没有连接", 0).show();
+					return;
+				}
+				// 判断网络类型
+				int networkType = myHttpUtils.getNetworkType();
+				Log.e("当前的网络是", networkType + "");
+				switch (networkType) {
+				case 0:// 流量网络
+					showNetAlert(position);
+					break;
+				case 1:// Wi-Fi网络
+					getDownUrl(position);
+					break;
+
+				}
 			}
 		});
+	}
+
+	/**
+	* @Description:判断网络类型 ，在流量状态下提示 
+	* @param position
+	* @return void 
+	* @author bai
+	*/
+	private void showNetAlert(final int position) {
+
+		AlertDialog.Builder builder = new AlertDialog.Builder(context);
+		final AlertDialog dialog = builder.create();
+		View alertDialogView = View.inflate(context, R.layout.dialog_nettips,
+				null);
+		TextView okTv = (TextView) alertDialogView
+				.findViewById(R.id.tv_countinue);
+		TextView cancelTv = (TextView) alertDialogView
+				.findViewById(R.id.tv_stop);
+		dialog.show();
+		WindowManager.LayoutParams params = dialog.getWindow().getAttributes();
+		WindowManager m = ((Activity) context).getWindowManager();
+		Display d = m.getDefaultDisplay();
+		params.height = (int) (d.getHeight() * 0.286);
+		params.width = (int) (d.getWidth() * 0.8);
+		dialog.getWindow().setAttributes(params);
+		dialog.setContentView(alertDialogView);
+		okTv.setOnClickListener(new OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				dialog.dismiss();
+				getDownUrl(position);
+			}
+		});
+		cancelTv.setOnClickListener(new OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				dialog.dismiss();
+			}
+		});
+
 	}
 
 	// 根据点击歌曲的位置通过音乐的ID找到音乐的链接和图片的链接
@@ -196,7 +265,7 @@ public class SearchResultAdapter extends BaseAdapter {
 		httpUtils.download(mp3Url, MusicTarget, new RequestCallBack<File>() {
 			@Override
 			public void onSuccess(ResponseInfo<File> arg0) {
-				
+
 				Toast.makeText(context, "音乐下载成功", 0).show();
 				// 音乐下载成功后把图片也下载下来
 				httpUtils.download(picUrl, ImageTarget,
@@ -206,6 +275,7 @@ public class SearchResultAdapter extends BaseAdapter {
 							public void onSuccess(ResponseInfo<File> arg0) {
 								Toast.makeText(context, "图片下载成功", 0).show();
 							}
+
 							@Override
 							public void onFailure(HttpException arg0,
 									String arg1) {

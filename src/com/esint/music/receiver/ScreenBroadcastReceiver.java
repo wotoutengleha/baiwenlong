@@ -1,4 +1,4 @@
-package com.esint.music.service;
+package com.esint.music.receiver;
 
 import com.esint.music.activity.LockActivity;
 

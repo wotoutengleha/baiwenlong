@@ -118,7 +118,6 @@ public class BackGroundActivity extends SwipeBackActivity implements
 		dialogBuilder.withTitle("提示").withTitleColor("#FFFFFF")
 				.withDividerColor("#97E8F9").withMessage("确定要使用此背景图片吗？")
 				.withMessageColor("#FFFFFF")
-				.withIcon(getResources().getDrawable(R.drawable.icon))
 				.isCancelableOnTouchOutside(true).withEffect(effect)
 				.withButton1Text("确定").withButton2Text("取消")
 				.setCustomView(R.layout.custom_view, this)

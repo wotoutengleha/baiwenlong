@@ -46,7 +46,7 @@ public class SettingActivity extends SwipeBackActivity implements
 	private SetupBGButton sleepButton;// 是否开启睡眠定时
 	private SetupBGButton shakeButton;// 是否开启摇一摇模式
 	private SetupBGButton otherControl;//辅助操作
-	private SetupWifiButton WifiButton;// 仅Wifi按钮
+	private SetupWifiButton WifiButton;// 仅WiFi按钮
 	private SetupDesktoplyricsButton deskLrcButton;// 桌面歌词
 	private SetupLockScreenButton lockLrcButton;// 锁屏歌词
 
@@ -67,7 +67,6 @@ public class SettingActivity extends SwipeBackActivity implements
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
-		unregisterReceiver(mAlarmReceiver);
 		ActivityCollectUtil.removeActivity(this);
 	}
 
@@ -126,9 +125,9 @@ public class SettingActivity extends SwipeBackActivity implements
 
 	private void initData() {
 		// 注册广播
-		IntentFilter filter = new IntentFilter();
-		filter.addAction(Constant.ALARM_CLOCK_BROADCAST);
-		registerReceiver(mAlarmReceiver, filter);
+//		Intent intent = new Intent();
+//		intent.setAction(Constant.ALARM_CLOCK_BROADCAST);
+//		sendBroadcast(intent);
 	}
 
 	@Override
@@ -310,16 +309,6 @@ public class SettingActivity extends SwipeBackActivity implements
 		sleepButton.setSelect(false);
 	}
 
-	// 接收到广播后退出程序
-	private BroadcastReceiver mAlarmReceiver = new BroadcastReceiver() {
-
-		@Override
-		public void onReceive(Context context, Intent intent) {
-			// 退出APP
-			ActivityCollectUtil.finishAllActi();
-		}
-
-	};
 
 	private void initComponent() {
 		soundBGButton = new SetupBGButton[6];

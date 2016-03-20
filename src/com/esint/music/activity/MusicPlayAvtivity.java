@@ -1,10 +1,14 @@
 package com.esint.music.activity;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
+
+import org.apache.http.NameValuePair;
+import org.apache.http.message.BasicNameValuePair;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import name.teze.layout.lib.SwipeBackActivity;
 import android.annotation.SuppressLint;
@@ -18,7 +22,6 @@ import android.content.ServiceConnection;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.Environment;
@@ -28,19 +31,14 @@ import android.os.Message;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v4.view.ViewPager.OnPageChangeListener;
-import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.View.OnClickListener;
-import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
-import android.view.animation.AnimationSet;
 import android.view.animation.AnimationUtils;
 import android.view.animation.LinearInterpolator;
-import android.view.animation.ScaleAnimation;
-import android.view.animation.TranslateAnimation;
 import android.view.Window;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -50,12 +48,15 @@ import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import cn.sharesdk.framework.ShareSDK;
+import cn.sharesdk.onekeyshare.OnekeyShare;
+import cn.sharesdk.onekeyshare.OnekeyShareTheme;
+
 import com.esint.music.R;
 import com.esint.music.db.MySQLite;
-import com.esint.music.fragment.MyTabMusic;
-import com.esint.music.fragment.MyTabMusic.MyBroadCast;
 import com.esint.music.model.DownMucicInfo;
 import com.esint.music.model.Mp3Info;
+import com.esint.music.model.SearchMusicInfo;
 import com.esint.music.model.SearchResult;
 import com.esint.music.service.MusicPlayService;
 import com.esint.music.service.MusicPlayService.PlayBinder;
@@ -65,7 +66,7 @@ import com.esint.music.utils.Constant;
 import com.esint.music.utils.DownMusicUtils;
 import com.esint.music.utils.GaussianBlurUtil;
 import com.esint.music.utils.MediaUtils;
-import com.esint.music.utils.MyApplication;
+import com.esint.music.utils.MyHttpUtils;
 import com.esint.music.utils.SearchMusicUtil;
 import com.esint.music.utils.SortListUtil;
 import com.esint.music.utils.SearchMusicUtil.onSearchResultListener;
@@ -76,8 +77,11 @@ import com.esint.music.view.PlayListDownPopu;
 import com.esint.music.view.PlayListLikePopu;
 import com.esint.music.view.PlayListPopuWindow;
 import com.esint.music.view.PlayListPopuWindow.OnItemClickListener;
-import com.lidroid.xutils.db.sqlite.Selector;
-import com.lidroid.xutils.exception.DbException;
+import com.lidroid.xutils.HttpUtils;
+import com.lidroid.xutils.exception.HttpException;
+import com.lidroid.xutils.http.ResponseInfo;
+import com.lidroid.xutils.http.callback.RequestCallBack;
+import com.lidroid.xutils.http.client.HttpRequest.HttpMethod;
 
 public class MusicPlayAvtivity extends SwipeBackActivity implements
 		OnClickListener, OnSeekBarChangeListener {
@@ -101,10 +105,10 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 	private Handler mHandler;
 	private MusicPlayService musicPlayService;
 	private RelativeLayout playMusicBg;
-	private MyApplication myApp;
 	private LrcView mLrcViewOnSecondPage; // 7 lines lrc
 	private LrcView mLrcViewOnFirstPage; // single line lrc
 	private String intentMusicName;// 从主界面通过intent传递过来的歌曲的名字,目的是为了使用歌名搜索歌词
+	private String intentArtist;// 从主界面通过intent传递过来的歌手的名字,目的是为了使用歌名搜索歌词
 	private String downMusicSongTime;// 从主界面传递过来下载音乐的歌曲的时长
 	private ArrayList<DownMucicInfo> downMusicList;// 我的下载的音乐的列表
 	private int recordDownMusicPosition;// 记录点击我的下载歌曲里边的列表
@@ -112,6 +116,12 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 	private MyBroadCast broadCast;
 	private ImageView mMoveIv;// 添加喜欢的音乐时的动画图片
 	private String imageTarget;// 下载的图片的文件路径
+	private String musicTarget;//下载音乐的路径
+	private MyHttpUtils myHttpUtils;
+	private HttpUtils httpUtils;//XUtils
+	private ArrayList<SearchMusicInfo> searchMusicList = new ArrayList<SearchMusicInfo>();
+	private String mp3Url;//用来分享的音乐的地址
+	private String picUrl;//用来分享音乐的图片的地址
 
 	@Override
 	protected void onCreate(Bundle arg0) {
@@ -196,8 +206,8 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 				Constant.CLICKED_MUNSIC_NAME_DOWN, -1);
 		recordLikeMusicPosition = SharedPrefUtil.getInt(this,
 				Constant.CLICKED_MUNSIC_NAME_LIKE, -1);
-
-		myApp = (MyApplication) getApplication();
+		myHttpUtils = new MyHttpUtils(this);
+		httpUtils = new HttpUtils();
 		Intent intent = new Intent(this, MusicPlayService.class);
 		bindService(intent, connection, Context.BIND_AUTO_CREATE);
 
@@ -219,14 +229,14 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 		mp3List = MediaUtils.getMp3Info(this);
 		mp3List = new SortListUtil().initMyLocalMusic(mp3List);
 
-		// 下载歌曲的文件夹
-		String MusicTarget = Environment.getExternalStorageDirectory() + "/"
+		musicTarget = Environment.getExternalStorageDirectory() + "/"
 				+ "/下载的歌曲";
-		downMusicList = MediaUtils.GetMusicFiles(MusicTarget, ".mp3", true);
+		downMusicList = MediaUtils.GetMusicFiles(musicTarget, ".mp3", true);
 		imageTarget = Environment.getExternalStorageDirectory() + "/"
 				+ "/下载的图片" + "/";
 
 		intentMusicName = getIntent().getStringExtra("Music_name");
+		 intentArtist = getIntent().getStringExtra("Music_artist");
 		if (currentPosition != -1 && musicFlag.equals("local_music")) {
 			musicName.setText(intentMusicName);
 			musicSinger.setText("一   "
@@ -241,7 +251,8 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 			playMusicBg.setBackgroundDrawable(boxBlurFilter);
 			startAnim();
 		}
-		if (recordLikeMusicPosition != -1 && musicFlag.equals("like_music")&&MainFragmentActivity.likeMusciList.size()!=0) {
+		if (recordLikeMusicPosition != -1 && musicFlag.equals("like_music")
+				&& MainFragmentActivity.likeMusciList.size() != 0) {
 			musicName.setText(MainFragmentActivity.likeMusciList.get(
 					recordLikeMusicPosition).getMusicName());
 			musicSinger.setText("一   "
@@ -264,11 +275,11 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 			startAnim();
 		}
 		if (recordDownMusicPosition != -1 && musicFlag.equals("down_music")) {
-			String artist = getIntent().getStringExtra("Music_artist");
+		
 			downMusicSongTime = downMusicList.get(recordDownMusicPosition)
 					.getDownMusicDuration();
 			musicName.setText(intentMusicName);
-			musicSinger.setText("一   " + artist + "  一");
+			musicSinger.setText("一   " + intentArtist + "  一");
 			musicTime.setText(downMusicSongTime);
 
 			Bitmap albumBit = BitmapFactory.decodeFile(imageTarget
@@ -338,7 +349,8 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 							sendBroadcast(intent);
 
 						}
-					} else if (musicFlag.equals("like_music")&&MainFragmentActivity.likeMusciList.size()!=0) {
+					} else if (musicFlag.equals("like_music")
+							&& MainFragmentActivity.likeMusciList.size() != 0) {
 
 						if (seekBar.getProgress() <= MainFragmentActivity.likeMusciList
 								.get(musicPlayService.getCurrentPosition())
@@ -377,6 +389,24 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 					String targrt = (String) msg.obj;
 					setLrc(targrt);
 					break;
+				}
+			}
+		};
+		MyHttpUtils.handler = new Handler(){
+			@Override
+			public void handleMessage(Message msg) {
+				super.handleMessage(msg);
+				switch (msg.what) {
+				case Constant.WHAT_NET_HOTMUSIC_LIST:{
+					Log.e("接收到了消息", "接收到了消息");
+					     searchMusicList.addAll((ArrayList<SearchMusicInfo>) msg.obj);
+					     String musicID = searchMusicList.get(0).getMusicID();
+					     getDownUrl(searchMusicList);
+				}
+					
+					
+					break;
+
 				}
 			}
 		};
@@ -436,7 +466,8 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 								downMusicNextOrPre();
 							}
 						});
-			} else if (musicFlag.equals("like_music")&&MainFragmentActivity.likeMusciList.size()!=0) {
+			} else if (musicFlag.equals("like_music")
+					&& MainFragmentActivity.likeMusciList.size() != 0) {
 
 				int isPlayingPosi = musicPlayService.getCurrentPosition();
 				PlayListLikePopu popuWindow = new PlayListLikePopu(this,
@@ -485,7 +516,8 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 				Constant.ISFirst_PLAY = false;
 				updateDownProgress();
 			} else if (currentPositionLike != -1 && Constant.ISFirst_PLAY
-					&& musicFlag.equals("like_music")&&MainFragmentActivity.likeMusciList.size()!=0) {
+					&& musicFlag.equals("like_music")
+					&& MainFragmentActivity.likeMusciList.size() != 0) {
 				Constant.isFirst = false;
 				musicPlayService.playMyFav(currentPositionDown);
 				// 发送更新播放按钮的广播
@@ -529,7 +561,8 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 				musicPlayService.previousDown();
 				downMusicNextOrPre();
 				Constant.isInsert = false;
-			} else if (musicFlag.equals("like_music")&&MainFragmentActivity.likeMusciList.size()!=0) {
+			} else if (musicFlag.equals("like_music")
+					&& MainFragmentActivity.likeMusciList.size() != 0) {
 				musicPlayService.previousLike();
 				likeMusicNextOrPre();
 				Constant.isInsert = false;
@@ -546,7 +579,8 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 				musicPlayService.nextDownMusic();
 				Constant.isInsert = false;
 				downMusicNextOrPre();
-			} else if (musicFlag.equals("like_music")&&MainFragmentActivity.likeMusciList.size()!=0) {
+			} else if (musicFlag.equals("like_music")
+					&& MainFragmentActivity.likeMusciList.size() != 0) {
 				musicPlayService.nextLikeMusic();
 				Constant.isInsert = false;
 				likeMusicNextOrPre();
@@ -583,6 +617,9 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 		}
 			break;
 		case R.id.play_shared: {
+
+			searchShakeMusic();
+			
 		}
 			break;
 		case R.id.ivLikeNormal: {
@@ -810,11 +847,12 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 				.formatTime(MainFragmentActivity.likeMusciList.get(
 						recordLikeMusicPosition).getMusicTime()));
 		int curr = musicPlayService.getCurrentPosition();
-		Drawable boxBlurFilter1 = GaussianBlurUtil.BoxBlurFilter(MainFragmentActivity.likeMusciList.get(
-				curr).getBitmap());
+		Drawable boxBlurFilter1 = GaussianBlurUtil
+				.BoxBlurFilter(MainFragmentActivity.likeMusciList.get(curr)
+						.getBitmap());
 		playMusicBg.setBackgroundDrawable(boxBlurFilter1);
-		albumIV.setImageBitmap(MainFragmentActivity.likeMusciList.get(
-				curr).getBitmap());
+		albumIV.setImageBitmap(MainFragmentActivity.likeMusciList.get(curr)
+				.getBitmap());
 		startAnim();
 		musicPlayService.updateNotification(null,
 				MainFragmentActivity.likeMusciList.get(nextPosition)
@@ -846,7 +884,8 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 					updateLocalProgress();
 				} else if (musicFlag.equals("down_music")) {
 					updateDownProgress();
-				} else if (musicFlag.equals("like_music")&&MainFragmentActivity.likeMusciList.size()!=0) {
+				} else if (musicFlag.equals("like_music")
+						&& MainFragmentActivity.likeMusciList.size() != 0) {
 					updateLikeProgress();
 				}
 				btnPause.setVisibility(View.VISIBLE);
@@ -873,7 +912,8 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 				} else {
 					btnLike.setImageResource(R.drawable.player_btn_favorite_highlight);
 				}
-			} else if (musicFlag.equals("like_music")&&MainFragmentActivity.likeMusciList.size()!=0) {
+			} else if (musicFlag.equals("like_music")
+					&& MainFragmentActivity.likeMusciList.size() != 0) {
 				boolean likeMusic = isLikeMusic(MainFragmentActivity.likeMusciList
 						.get(musicPlayService.getCurrentPosition())
 						.getMusicName());
@@ -973,7 +1013,8 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 				while (Constant.isLikeStop) {
 					try {
 
-						if (musicFlag.equals("like_music")&&MainFragmentActivity.likeMusciList.size()!=0) {
+						if (musicFlag.equals("like_music")
+								&& MainFragmentActivity.likeMusciList.size() != 0) {
 							seekBar.setMax(new Long(
 									MainFragmentActivity.likeMusciList.get(
 											musicPlayService
@@ -1192,7 +1233,8 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 				}
 
 			} else if (intent.getAction().equals("updateLikeText")) {
-				if (musicFlag.equals("like_music")&&MainFragmentActivity.likeMusciList.size()!=0) {
+				if (musicFlag.equals("like_music")
+						&& MainFragmentActivity.likeMusciList.size() != 0) {
 					likeMusicNextOrPre();
 				}
 			}
@@ -1200,4 +1242,95 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 		}
 	}
 
+	private void showShare(int position) {
+		ShareSDK.initSDK(this);
+		OnekeyShare oks = new OnekeyShare();
+		oks.setTheme(OnekeyShareTheme.CLASSIC);
+		// 关闭sso授权
+		oks.disableSSOWhenAuthorize();
+
+		// 分享时Notification的图标和文字 2.5.9以后的版本不调用此方法
+		// oks.setNotification(R.drawable.ic_launcher,
+		// getString(R.string.app_name));
+		// title标题，印象笔记、邮箱、信息、微信、人人网和QQ空间使用
+		oks.setTitle(intentMusicName);
+		// titleUrl是标题的网络链接，仅在人人网和QQ空间使用
+		 oks.setTitleUrl(mp3Url);
+		// text是分享文本，所有平台都需要这个字段
+		oks.setText(intentArtist);
+		// imagePath是图片的本地路径，Linked-In以外的平台都支持此参数
+//		 oks.setImagePath("/sdcard/test.jpg");//确保SDcard下面存在此张图片
+		// url仅在微信（包括好友和朋友圈）中使用
+		// comment是我对这条分享的评论，仅在人人网和QQ空间使用
+		// oks.setComment("我是测试评论文本");
+		// site是分享此内容的网站名称，仅在QQ空间使用
+		 oks.setSite(getString(R.string.app_name));
+		// siteUrl是分享此内容的网站地址，仅在QQ空间使用
+		 oks.setSiteUrl(mp3Url);
+		 oks.setUrl(mp3Url);
+		 oks.setImageUrl(picUrl);
+		 Log.e("分享的 MP3地址", mp3Url+"");
+		 Log.e("分享的 MP3图片的地址", picUrl+"");
+		// 启动分享GUI
+		oks.show(this);
+	}
+	//根据歌曲名字上搜索音乐 用来分享音乐的链接
+	private void searchShakeMusic(){
+		List<NameValuePair> parmas = new ArrayList<NameValuePair>();
+		parmas.add(new BasicNameValuePair("s", intentMusicName+" "+intentArtist));
+		parmas.add(new BasicNameValuePair("type", "1"));
+		parmas.add(new BasicNameValuePair("offset","0"));
+		parmas.add(new BasicNameValuePair("sub", "false"));
+		parmas.add(new BasicNameValuePair("limit", "5"));
+		myHttpUtils.searchMusicToAPI(Constant.API_NET_SEARCH_MUSIC, parmas);
+	}
+	
+	// 根据点击歌曲的位置通过音乐的ID找到音乐的链接和图片的链接
+	private void getDownUrl(ArrayList<SearchMusicInfo> searchMusicList ) {
+		// http://music.163.com/api/song/detail/?id=29818120&ids=[29818120]
+		String musicID = searchMusicList.get(0).getMusicID();
+		String musicUrl = "http://music.163.com/api/song/detail/?id=" + musicID
+				+ "&ids=[" + musicID + "]";
+		httpUtils.send(HttpMethod.GET, musicUrl, new RequestCallBack<String>() {
+
+			@Override
+			public void onFailure(HttpException arg0, String arg1) {
+				Toast.makeText(MusicPlayAvtivity.this, "请求下载链接失败了", 0).show();
+			}
+
+			@Override
+			public void onSuccess(ResponseInfo<String> arg0) {
+				String response = arg0.result;
+				Log.e("请求的网络地址", getRequestUrl());
+				parseJsonResult(response);
+			}
+		});
+
+	}
+
+	/**
+	 * @Description:解析请求的链接返回的数据 目的是为了获取MP3 和图片的下载链接
+	 * @return void
+	 * @author bai
+	 */
+	protected void parseJsonResult(String response) {
+
+		try {
+			JSONObject result = new JSONObject(response);
+			String songs = result.getString("songs");
+			JSONArray songArray = new JSONArray(songs);
+			for (int i = 0; i < songArray.length(); i++) {
+				JSONObject object = (JSONObject) songArray.get(0);
+				mp3Url = object.getString("mp3Url");
+				String album = object.getString("album");
+				JSONObject picObject = new JSONObject(album);
+				picUrl = picObject.getString("picUrl");
+				showShare(musicPlayService.getCurrentPosition());
+			}
+
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+
+	}
 }

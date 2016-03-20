@@ -46,7 +46,7 @@ public class ShakeDetector implements SensorEventListener {
 			float highY = y - lowY;
 			float highZ = z - lowZ;
 			
-			if(highX >= 10 || highY >= 10 || highZ >= 10) {
+			if(highX >= 30 || highY >= 30 || highZ >= 30) {
 				mOnShakeListener.onShake();
 				stop();
 			}
