@@ -131,7 +131,7 @@
     </LinearLayout>
 
     <LinearLayout
-        android:id="@+id/linearLayout3"
+        android:id="@+id/original_ll"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentRight="true"
@@ -181,9 +181,10 @@
     </LinearLayout>
 
     <LinearLayout
+        android:id="@+id/rise_ll"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/linearLayout3"
+        android:layout_below="@+id/original_ll"
         android:layout_marginBottom="10dp"
         android:layout_marginTop="10dp"
         android:background="@drawable/background_net_music"

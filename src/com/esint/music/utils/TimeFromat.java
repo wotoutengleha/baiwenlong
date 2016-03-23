@@ -10,11 +10,12 @@ import java.util.Calendar;
 public class TimeFromat {
 
 	// 毫秒转换为日期
-	public static void main(String[] args) {
-		DateFormat formatter = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+	public static String timeFormat(String time) {
+		DateFormat formatter = new SimpleDateFormat("MM"+"月"+"dd"+"日");
 		long now = System.currentTimeMillis();
 		Calendar calendar = Calendar.getInstance();
 		calendar.setTimeInMillis(now);
 		System.out.println(now + " = " + formatter.format(calendar.getTime()));
+		return formatter.format(calendar.getTime());
 	}
 }

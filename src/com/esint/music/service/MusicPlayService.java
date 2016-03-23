@@ -10,13 +10,18 @@ import android.app.Service;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Bitmap;
+import android.media.AudioManager;
 import android.media.MediaPlayer;
+import android.media.MediaPlayer.OnBufferingUpdateListener;
+import android.media.MediaPlayer.OnCompletionListener;
+import android.media.MediaPlayer.OnPreparedListener;
 import android.net.Uri;
 import android.os.Binder;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
+import android.util.Log;
 import android.widget.RemoteViews;
 import android.widget.Toast;
 
@@ -43,7 +48,8 @@ import com.esint.music.utils.SortListUtil;
  * 创建时间：2016-1-10 下午9:53:16   
  *        
  */
-public class MusicPlayService extends Service implements OnShakeListener {
+public class MusicPlayService extends Service implements OnShakeListener,
+		OnPreparedListener {
 
 	private MediaPlayer mPlayer;// 播放音乐的类
 	private int currentPlayPosition;// 当前播放的位置
@@ -58,7 +64,7 @@ public class MusicPlayService extends Service implements OnShakeListener {
 
 	// 下载歌曲的文件夹
 	private String target;
-	private ArrayList<DownMucicInfo> downMusicList;// 我的下载的音乐列表
+	private ArrayList<DownMucicInfo> downMusicList = new ArrayList<DownMucicInfo>();// 我的下载的音乐列表
 	private ScreenBroadcastReceiver sOnBroadcastReciver;
 	private int NOTIFICATION_ID = 0x1;
 	private ShakeDetector mShakeDetector;// 摇一摇切换音乐
@@ -78,7 +84,6 @@ public class MusicPlayService extends Service implements OnShakeListener {
 		mp3Infos = new SortListUtil().initMyLocalMusic(mp3Infos);
 		target = Environment.getExternalStorageDirectory() + "/" + "/下载的歌曲";
 		downMusicList = MediaUtils.GetMusicFiles(target, ".mp3", true);
-
 		playMode = SharedPrefUtil.getInt(this, Constant.PLAY_MODE, 1);
 
 		// 注册监听锁屏界面的广播
@@ -90,13 +95,12 @@ public class MusicPlayService extends Service implements OnShakeListener {
 
 		mShakeDetector = new ShakeDetector(this);
 		mShakeDetector.setOnShakeListener(this);
-
+		mPlayer.setOnPreparedListener(this);
 		// 摇一摇的实现不断的在handler里边发送消息
 		SettingActivity.mHandler = new Handler() {
 			@Override
 			public void handleMessage(Message msg) {
 				super.handleMessage(msg);
-
 				if (msg.what == Constant.WHAT_SHAKE) {
 					Boolean isSelect = (Boolean) msg.obj;
 					if (isSelect == true) {
@@ -379,15 +383,17 @@ public class MusicPlayService extends Service implements OnShakeListener {
 	}
 
 	/**
-	 * 
-	 * @param url
-	 *            url地址
-	 */
-	public void playUrl(String url) {
+	* @Description:播放网络音乐 
+	* @param url
+	* @return void 
+	* @author bai
+	*/
+	public void playNetMusic(String url) {
 		try {
-			mPlayer.reset();
+			mPlayer.reset();// 重置URL
 			mPlayer.setDataSource(url); // 设置数据源
-			mPlayer.prepare(); // prepare自动播放
+			mPlayer.prepareAsync();
+			Log.e("url", url);
 		} catch (IllegalArgumentException e) {
 			e.printStackTrace();
 		} catch (SecurityException e) {
@@ -397,6 +403,7 @@ public class MusicPlayService extends Service implements OnShakeListener {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+
 	}
 
 	public int getDuration() {
@@ -427,5 +434,11 @@ public class MusicPlayService extends Service implements OnShakeListener {
 		Message message = MyTabMusic.mHandler
 				.obtainMessage(Constant.SHAKE_MUSIC);
 		message.sendToTarget();
+	}
+
+	@Override
+	public void onPrepared(MediaPlayer mp) {
+		mp.start();
+
 	}
 }

@@ -15,7 +15,7 @@ public class Constant {
 	public static final String BROADCAST_NAME = "com.esint.music.broadcast";
 	public static final String CLICKED_MUNSIC_NAME = "ClickPosition";// 点击本地歌曲的时候存入的位置
 	public static final String CLICKED_MUNSIC_NAME_DOWN = "ClickPositionDown";// 点击下载歌曲的时候存入的位置
-	public static final String CLICKED_MUNSIC_NAME_LIKE= "ClickPositionlike";// 点击下载歌曲的时候存入的位置
+	public static final String CLICKED_MUNSIC_NAME_LIKE = "ClickPositionlike";// 点击下载歌曲的时候存入的位置
 	public static final String COLOR_INDEX = "color_index";// 在设置界面中点击切换actionBar的颜色
 	public static final String COLOR_INDEX_SELECT = "color_index_select";// 被选择的
 	public static final String MUSIC_FLAG = "music_flag";
@@ -45,21 +45,20 @@ public class Constant {
 	public static final String ND = "http://www.5nd.com/";
 	public static final String ND_HOT = "paihang/liuxinggequ.htm";
 	public static final String SHAKE_FLAG = "shake_flag";
-	public static final int  WHAT_SHAKE = 0x011;//发送摇一摇的what
-	public static final int DOWN_LRC = 0x012;//在播放界面的时候下载歌词
-	public static boolean isDownStop=true;//控制下载音乐的进度条
-	public static  boolean isLocalStop=true;//控制本地音乐的进度条
-	public static  boolean isLikeStop=true;//控制喜欢音乐的进度条
-	public static boolean isInsert=false;//是否插入了数据
-	
+	public static final int WHAT_SHAKE = 0x011;// 发送摇一摇的what
+	public static final int DOWN_LRC = 0x012;// 在播放界面的时候下载歌词
+	public static boolean isDownStop = true;// 控制下载音乐的进度条
+	public static boolean isLocalStop = true;// 控制本地音乐的进度条
+	public static boolean isLikeStop = true;// 控制喜欢音乐的进度条
+	public static boolean isInsert = false;// 是否插入了数据
 
 	// 是否开启了振动模式
 	public static final String SHAKE_ON_OFF = "SHAKE_ON_OFF";
-	//wifi开关
+	// wifi开关
 	public static final String IS_WIFI = "SHAKE_ON_OFF";
-	//桌面歌词
+	// 桌面歌词
 	public static final String DESK_LRC = "desk_lrc";
-	//锁屏歌词
+	// 锁屏歌词
 	public static final String LOCK_LRC = "lock_lrc";
 
 	// sharedPreference名字
@@ -76,14 +75,20 @@ public class Constant {
 
 	public static final String API_NET_NEWMUSIC_LIST = "http://music.163.com/api/playlist/detail?id=3779629";
 	public static final String API_NET_HOTMUSIC_LIST = "http://music.163.com/api/playlist/detail?id=3778678";
+	public static final String API_NET_ORIGINALMUSIC_LIST = "http://music.163.com/api/playlist/detail?id=2884035";
+	public static final String API_NET_RISEMUSIC_LIST = "http://music.163.com/api/playlist/detail?id=19723756";
 	public static final String API_NET_SEARCH_MUSIC = "http://music.163.com/api/search/get";// 搜索音乐的接口
 	public static final int WHAT_NET_NEWMUSIC_LIST = 0x111;
 	public static final int WHAT_NEW_SONGINFO = 0x112;
 	public static final int WHAT_HOT_SONGINFO = 0x114;
+	public static final int WHAT_ORIGINAL_SONGINFO = 0x117;
+	public static final int WHAT_RISE_SONGINFO = 0x119;
 	public static final int WHAT_NET_HOTMUSIC_LIST = 0x113;
+	public static final int WHAT_NET_ORIGINALMUSIC_LIST = 0x116;
+	public static final int WHAT_NET_RISEMUSIC_LIST = 0x118;
 	public static final int WHAT_EXECEPTION = 0X114;
-	
-	
-	  public static final String YR_URL="http://music.163.com/api/song/media?id=";
-	  public static final String DIR_LRC="/youran_music/lrc";
+	public static final int WHAT_UPDATE_BTN = 0x115;// 点击播放网络音乐的时候更新按钮
+
+	public static final String YR_URL = "http://music.163.com/api/song/media?id=";
+	public static final String DIR_LRC = "/youran_music/lrc";
 }

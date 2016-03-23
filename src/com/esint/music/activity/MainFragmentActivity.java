@@ -416,14 +416,21 @@ public class MainFragmentActivity extends BaseActivity implements
 			searchMusicView();
 			break;
 		case R.id.musiccontent: {
-			// 传递下载歌曲的歌名和歌手
-			Intent intent = new Intent(MainFragmentActivity.this,
-					MusicPlayAvtivity.class);
-			intent.putExtra("Music_name", musicName.getText().toString());
-			intent.putExtra("Music_artist", musicSinger.getText().toString());
-			startActivity(intent);
-			overridePendingTransition(R.anim.in_from_right, R.anim.out_to_left);
-			break;
+			String musciFlag = SharedPrefUtil.getString(this, Constant.MUSIC_FLAG, "");
+			if (musciFlag.equals("NET_MUSIC")) {
+				return;
+			} else {
+				// 传递下载歌曲的歌名和歌手
+				Intent intent = new Intent(MainFragmentActivity.this,
+						MusicPlayAvtivity.class);
+				intent.putExtra("Music_name", musicName.getText().toString());
+				intent.putExtra("Music_artist", musicSinger.getText()
+						.toString());
+				startActivity(intent);
+				overridePendingTransition(R.anim.in_from_right,
+						R.anim.out_to_left);
+				break;
+			}
 		}
 		}
 	}

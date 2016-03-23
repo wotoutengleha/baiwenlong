@@ -7,10 +7,10 @@
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="230dp"
-        android:background="@drawable/hotmusic" >
+        android:background="@drawable/risemusic" >
 
         <TextView
-            android:id="@+id/hot_updatetv"
+            android:id="@+id/rise_updatetv"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignLeft="@+id/textView1"
@@ -34,7 +34,7 @@
             android:textStyle="italic" />
 
         <TextView
-            android:id="@+id/hot_decription_tv"
+            android:id="@+id/rise_decription_tv"
             android:layout_width="match_parent"
             android:layout_height="40dp"
             android:layout_alignParentBottom="true"
@@ -72,7 +72,7 @@
             android:textSize="16sp" />
 
         <TextView
-            android:id="@+id/hotsongConut"
+            android:id="@+id/risesongConut"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerVertical="true"

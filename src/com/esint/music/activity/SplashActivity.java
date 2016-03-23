@@ -2,6 +2,7 @@ package com.esint.music.activity;
 
 import com.esint.music.R;
 import com.esint.music.service.MusicPlayService;
+import com.esint.music.service.NetMusicService;
 import com.esint.music.utils.ActivityCollectUtil;
 import com.esint.music.utils.Constant;
 
@@ -30,6 +31,7 @@ public class SplashActivity extends BaseActivity {
 		// 3S后进入到主界面
 		mHandler.sendEmptyMessageDelayed(Constant.START_ACTIVITY, 100);
 		startService(new Intent(this, MusicPlayService.class));
+		
 	}
 
 	@Override

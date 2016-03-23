@@ -116,12 +116,12 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 	private MyBroadCast broadCast;
 	private ImageView mMoveIv;// 添加喜欢的音乐时的动画图片
 	private String imageTarget;// 下载的图片的文件路径
-	private String musicTarget;//下载音乐的路径
+	private String musicTarget;// 下载音乐的路径
 	private MyHttpUtils myHttpUtils;
-	private HttpUtils httpUtils;//XUtils
+	private HttpUtils httpUtils;// XUtils
 	private ArrayList<SearchMusicInfo> searchMusicList = new ArrayList<SearchMusicInfo>();
-	private String mp3Url;//用来分享的音乐的地址
-	private String picUrl;//用来分享音乐的图片的地址
+	private String mp3Url;// 用来分享的音乐的地址
+	private String picUrl;// 用来分享音乐的图片的地址
 
 	@Override
 	protected void onCreate(Bundle arg0) {
@@ -236,7 +236,7 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 				+ "/下载的图片" + "/";
 
 		intentMusicName = getIntent().getStringExtra("Music_name");
-		 intentArtist = getIntent().getStringExtra("Music_artist");
+		intentArtist = getIntent().getStringExtra("Music_artist");
 		if (currentPosition != -1 && musicFlag.equals("local_music")) {
 			musicName.setText(intentMusicName);
 			musicSinger.setText("一   "
@@ -275,7 +275,7 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 			startAnim();
 		}
 		if (recordDownMusicPosition != -1 && musicFlag.equals("down_music")) {
-		
+
 			downMusicSongTime = downMusicList.get(recordDownMusicPosition)
 					.getDownMusicDuration();
 			musicName.setText(intentMusicName);
@@ -325,6 +325,9 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 							musicPlayService.next();
 							// localMusicNextOrPre();
 							Log.e("走到了发送本地音乐", "走到了发送本地音乐");
+							SharedPrefUtil.setString(MusicPlayAvtivity.this,
+									Constant.MUSIC_FLAG,
+									Constant.MY_LOCAL_MUSIC);
 							// 发送更新播放按钮的广播
 							Intent intent = new Intent("updateLocalText");
 							sendBroadcast(intent);
@@ -344,6 +347,10 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 							musicPlayService.nextDownMusic();
 							// downMusicNextOrPre();
 							Log.e("走到了发送下载音乐", "走到了发送下载音乐");
+							SharedPrefUtil
+									.setString(MusicPlayAvtivity.this,
+											Constant.MUSIC_FLAG,
+											Constant.MY_DOWN_MUSIC);
 							// 发送更新播放按钮的广播
 							Intent intent = new Intent("updateDownText");
 							sendBroadcast(intent);
@@ -363,6 +370,10 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 							musicPlayService.nextLikeMusic();
 							// downMusicNextOrPre();
 							Log.e("走到了发送喜欢音乐", "走到了发送喜欢音乐");
+							SharedPrefUtil
+									.setString(MusicPlayAvtivity.this,
+											Constant.MUSIC_FLAG,
+											Constant.MY_LIKE_MUSIC);
 							// 发送更新播放按钮的广播
 							Intent intent = new Intent("updateLikeText");
 							sendBroadcast(intent);
@@ -392,19 +403,19 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 				}
 			}
 		};
-		MyHttpUtils.handler = new Handler(){
+		MyHttpUtils.handler = new Handler() {
 			@Override
 			public void handleMessage(Message msg) {
 				super.handleMessage(msg);
 				switch (msg.what) {
-				case Constant.WHAT_NET_HOTMUSIC_LIST:{
+				case Constant.WHAT_NET_HOTMUSIC_LIST: {
 					Log.e("接收到了消息", "接收到了消息");
-					     searchMusicList.addAll((ArrayList<SearchMusicInfo>) msg.obj);
-					     String musicID = searchMusicList.get(0).getMusicID();
-					     getDownUrl(searchMusicList);
+					searchMusicList
+							.addAll((ArrayList<SearchMusicInfo>) msg.obj);
+					String musicID = searchMusicList.get(0).getMusicID();
+					getDownUrl(searchMusicList);
 				}
-					
-					
+
 					break;
 
 				}
@@ -619,7 +630,7 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 		case R.id.play_shared: {
 
 			searchShakeMusic();
-			
+
 		}
 			break;
 		case R.id.ivLikeNormal: {
@@ -1255,38 +1266,41 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 		// title标题，印象笔记、邮箱、信息、微信、人人网和QQ空间使用
 		oks.setTitle(intentMusicName);
 		// titleUrl是标题的网络链接，仅在人人网和QQ空间使用
-		 oks.setTitleUrl(mp3Url);
+		oks.setTitleUrl(mp3Url);
 		// text是分享文本，所有平台都需要这个字段
 		oks.setText(intentArtist);
 		// imagePath是图片的本地路径，Linked-In以外的平台都支持此参数
-//		 oks.setImagePath("/sdcard/test.jpg");//确保SDcard下面存在此张图片
+		// oks.setImagePath("/sdcard/test.jpg");//确保SDcard下面存在此张图片
 		// url仅在微信（包括好友和朋友圈）中使用
 		// comment是我对这条分享的评论，仅在人人网和QQ空间使用
 		// oks.setComment("我是测试评论文本");
 		// site是分享此内容的网站名称，仅在QQ空间使用
-		 oks.setSite(getString(R.string.app_name));
+		oks.setSite(getString(R.string.app_name));
 		// siteUrl是分享此内容的网站地址，仅在QQ空间使用
-		 oks.setSiteUrl(mp3Url);
-		 oks.setUrl(mp3Url);
-		 oks.setImageUrl(picUrl);
-		 Log.e("分享的 MP3地址", mp3Url+"");
-		 Log.e("分享的 MP3图片的地址", picUrl+"");
+		oks.setSiteUrl(mp3Url);
+		oks.setUrl(mp3Url);
+		oks.setImageUrl(picUrl);
+		oks.setMusicUrl(mp3Url);
+		Log.e("分享的 MP3地址", mp3Url + "");
+		Log.e("分享的 MP3图片的地址", picUrl + "");
 		// 启动分享GUI
 		oks.show(this);
 	}
-	//根据歌曲名字上搜索音乐 用来分享音乐的链接
-	private void searchShakeMusic(){
+
+	// 根据歌曲名字上搜索音乐 用来分享音乐的链接
+	private void searchShakeMusic() {
 		List<NameValuePair> parmas = new ArrayList<NameValuePair>();
-		parmas.add(new BasicNameValuePair("s", intentMusicName+" "+intentArtist));
+		parmas.add(new BasicNameValuePair("s", intentMusicName + " "
+				+ intentArtist));
 		parmas.add(new BasicNameValuePair("type", "1"));
-		parmas.add(new BasicNameValuePair("offset","0"));
+		parmas.add(new BasicNameValuePair("offset", "0"));
 		parmas.add(new BasicNameValuePair("sub", "false"));
 		parmas.add(new BasicNameValuePair("limit", "5"));
 		myHttpUtils.searchMusicToAPI(Constant.API_NET_SEARCH_MUSIC, parmas);
 	}
-	
+
 	// 根据点击歌曲的位置通过音乐的ID找到音乐的链接和图片的链接
-	private void getDownUrl(ArrayList<SearchMusicInfo> searchMusicList ) {
+	private void getDownUrl(ArrayList<SearchMusicInfo> searchMusicList) {
 		// http://music.163.com/api/song/detail/?id=29818120&ids=[29818120]
 		String musicID = searchMusicList.get(0).getMusicID();
 		String musicUrl = "http://music.163.com/api/song/detail/?id=" + musicID

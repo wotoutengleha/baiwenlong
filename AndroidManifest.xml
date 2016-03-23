@@ -19,6 +19,11 @@
     <uses-permission android:name="android.permission.GET_ACCOUNTS" />
     <uses-permission android:name="com.android.browser.permission.WRITE_HISTORY_BOOKMARKS" />
     <uses-permission android:name="android.permission.BROADCAST_STICKY" />
+     
+    
+       <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" ></uses-permission>
+    <uses-permission android:name="android.permission.WAKE_LOCK" ></uses-permission>
+    
     <!-- 蓝牙分享所需的权限 -->
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
@@ -79,6 +84,7 @@
 
         <service android:name="com.esint.music.service.MusicPlayService" />
         <service android:name="com.esint.music.service.NotificationService" />
+        <service android:name="com.esint.music.service.NetMusicService"></service>
 
         <receiver
             android:name="com.esint.music.receiver.AlarmReceiver"

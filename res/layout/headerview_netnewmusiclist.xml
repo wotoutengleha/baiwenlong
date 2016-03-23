@@ -6,10 +6,11 @@
 
     <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="230dp"
+        android:layout_height="240dp"
         android:background="@drawable/newmusiclist" >
 
         <TextView
+            android:id="@+id/tv_updatetime"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignLeft="@+id/textView1"
@@ -31,6 +32,21 @@
             android:textColor="@color/white"
             android:textSize="20sp"
             android:textStyle="italic" />
+
+        <TextView
+            android:id="@+id/decription_tv"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentLeft="true"
+            android:layout_marginBottom="8dp"
+            android:lineSpacingExtra="2dp"
+            android:lineSpacingMultiplier="1.2"
+            android:maxLines="2"
+            android:paddingLeft="5dp"
+            android:paddingRight="5dp"
+            android:text="TextView"
+            android:textColor="@color/white" />
     </RelativeLayout>
 
     <RelativeLayout
@@ -56,6 +72,7 @@
             android:textSize="16sp" />
 
         <TextView
+            android:id="@+id/songcountTv"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerVertical="true"

@@ -253,9 +253,7 @@ public class MyTabMusic extends Fragment implements OnClickListener {
 								Constant.CLICKED_MUNSIC_NAME_LIKE,
 								currentPositionDown);
 						changeUIStatusOnPlayLike(currentPositionDown);
-
 					}
-
 				}
 					break;
 				}
@@ -280,7 +278,7 @@ public class MyTabMusic extends Fragment implements OnClickListener {
 			randomPlayAnim();
 			Random random = new Random();
 			musicPlayService.playLocalMusic(random.nextInt(mp3List.size()));
-			playButton.setVisibility(View.INVISIBLE);
+			playButton.setVisibility(View.GONE);
 			pauseButton.setVisibility(View.VISIBLE);
 			// 点击item的时候 存入播放的位置
 			SharedPrefUtil.setInt(getActivity(), Constant.CLICKED_MUNSIC_NAME,
@@ -289,6 +287,15 @@ public class MyTabMusic extends Fragment implements OnClickListener {
 
 			break;
 		case R.id.ib_pause: {
+			String musicFlag = SharedPrefUtil.getString(mainActivity, Constant.MUSIC_FLAG, "");
+
+			if (musicFlag.equals("NET_MUSIC")) {
+				musicPlayService.pause();
+				playButton.setVisibility(View.VISIBLE);
+				pauseButton.setVisibility(View.GONE);
+				return;
+			}
+
 			musicPlayService.pause();
 			albumImg.clearAnimation();
 			playButton.setVisibility(View.VISIBLE);
@@ -298,6 +305,14 @@ public class MyTabMusic extends Fragment implements OnClickListener {
 			break;
 		}
 		case R.id.ib_play: {
+			String musicFlag = SharedPrefUtil.getString(mainActivity, Constant.MUSIC_FLAG, "");
+			if (musicFlag.equals("NET_MUSIC")) {
+				musicPlayService.start();
+				playButton.setVisibility(View.GONE);
+				pauseButton.setVisibility(View.VISIBLE);
+				return;
+			}
+
 			currentPlayPosition = SharedPrefUtil.getInt(getActivity(),
 					Constant.CLICKED_MUNSIC_NAME, -1);
 			int recordDownMusicPosition = SharedPrefUtil.getInt(getActivity(),
@@ -313,9 +328,10 @@ public class MyTabMusic extends Fragment implements OnClickListener {
 				// 得到记录的位置
 
 				musicPlayService.playLocalMusic(currentPlayPosition);
-
+				SharedPrefUtil.setString(mainActivity, Constant.MUSIC_FLAG,
+						Constant.MY_LOCAL_MUSIC);
 				pauseButton.setVisibility(View.VISIBLE);
-				playButton.setVisibility(View.INVISIBLE);
+				playButton.setVisibility(View.GONE);
 				startAnim();
 				if (currentPlayPosition != -1) {
 					// // 设置进度条
@@ -331,7 +347,7 @@ public class MyTabMusic extends Fragment implements OnClickListener {
 				// 得到记录的位置
 				musicPlayService.playMyFav(recordLikeMusicPosition);
 				pauseButton.setVisibility(View.VISIBLE);
-				playButton.setVisibility(View.INVISIBLE);
+				playButton.setVisibility(View.GONE);
 				startAnim();
 				if (recordLikeMusicPosition != -1
 						&& MainFragmentActivity.likeMusciList != null) {
@@ -349,7 +365,7 @@ public class MyTabMusic extends Fragment implements OnClickListener {
 				// 得到记录的位置
 				musicPlayService.playMyDown(recordDownMusicPosition);
 				pauseButton.setVisibility(View.VISIBLE);
-				playButton.setVisibility(View.INVISIBLE);
+				playButton.setVisibility(View.GONE);
 				startAnim();
 				if (recordDownMusicPosition != -1 && downMusicList != null) {
 					// // 设置进度条
@@ -367,25 +383,26 @@ public class MyTabMusic extends Fragment implements OnClickListener {
 			else if (!Constant.isFirst) {
 				musicPlayService.start();
 				pauseButton.setVisibility(View.VISIBLE);
-				playButton.setVisibility(View.INVISIBLE);
+				playButton.setVisibility(View.GONE);
 				startAnim();
 			}
 
 			break;
 		}
 		case R.id.ib_next: {
+			String musicFlag = SharedPrefUtil.getString(mainActivity, Constant.MUSIC_FLAG, "");
 			currentPlayPosition = SharedPrefUtil.getInt(getActivity(),
 					Constant.CLICKED_MUNSIC_NAME, -1);
-
+			if (musicFlag.equals("NET_MUSIC")) {
+				return;
+			}
 			if (currentPlayPosition == -1) {
 				return;
 			}
 
-			playButton.setVisibility(View.INVISIBLE);
+			playButton.setVisibility(View.GONE);
 			pauseButton.setVisibility(View.VISIBLE);
 
-			String musicFlag = SharedPrefUtil.getString(mainActivity,
-					Constant.MUSIC_FLAG, "musicFlag is Empty");
 			if (musicFlag.equals("local_music")) {
 				musicPlayService.next();
 				int currentPosition = musicPlayService.getCurrentPosition();
@@ -592,9 +609,6 @@ public class MyTabMusic extends Fragment implements OnClickListener {
 				if (position == mp3List.size()) {
 					return;
 				}
-				// musicPlayer = new NetMusicPlayer(progressBar);
-				// musicPlayer.pause();
-				// musicPlayer.stop();
 				// 点击item的时候 存入播放的位置
 				SharedPrefUtil.setString(mainActivity, Constant.MUSIC_FLAG,
 						Constant.MY_LOCAL_MUSIC);
@@ -1196,23 +1210,22 @@ public class MyTabMusic extends Fragment implements OnClickListener {
 				}
 			} else if (intent.getAction().endsWith("updateDownText")) {
 				if (musicFlag.equals("down_music")) {
-
 					Log.e("接收到了下载音乐", "接收到了下载音乐");
-					changeUIStatusOnPlayDown(musicPlayService
-							.getCurrentPosition());
 					SharedPrefUtil.setInt(mainActivity,
 							Constant.CLICKED_MUNSIC_NAME_DOWN,
 							musicPlayService.getCurrentPosition());
+					changeUIStatusOnPlayDown(musicPlayService
+							.getCurrentPosition());
 				}
 			} else if (intent.getAction().endsWith("updateLikeText")) {
 				if (musicFlag.equals("like_music")
 						&& MainFragmentActivity.likeMusciList.size() != 0) {
 					Log.e("接收到了喜欢音乐", "接收到了喜欢音乐");
-					changeUIStatusOnPlayLike(musicPlayService
-							.getCurrentPosition());
 					SharedPrefUtil.setInt(mainActivity,
 							Constant.CLICKED_MUNSIC_NAME_LIKE,
 							musicPlayService.getCurrentPosition());
+					changeUIStatusOnPlayLike(musicPlayService
+							.getCurrentPosition());
 				}
 			}
 		}

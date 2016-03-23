@@ -5,23 +5,17 @@ import java.io.FileDescriptor;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.RandomAccessFile;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.logging.Level;
 
-import org.jaudiotagger.audio.AudioFileIO;
 import org.jaudiotagger.audio.exceptions.InvalidAudioFrameException;
 import org.jaudiotagger.audio.exceptions.ReadOnlyFileException;
 import org.jaudiotagger.audio.mp3.MP3AudioHeader;
 import org.jaudiotagger.audio.mp3.MP3File;
 import org.jaudiotagger.tag.TagException;
-import org.jaudiotagger.tag.id3.ID3v23Frame;
-import org.jaudiotagger.tag.id3.ID3v23Tag;
 
 import com.esint.music.R;
 import com.esint.music.model.DownImageInfo;
@@ -35,12 +29,10 @@ import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.BitmapFactory.Options;
-import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Environment;
 import android.os.ParcelFileDescriptor;
 import android.provider.MediaStore;
-import android.util.Log;
 
 public class MediaUtils {
 
@@ -442,83 +434,85 @@ public class MediaUtils {
 
 		ArrayList<DownMucicInfo> netMusicList = new ArrayList<DownMucicInfo>();
 		File[] files = new File(Path).listFiles();
+		if(files!=null){
+			for (int i = 0; i < files.length; i++) {
+				File f = files[i];
+				if (f.isFile()) {
+					if (f.getPath()
+							.substring(f.getPath().length() - Extension.length())
+							.equals(Extension)) // 判断扩展名
+						lstFile.add(f.getPath());
+					String wholeName = f.getName();// 获得文件的名称
+					String target = Environment.getExternalStorageDirectory() + "/"
+							+ "/下载的歌曲" + "/" + wholeName;
+					
+					String saveTarget = Environment.getExternalStorageDirectory() + "/"
+							+ "/下载的歌曲" + "/";
+					String[] whole = wholeName.split("-");
+					String artist = whole[0];
+					String musicName = whole[1];
+					musicName = musicName.substring(0, musicName.lastIndexOf('.'));
+					DownMucicInfo netMucicInfo = new DownMucicInfo();
 
-		for (int i = 0; i < files.length; i++) {
-			File f = files[i];
-			if (f.isFile()) {
-				if (f.getPath()
-						.substring(f.getPath().length() - Extension.length())
-						.equals(Extension)) // 判断扩展名
-					lstFile.add(f.getPath());
-				String wholeName = f.getName();// 获得文件的名称
-				String target = Environment.getExternalStorageDirectory() + "/"
-						+ "/下载的歌曲" + "/" + wholeName;
-				
-				String saveTarget = Environment.getExternalStorageDirectory() + "/"
-						+ "/下载的歌曲" + "/";
-				String[] whole = wholeName.split("-");
-				String artist = whole[0];
-				String musicName = whole[1];
-				musicName = musicName.substring(0, musicName.lastIndexOf('.'));
-				DownMucicInfo netMucicInfo = new DownMucicInfo();
 
-
-//				Mp3File mp3file;
-//				try {
-//					mp3file = new Mp3File(target);
-//					Log.e("mp3file", mp3file.toString() + "");
-//					ID3v2 id3v2Tag;
-//					if (mp3file.hasId3v2Tag()) {
-//						Log.e("if", "if");
-//						id3v2Tag = mp3file.getId3v2Tag();
-//					} else {
-//						id3v2Tag = new ID3v24Tag();
-//						mp3file.setId3v2Tag(id3v2Tag);
-//						Log.e("else", "else");
+//					Mp3File mp3file;
+//					try {
+//						mp3file = new Mp3File(target);
+//						Log.e("mp3file", mp3file.toString() + "");
+//						ID3v2 id3v2Tag;
+//						if (mp3file.hasId3v2Tag()) {
+//							Log.e("if", "if");
+//							id3v2Tag = mp3file.getId3v2Tag();
+//						} else {
+//							id3v2Tag = new ID3v24Tag();
+//							mp3file.setId3v2Tag(id3v2Tag);
+//							Log.e("else", "else");
+//						}
+//						id3v2Tag.setArtist(artist);
+//						id3v2Tag.setTitle(musicName);
+//						Log.e("id3v2Tag", "音乐名称" + id3v2Tag.getTitle() + "");
+//						Log.e("id3v2Tag", "artist" + id3v2Tag.getArtist() + "");
+//						id3v2Tag.setEncoder("UTF-8");
+//						mp3file.save(saveTarget +musicName+".mp3");
+	//
+//					} catch (Exception e) {
+//						e.printStackTrace();
 //					}
-//					id3v2Tag.setArtist(artist);
-//					id3v2Tag.setTitle(musicName);
-//					Log.e("id3v2Tag", "音乐名称" + id3v2Tag.getTitle() + "");
-//					Log.e("id3v2Tag", "artist" + id3v2Tag.getArtist() + "");
-//					id3v2Tag.setEncoder("UTF-8");
-//					mp3file.save(saveTarget +musicName+".mp3");
-//
-//				} catch (Exception e) {
-//					e.printStackTrace();
-//				}
 
-				File sourceFile = new File(target);
-				try {
-					MP3File mp3file2 = new MP3File(sourceFile);
-					MP3AudioHeader header = mp3file2.getMP3AudioHeader();
-					if (header == null) {
-						return null;
+					File sourceFile = new File(target);
+					try {
+						MP3File mp3file2 = new MP3File(sourceFile);
+						MP3AudioHeader header = mp3file2.getMP3AudioHeader();
+						if (header == null) {
+							return null;
+						}
+						// 歌曲时长
+						String durationStr = header.getTrackLengthAsString();
+						netMucicInfo.setDownMusicDuration(durationStr);
+					} catch (IOException e) {
+						e.printStackTrace();
+					} catch (TagException e) {
+						e.printStackTrace();
+					} catch (ReadOnlyFileException e) {
+						e.printStackTrace();
+					} catch (InvalidAudioFrameException e) {
+						e.printStackTrace();
 					}
-					// 歌曲时长
-					String durationStr = header.getTrackLengthAsString();
-					netMucicInfo.setDownMusicDuration(durationStr);
-				} catch (IOException e) {
-					e.printStackTrace();
-				} catch (TagException e) {
-					e.printStackTrace();
-				} catch (ReadOnlyFileException e) {
-					e.printStackTrace();
-				} catch (InvalidAudioFrameException e) {
-					e.printStackTrace();
-				}
 
-				String fileSize = getFileSize(files[i].length());
+					String fileSize = getFileSize(files[i].length());
 
-				netMucicInfo.setDownMusicName(musicName);
-				netMucicInfo.setDownMusicArtist(artist);
-				netMucicInfo.setDownMusicSize(fileSize);
-				netMucicInfo.setDownMusicUrl(target);
-				netMusicList.add(netMucicInfo);
+					netMucicInfo.setDownMusicName(musicName);
+					netMucicInfo.setDownMusicArtist(artist);
+					netMucicInfo.setDownMusicSize(fileSize);
+					netMucicInfo.setDownMusicUrl(target);
+					netMusicList.add(netMucicInfo);
 
-				if (!IsIterative)
-					break;
-			} else if (f.isDirectory() && f.getPath().indexOf("/.") == -1) // 忽略点文件（隐藏文件/文件夹）
-				GetMusicFiles(f.getPath(), Extension, IsIterative);
+					if (!IsIterative)
+						break;
+				} else if (f.isDirectory() && f.getPath().indexOf("/.") == -1) // 忽略点文件（隐藏文件/文件夹）
+					GetMusicFiles(f.getPath(), Extension, IsIterative);
+			}
+			
 		}
 		return netMusicList;
 	}
