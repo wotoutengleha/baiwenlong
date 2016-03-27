@@ -16,7 +16,6 @@ import android.view.animation.LinearInterpolator;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-
 public class LoadingDialog extends Dialog {
 	/**
 	 * Ðý×ª¶¯»­
@@ -117,7 +116,6 @@ public class LoadingDialog extends Dialog {
 
 	public interface DialogListener {
 		public void onShowed();
-
 		public void onDismissed();
 	}
 

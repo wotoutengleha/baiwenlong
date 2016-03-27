@@ -69,6 +69,7 @@ import com.esint.music.dialog.Effectstype;
 import com.esint.music.dialog.NiftyDialogBuilder;
 import com.esint.music.fragment.MyTabMusic;
 import com.esint.music.fragment.NetMusicFragment;
+import com.esint.music.history.SearchShopActivity;
 import com.esint.music.model.DownMucicInfo;
 import com.esint.music.model.LikeMusicModel;
 import com.esint.music.model.Mp3Info;
@@ -86,8 +87,7 @@ import com.esint.music.utils.SortListUtil;
 import com.esint.music.utils.SharedPrefUtil;
 import com.esint.music.view.AlwaysMarqueeTextView;
 import com.esint.music.view.MainFunctionPop;
-import com.lidroid.xutils.db.sqlite.Selector;
-import com.lidroid.xutils.exception.DbException;
+import com.esint.music.view.SystemStatusManager;
 
 @SuppressLint("DefaultLocale")
 @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
@@ -120,8 +120,6 @@ public class MainFragmentActivity extends BaseActivity implements
 	private String musciFlag;// 是本地音乐还是我的最爱
 	// 汉字转换成拼音的类
 	private ArrayList<Mp3Info> mp3Infos;// 本地音乐
-	private List<Mp3Info> myLikeMp3Infos;// 我的最爱的list
-	private MyApplication myApp;
 	private ArrayList<DownMucicInfo> downMusicList;// 下载的歌曲
 	private MyHttpUtils myHttpUtils;// 请求网络的工具类
 	public MusicPlayService musicPlayService;
@@ -294,18 +292,11 @@ public class MainFragmentActivity extends BaseActivity implements
 		Intent intent = new Intent(this, MusicPlayService.class);
 		bindService(intent, connection, Context.BIND_AUTO_CREATE);
 		mFragLists = new ArrayList<Fragment>();
-		myApp = (MyApplication) getApplication();
 		mp3Infos = MediaUtils.getMp3Info(MainFragmentActivity.this);
 		myHttpUtils = new MyHttpUtils(MainFragmentActivity.this);
-		try {
-			// 排序MP3列表的数据
-			mp3Infos = MediaUtils.getMp3Info(this);
-			mp3Infos = new SortListUtil().initMyLocalMusic(mp3Infos);
-			myLikeMp3Infos = myApp.dbUtils.findAll(Mp3Info.class);
-			myLikeMp3Infos = new SortListUtil().initMyLocalMusic(mp3Infos);
-		} catch (DbException e) {
-			e.printStackTrace();
-		}
+		// 排序MP3列表的数据
+		mp3Infos = MediaUtils.getMp3Info(this);
+		mp3Infos = new SortListUtil().initMyLocalMusic(mp3Infos);
 
 		MyTabMusic myMusic = new MyTabMusic(action);
 		NetMusicFragment netMusic = new NetMusicFragment(action);
@@ -413,10 +404,13 @@ public class MainFragmentActivity extends BaseActivity implements
 			initPopuWindow();
 			break;
 		case R.id.btn_search:
-			searchMusicView();
+//			searchMusicView();
+			startActivity(new Intent(MainFragmentActivity.this,SearchShopActivity.class));
+			overridePendingTransition(R.anim.in_from_right, R.anim.out_to_left);
 			break;
 		case R.id.musiccontent: {
-			String musciFlag = SharedPrefUtil.getString(this, Constant.MUSIC_FLAG, "");
+			String musciFlag = SharedPrefUtil.getString(this,
+					Constant.MUSIC_FLAG, "");
 			if (musciFlag.equals("NET_MUSIC")) {
 				return;
 			} else {
@@ -559,6 +553,7 @@ public class MainFragmentActivity extends BaseActivity implements
 	}
 
 	// 更新搜索音乐的列表
+	@SuppressWarnings("deprecation")
 	private void updateSearchMusic(int offset) {
 
 		String edSearch = searchEt.getText().toString();
@@ -988,6 +983,37 @@ public class MainFragmentActivity extends BaseActivity implements
 			} while (cursor.moveToNext());
 		}
 		return likeMusciList;
+	}
+
+	private void setTranslucentStatus(int colorIndex) {
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+			// 透明状态栏
+			getWindow().addFlags(
+					WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
+			// 透明导航栏
+			getWindow().addFlags(
+					WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION);
+			SystemStatusManager tintManager = new SystemStatusManager(this);
+			tintManager.setStatusBarTintEnabled(true);
+			getWindow().getDecorView().setFitsSystemWindows(true);
+			if (colorIndex == 0) {
+				tintManager.setStatusBarTintResource(color.tianyilan);
+			} else if (colorIndex == 1) {
+				tintManager.setStatusBarTintResource(color.hidden_bitterness);
+			} else if (colorIndex == 2) {
+				tintManager.setStatusBarTintResource(color.gorgeous);
+			} else if (colorIndex == 3) {
+				tintManager.setStatusBarTintResource(color.romance);
+			} else if (colorIndex == 4) {
+				tintManager.setStatusBarTintResource(color.sunset);
+			} else if (colorIndex == 5) {
+				tintManager.setStatusBarTintResource(color.warm_colour);
+			} else {
+				tintManager.setStatusBarTintResource(color.holo_blue_light);
+			}
+
+			
+		}
 	}
 
 }

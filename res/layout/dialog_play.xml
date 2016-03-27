@@ -30,7 +30,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:lineSpacingExtra="4dp"
-            android:text="当前非Wi-Fi网络,不能继续播放。"
+            android:text="当前非Wi-Fi网络,继续播放将消耗流量！"
              />
     </LinearLayout>
 
@@ -63,7 +63,6 @@
                 android:background="#e5e6e6" />
 
             <TextView
-                android:visibility="gone"
                 android:id="@+id/tvplay_countinue"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"

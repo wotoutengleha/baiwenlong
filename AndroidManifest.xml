@@ -19,11 +19,11 @@
     <uses-permission android:name="android.permission.GET_ACCOUNTS" />
     <uses-permission android:name="com.android.browser.permission.WRITE_HISTORY_BOOKMARKS" />
     <uses-permission android:name="android.permission.BROADCAST_STICKY" />
-     
-    
-       <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" ></uses-permission>
-    <uses-permission android:name="android.permission.WAKE_LOCK" ></uses-permission>
-    
+    <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" >
+    </uses-permission>
+    <uses-permission android:name="android.permission.WAKE_LOCK" >
+    </uses-permission>
+
     <!-- 蓝牙分享所需的权限 -->
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
@@ -61,7 +61,7 @@
             android:theme="@android:style/Theme.Translucent.NoTitleBar" />
         <activity
             android:name="com.esint.music.activity.MusicPlayAvtivity"
-            android:theme="@android:style/Theme.Translucent" />
+            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
         <activity
             android:name="com.esint.music.activity.LockActivity"
             android:excludeFromRecents="true"
@@ -81,10 +81,16 @@
             android:configChanges="orientation|keyboardHidden|navigation"
             android:theme="@android:style/Theme.Translucent.NoTitleBar"
             android:windowSoftInputMode="adjustPan" />
+        <activity
+            android:name="com.esint.music.history.SearchShopActivity"
+            android:configChanges="orientation|keyboardHidden|navigation"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar"
+            android:windowSoftInputMode="adjustPan" />
 
         <service android:name="com.esint.music.service.MusicPlayService" />
         <service android:name="com.esint.music.service.NotificationService" />
-        <service android:name="com.esint.music.service.NetMusicService"></service>
+        <service android:name="com.esint.music.service.NetMusicService" >
+        </service>
 
         <receiver
             android:name="com.esint.music.receiver.AlarmReceiver"

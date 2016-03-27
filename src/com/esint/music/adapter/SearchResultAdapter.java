@@ -12,6 +12,8 @@ import com.esint.music.model.SearchMusicInfo;
 import com.esint.music.utils.DownMusicUtils;
 import com.esint.music.utils.DownMusicUtils.OnDownLoadListener;
 import com.esint.music.utils.MyHttpUtils;
+import com.esint.music.view.LoadingDialog;
+import com.esint.music.view.LoadingDialog.DialogListener;
 import com.lidroid.xutils.HttpUtils;
 import com.lidroid.xutils.exception.HttpException;
 import com.lidroid.xutils.http.ResponseInfo;
@@ -45,6 +47,7 @@ public class SearchResultAdapter extends BaseAdapter {
 	private Context context;
 	private ArrayList<SearchMusicInfo> netDataList;
 	private HttpUtils httpUtils = new HttpUtils();
+	private LoadingDialog loadingDialog;
 
 	public SearchResultAdapter(Context context,
 			ArrayList<SearchMusicInfo> searchResult) {
@@ -274,6 +277,10 @@ public class SearchResultAdapter extends BaseAdapter {
 							@Override
 							public void onSuccess(ResponseInfo<File> arg0) {
 								Toast.makeText(context, "图片下载成功", 0).show();
+								if (loadingDialog.isShowing()
+										&& loadingDialog != null) {
+									loadingDialog.dismiss();
+								}
 							}
 
 							@Override
@@ -296,6 +303,20 @@ public class SearchResultAdapter extends BaseAdapter {
 			public void onLoading(long total, long current, boolean isUploading) {
 				super.onLoading(total, current, isUploading);
 				Log.e("current", current + "  /  " + total);
+				if (loadingDialog == null) {
+					loadingDialog = new LoadingDialog(context,
+							R.style.dialogloading, new DialogListener() {
+
+								@Override
+								public void onShowed() {
+								}
+
+								@Override
+								public void onDismissed() {
+								}
+							});
+				}
+				loadingDialog.showDialog("正在下载请稍后。。。");
 			}
 		});
 

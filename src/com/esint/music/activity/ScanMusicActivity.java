@@ -86,7 +86,7 @@ public class ScanMusicActivity extends SwipeBackActivity implements
 		btnScan = (Button) findViewById(R.id.scanBtn);
 		btnBack = (ImageView) findViewById(R.id.backBtnSC);
 		scanMusicActionBar = (RelativeLayout) findViewById(R.id.topLayout);
-		mDialog = new ProgressDialog(this);
+		mDialog = new ProgressDialog(this,ProgressDialog.THEME_HOLO_LIGHT);
 		btnScan.setOnClickListener(this);
 		btnBack.setOnClickListener(this);
 

@@ -28,6 +28,8 @@ import com.esint.music.model.RiseMusicInfo;
 import com.esint.music.utils.Constant;
 import com.esint.music.utils.MyHttpUtils;
 import com.esint.music.utils.SharedPrefUtil;
+import com.esint.music.view.LoadingDialog;
+import com.esint.music.view.LoadingDialog.DialogListener;
 import com.lidroid.xutils.HttpUtils;
 import com.lidroid.xutils.exception.HttpException;
 import com.lidroid.xutils.http.ResponseInfo;
@@ -43,6 +45,7 @@ public class RiseMusicListAdapter extends BaseAdapter {
 
 	private Context context;
 	private ArrayList<RiseMusicInfo> riseMusicList;
+	private LoadingDialog loadingDialog;
 
 	public RiseMusicListAdapter(Context context,
 			ArrayList<RiseMusicInfo> riseMusicList) {
@@ -243,6 +246,10 @@ public class RiseMusicListAdapter extends BaseAdapter {
 									@Override
 									public void onSuccess(
 											ResponseInfo<File> arg0) {
+										if (loadingDialog.isShowing()
+												&& loadingDialog != null) {
+											loadingDialog.dismiss();
+										}
 									}
 
 									@Override
@@ -262,6 +269,21 @@ public class RiseMusicListAdapter extends BaseAdapter {
 					public void onLoading(long total, long current,
 							boolean isUploading) {
 						super.onLoading(total, current, isUploading);
+						if (loadingDialog == null) {
+							loadingDialog = new LoadingDialog(context,
+									R.style.dialogloading,
+									new DialogListener() {
+
+										@Override
+										public void onShowed() {
+										}
+
+										@Override
+										public void onDismissed() {
+										}
+									});
+						}
+						loadingDialog.showDialog("正在下载请稍后。。。");
 					}
 				});
 

@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:android_custom="http://schemas.android.com/apk/res/com.esint.music"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical" >
@@ -8,22 +7,13 @@
     <LinearLayout
         android:id="@+id/backgroundRecord"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="64dp"
         android:orientation="horizontal" >
 
         <RelativeLayout
-            android:layout_width="0dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="0.96" >
-
-            <ImageView
-                android:id="@+id/record"
-                android:layout_width="30dp"
-                android:layout_height="40dp"
-                android:layout_alignParentLeft="true"
-                android:layout_centerVertical="true"
-                android:src="@drawable/record3"
-                android:visibility="gone" />
+            android:layout_weight="2" >
 
             <TextView
                 android:id="@+id/title_net"
@@ -33,8 +23,6 @@
                 android:layout_marginLeft="15dip"
                 android:gravity="center_vertical"
                 android:padding="10dp"
-                android:paddingBottom="10dip"
-                android:paddingTop="10dip"
                 android:singleLine="true"
                 android:text="筷子兄弟"
                 android:textColor="#336598" />
@@ -65,39 +53,20 @@
                 android:textColor="#336598" />
         </RelativeLayout>
 
-        <RelativeLayout
+        <ImageView
+            android:id="@+id/arrowDown"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical" >
-
-            <ImageView
-                android:id="@+id/arrowDown"
-                android:layout_width="25dp"
-                android:layout_height="25dp"
-                android:layout_gravity="right"
-                android:src="@drawable/img_right_menu_arrow_down1" />
-
-            <ImageView
-                android:id="@+id/arrowUp"
-                android:layout_width="25dp"
-                android:layout_height="25dp"
-                android:layout_gravity="right"
-                android:src="@drawable/img_right_menu_arrow_up1"
-                android:visibility="gone" />
-        </RelativeLayout>
+            android:layout_height="30dp"
+            android:layout_gravity="center_vertical"
+            android:src="@drawable/img_right_menu_arrow_down1" />
     </LinearLayout>
 
-    <com.esint.music.view.RoundProgressBar
-        android:layout_marginTop="150dp"
-        android:id="@+id/roundProgressBar2"
-        android:layout_width="80dip"
-        android:layout_height="80dip"
-        android_custom:roundColor="#D1D1D1"
-        android:layout_gravity="center_horizontal"
-        android_custom:roundProgressColor="@android:color/black"
-        android_custom:roundWidth="10dip"
-        android_custom:textColor="#9A32CD"
-        android:visibility="gone"
-        android_custom:textSize="18sp" />
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:background="#e5e6e6"
+        android:visibility="gone" />
 
 </LinearLayout>

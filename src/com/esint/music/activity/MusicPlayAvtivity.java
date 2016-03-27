@@ -23,6 +23,7 @@ import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.Drawable;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
@@ -36,6 +37,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.View.OnClickListener;
+import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.view.animation.LinearInterpolator;
@@ -77,6 +79,7 @@ import com.esint.music.view.PlayListDownPopu;
 import com.esint.music.view.PlayListLikePopu;
 import com.esint.music.view.PlayListPopuWindow;
 import com.esint.music.view.PlayListPopuWindow.OnItemClickListener;
+import com.esint.music.view.SystemStatusManager;
 import com.lidroid.xutils.HttpUtils;
 import com.lidroid.xutils.exception.HttpException;
 import com.lidroid.xutils.http.ResponseInfo;
@@ -127,6 +130,7 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 	protected void onCreate(Bundle arg0) {
 		super.onCreate(arg0);
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
+		setTranslucentStatus();
 		setContentView(R.layout.activity_music_play);
 		ActivityCollectUtil.addActivity(this);
 		initView();
@@ -1345,6 +1349,20 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 		} catch (JSONException e) {
 			e.printStackTrace();
 		}
+	}
 
+	/** * 设置状态栏背景状态 */
+	@SuppressLint("InlinedApi")
+	private void setTranslucentStatus() {
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+			Window win = getWindow();
+			WindowManager.LayoutParams winParams = win.getAttributes();
+			final int bits = WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS;
+			winParams.flags |= bits;
+			win.setAttributes(winParams);
+			SystemStatusManager tintManager = new SystemStatusManager(this);
+			tintManager.setStatusBarTintEnabled(true);
+			tintManager.setStatusBarTintResource(0);// 状态栏无背景
+		}
 	}
 }

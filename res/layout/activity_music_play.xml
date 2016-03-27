@@ -5,29 +5,42 @@
     android:layout_height="match_parent"
     android:background="@drawable/playback_backround" >
 
-    <ImageButton
-        android:id="@+id/play_button_back"
-        android:layout_width="50dp"
-        android:layout_height="50dp"
-        android:layout_alignParentLeft="true"
-        android:background="@drawable/button_backround_deep"
-        android:contentDescription="@string/app_name"
-        android:src="@drawable/activity_back_normal" />
+    <View
+        android:id="@+id/view"
+        android:layout_width="match_parent"
+        android:layout_height="20dp" >
+    </View>
 
-    <ImageButton
-        android:id="@+id/play_more_functions"
-        android:layout_width="50dp"
-        android:layout_height="50dp"
-        android:layout_alignParentRight="true"
-        android:background="@drawable/button_backround_deep"
-        android:contentDescription="@string/app_name"
-        android:src="@drawable/maintabbar_button_more_highlight" />
+    <RelativeLayout
+        android:id="@+id/top"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/view" >
+
+        <ImageButton
+            android:id="@+id/play_button_back"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_alignParentLeft="true"
+            android:background="@drawable/button_backround_deep"
+            android:contentDescription="@string/app_name"
+            android:src="@drawable/activity_back_normal" />
+
+        <ImageButton
+            android:id="@+id/play_more_functions"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_alignParentRight="true"
+            android:background="@drawable/button_backround_deep"
+            android:contentDescription="@string/app_name"
+            android:src="@drawable/maintabbar_button_more_highlight" />
+    </RelativeLayout>
 
     <LinearLayout
         android:id="@+id/tv_musicName_play_ll"
         android:layout_width="200dp"
         android:layout_height="wrap_content"
-        android:layout_alignBottom="@+id/play_more_functions"
+        android:layout_alignBottom="@+id/top"
         android:layout_centerHorizontal="true"
         android:gravity="center" >
 

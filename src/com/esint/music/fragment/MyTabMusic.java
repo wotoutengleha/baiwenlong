@@ -242,7 +242,7 @@ public class MyTabMusic extends Fragment implements OnClickListener {
 				case Constant.NEXT_LEKE_MUSIC: {
 					// 当点击喜欢列表里取消喜欢的按钮时 判断当前播放的歌曲是否和点击取消的歌曲位置一致
 					String musicTitle = (String) msg.obj;
-					if (musicTitle.equals(songName.getText().toString())) {
+					if (musicTitle.equals(songName.getText().toString())&&MainFragmentActivity.likeMusciList.size()>=2) {
 						// 调用下一首的喜欢的音乐列表
 						Log.e("进来了", "进来了");
 						musicPlayService.nextLikeMusic();
@@ -287,7 +287,8 @@ public class MyTabMusic extends Fragment implements OnClickListener {
 
 			break;
 		case R.id.ib_pause: {
-			String musicFlag = SharedPrefUtil.getString(mainActivity, Constant.MUSIC_FLAG, "");
+			String musicFlag = SharedPrefUtil.getString(mainActivity,
+					Constant.MUSIC_FLAG, "");
 
 			if (musicFlag.equals("NET_MUSIC")) {
 				musicPlayService.pause();
@@ -305,7 +306,8 @@ public class MyTabMusic extends Fragment implements OnClickListener {
 			break;
 		}
 		case R.id.ib_play: {
-			String musicFlag = SharedPrefUtil.getString(mainActivity, Constant.MUSIC_FLAG, "");
+			String musicFlag = SharedPrefUtil.getString(mainActivity,
+					Constant.MUSIC_FLAG, "");
 			if (musicFlag.equals("NET_MUSIC")) {
 				musicPlayService.start();
 				playButton.setVisibility(View.GONE);
@@ -390,7 +392,8 @@ public class MyTabMusic extends Fragment implements OnClickListener {
 			break;
 		}
 		case R.id.ib_next: {
-			String musicFlag = SharedPrefUtil.getString(mainActivity, Constant.MUSIC_FLAG, "");
+			String musicFlag = SharedPrefUtil.getString(mainActivity,
+					Constant.MUSIC_FLAG, "");
 			currentPlayPosition = SharedPrefUtil.getInt(getActivity(),
 					Constant.CLICKED_MUNSIC_NAME, -1);
 			if (musicFlag.equals("NET_MUSIC")) {
@@ -1200,7 +1203,10 @@ public class MyTabMusic extends Fragment implements OnClickListener {
 	public class MyBroadCast extends BroadcastReceiver {
 		@Override
 		public void onReceive(Context context, Intent intent) {
+
 			if (intent.getAction().equals("updateLocalText")) {
+				String musicFlag = SharedPrefUtil.getString(mainActivity,
+						Constant.MUSIC_FLAG, "");
 				if (musicFlag.equals("local_music")) {
 					SharedPrefUtil.setInt(mainActivity,
 							Constant.CLICKED_MUNSIC_NAME,
@@ -1209,6 +1215,8 @@ public class MyTabMusic extends Fragment implements OnClickListener {
 					Log.e("接收到了本地的音乐", "接收到了本地的音乐");
 				}
 			} else if (intent.getAction().endsWith("updateDownText")) {
+				String musicFlag = SharedPrefUtil.getString(mainActivity,
+						Constant.MUSIC_FLAG, "");
 				if (musicFlag.equals("down_music")) {
 					Log.e("接收到了下载音乐", "接收到了下载音乐");
 					SharedPrefUtil.setInt(mainActivity,
@@ -1218,6 +1226,8 @@ public class MyTabMusic extends Fragment implements OnClickListener {
 							.getCurrentPosition());
 				}
 			} else if (intent.getAction().endsWith("updateLikeText")) {
+				String musicFlag = SharedPrefUtil.getString(mainActivity,
+						Constant.MUSIC_FLAG, "");
 				if (musicFlag.equals("like_music")
 						&& MainFragmentActivity.likeMusciList.size() != 0) {
 					Log.e("接收到了喜欢音乐", "接收到了喜欢音乐");

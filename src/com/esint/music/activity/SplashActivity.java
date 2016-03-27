@@ -2,7 +2,6 @@ package com.esint.music.activity;
 
 import com.esint.music.R;
 import com.esint.music.service.MusicPlayService;
-import com.esint.music.service.NetMusicService;
 import com.esint.music.utils.ActivityCollectUtil;
 import com.esint.music.utils.Constant;
 

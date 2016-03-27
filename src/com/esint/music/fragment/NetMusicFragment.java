@@ -47,7 +47,6 @@ import com.esint.music.model.NewMusicInfo;
 import com.esint.music.model.OriginalMusicInfo;
 import com.esint.music.model.RiseMusicInfo;
 import com.esint.music.service.MusicPlayService;
-import com.esint.music.service.NetMusicPlayer;
 import com.esint.music.service.MusicPlayService.PlayBinder;
 import com.esint.music.utils.Constant;
 import com.esint.music.utils.MyHttpUtils;
@@ -282,7 +281,8 @@ public class NetMusicFragment extends Fragment implements OnClickListener {
 
 				switch (networkType) {
 				case 0:// 流量网络
-					showNetAlert(currnetPoi);
+					showNetAlert(currnetPoi,netNewMusicList.get(currnetPoi)
+							.getMp3Url(),"NEW_MUSIC");
 					break;
 				case 1:// Wi-Fi网络 //直接播放
 						// 使用handler更新UI
@@ -394,7 +394,8 @@ public class NetMusicFragment extends Fragment implements OnClickListener {
 				// mainFragmentActivity.musicPlayService.pause();
 				switch (networkType) {
 				case 0:// 流量网络
-					showNetAlert(currnetPoi);
+					showNetAlert(currnetPoi,netHotMusicList.get(currnetPoi)
+							.getMp3Url(),"HOT_MUSIC");
 					break;
 				case 1:// Wi-Fi网络 //直接播放
 						// 使用handler更新UI
@@ -511,7 +512,8 @@ public class NetMusicFragment extends Fragment implements OnClickListener {
 				// mainFragmentActivity.musicPlayService.pause();
 				switch (networkType) {
 				case 0:// 流量网络
-					showNetAlert(currnetPoi);
+					showNetAlert(currnetPoi,netOriginalMusicList.get(currnetPoi)
+							.getMp3Url(),"ORIGINAL_MUSIC");
 					break;
 				case 1:// Wi-Fi网络 //直接播放
 						// 使用handler更新UI
@@ -625,7 +627,8 @@ public class NetMusicFragment extends Fragment implements OnClickListener {
 				// mainFragmentActivity.musicPlayService.pause();
 				switch (networkType) {
 				case 0:// 流量网络
-					showNetAlert(currnetPoi);
+					showNetAlert(currnetPoi,netRiseMusicList.get(currnetPoi)
+							.getMp3Url(),"RISE_MUSIC");
 					break;
 				case 1:// Wi-Fi网络 //直接播放
 						// 使用handler更新UI
@@ -666,7 +669,7 @@ public class NetMusicFragment extends Fragment implements OnClickListener {
 	* @return void 
 	* @author bai
 	*/
-	private void showNetAlert(final int position) {
+	private void showNetAlert(final int position,final String musicUrl,final String musicFlag) {
 
 		AlertDialog.Builder builder = new AlertDialog.Builder(
 				mainFragmentActivity);
@@ -690,6 +693,35 @@ public class NetMusicFragment extends Fragment implements OnClickListener {
 			@Override
 			public void onClick(View v) {
 				dialog.dismiss();
+				if(musicFlag.equals("NEW_MUSIC")){
+					Message songInfo = handler.obtainMessage(
+							Constant.WHAT_NEW_SONGINFO, position);
+					songInfo.sendToTarget();
+					mainFragmentActivity.musicPlayService
+					.playNetMusic(musicUrl);
+					
+				}else if(musicFlag.equals("HOT_MUSIC")){
+					Message songInfo = handler.obtainMessage(
+							Constant.WHAT_HOT_SONGINFO, position);
+					songInfo.sendToTarget();
+					mainFragmentActivity.musicPlayService
+					.playNetMusic(musicUrl);
+				}else if(musicFlag.equals("ORIGINAL_MUSIC")){
+					Message songInfo = handler.obtainMessage(
+							Constant.WHAT_ORIGINAL_SONGINFO, position);
+					songInfo.sendToTarget();
+					mainFragmentActivity.musicPlayService
+					.playNetMusic(musicUrl);
+				}else if(musicFlag.equals("RISE_MUSIC")){
+					Message songInfo = handler.obtainMessage(
+							Constant.WHAT_RISE_SONGINFO, position);
+					songInfo.sendToTarget();
+					mainFragmentActivity.musicPlayService
+					.playNetMusic(musicUrl);
+				}
+				// 发送广播更新按钮
+				Intent intent = new Intent(Constant.PLAYBUTTON_BROAD);
+				getActivity().sendBroadcast(intent);
 			}
 		});
 		cancelTv.setOnClickListener(new OnClickListener() {

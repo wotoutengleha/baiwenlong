@@ -13,6 +13,7 @@ import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 
@@ -25,7 +26,7 @@ public class XListViewFooter extends LinearLayout {
 	private Context mContext;
 
 	private View mContentView;
-	private View mProgressBar;
+	private ProgressBar mProgressBar;
 	private TextView mHintView;
 	
 	public XListViewFooter(Context context) {
@@ -109,7 +110,7 @@ public class XListViewFooter extends LinearLayout {
 		moreView.setLayoutParams(new LinearLayout.LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT));
 		
 		mContentView = moreView.findViewById(R.id.xlistview_footer_content);
-		mProgressBar = moreView.findViewById(R.id.xlistview_footer_progressbar);
+		mProgressBar = (ProgressBar) moreView.findViewById(R.id.xlistview_footer_progressbar);
 		mHintView = (TextView)moreView.findViewById(R.id.xlistview_footer_hint_textview);
 	}
 	

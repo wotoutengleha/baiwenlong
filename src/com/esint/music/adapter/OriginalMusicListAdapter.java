@@ -28,6 +28,8 @@ import com.esint.music.model.OriginalMusicInfo;
 import com.esint.music.utils.Constant;
 import com.esint.music.utils.MyHttpUtils;
 import com.esint.music.utils.SharedPrefUtil;
+import com.esint.music.view.LoadingDialog;
+import com.esint.music.view.LoadingDialog.DialogListener;
 import com.lidroid.xutils.HttpUtils;
 import com.lidroid.xutils.exception.HttpException;
 import com.lidroid.xutils.http.ResponseInfo;
@@ -43,6 +45,7 @@ public class OriginalMusicListAdapter extends BaseAdapter {
 
 	private Context context;
 	private ArrayList<OriginalMusicInfo> originalMusicList;
+	private LoadingDialog loadingDialog;
 
 	public OriginalMusicListAdapter(Context context,
 			ArrayList<OriginalMusicInfo> originalMusicList) {
@@ -153,7 +156,7 @@ public class OriginalMusicListAdapter extends BaseAdapter {
 			@Override
 			public void onClick(View v) {
 				dialog.dismiss();
-				
+
 				boolean isConnected = myHttpUtils.isConnnected(context);
 				if (isConnected == false) {
 					Toast.makeText(context, "当前网络没有连接", 0).show();
@@ -174,7 +177,7 @@ public class OriginalMusicListAdapter extends BaseAdapter {
 			}
 		});
 	}
-	
+
 	/**
 	* @Description:判断网络类型 ，在流量状态下提示 
 	* @param position
@@ -216,8 +219,6 @@ public class OriginalMusicListAdapter extends BaseAdapter {
 		});
 
 	}
-	
-
 
 	protected void downloadMusic(final int position) {
 
@@ -243,6 +244,10 @@ public class OriginalMusicListAdapter extends BaseAdapter {
 									@Override
 									public void onSuccess(
 											ResponseInfo<File> arg0) {
+										if (loadingDialog.isShowing()
+												&& loadingDialog != null) {
+											loadingDialog.dismiss();
+										}
 									}
 
 									@Override
@@ -262,6 +267,21 @@ public class OriginalMusicListAdapter extends BaseAdapter {
 					public void onLoading(long total, long current,
 							boolean isUploading) {
 						super.onLoading(total, current, isUploading);
+						if (loadingDialog == null) {
+							loadingDialog = new LoadingDialog(context,
+									R.style.dialogloading,
+									new DialogListener() {
+
+										@Override
+										public void onShowed() {
+										}
+
+										@Override
+										public void onDismissed() {
+										}
+									});
+						}
+						loadingDialog.showDialog("正在下载请稍后。。。");
 					}
 				});
 

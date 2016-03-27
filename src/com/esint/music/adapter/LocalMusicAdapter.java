@@ -146,15 +146,15 @@ public class LocalMusicAdapter extends BaseAdapter {
 
 			@Override
 			public void onClick(View v) {
-				
+
 				String musicTitle = list.get(position).getTitle();
 				String MusicArtist = list.get(position).getArtist();
 				String musicTime = list.get(position).getDuration() + "";
 				String MusicUrl = list.get(position).getUrl();
 				// 找到当前播放音乐的大图 将图片转换成字节数组插入到数据库表
 				Bitmap bitmap = MediaUtils.getArtwork(mContext,
-						list.get(position).getId(), list
-								.get(position).getAlbumId(), true, false);
+						list.get(position).getId(), list.get(position)
+								.getAlbumId(), true, false);
 				byte[] imgByte = MySQLite.img(bitmap);
 				ContentValues values = new ContentValues();
 				values.put("MusicTitle", musicTitle);
@@ -173,15 +173,16 @@ public class LocalMusicAdapter extends BaseAdapter {
 		viewHolder.ivLikePress.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				
+
 				String musicTitle = list.get(position).getTitle();
 				String whereClause = "MusicTitle=?";
-				String [] whereArgs = {musicTitle};
+				String[] whereArgs = { musicTitle };
 				MainFragmentActivity.db.delete("Music", whereClause, whereArgs);
 				Toast.makeText(mContext, "取消喜欢", 0).show();
 				viewHolder.ivLikeNormal.setVisibility(View.VISIBLE);
 				viewHolder.ivLikePress.setVisibility(View.GONE);
-				Message message = MyTabMusic.mHandler.obtainMessage(Constant.NEXT_LEKE_MUSIC, musicTitle);
+				Message message = MyTabMusic.mHandler.obtainMessage(
+						Constant.NEXT_LEKE_MUSIC, musicTitle);
 				message.sendToTarget();
 				sp.edit().clear().commit();
 				notifyDataSetChanged();
@@ -341,10 +342,9 @@ public class LocalMusicAdapter extends BaseAdapter {
 	}
 
 	// 判断当前音乐是否为喜欢的音乐
-	private boolean isLikeMusic(String isPlayMusicTitle) {
-
-		Cursor cursor = MainFragmentActivity.db.query("Music", null, null,
-				null, null, null, null);// 查询并获得游标
+	private boolean isLikeMusic(final String isPlayMusicTitle) {
+		final Cursor cursor = MainFragmentActivity.db.query("Music", null,
+				null, null, null, null, null);// 查询并获得游标
 		if (cursor.moveToFirst()) {
 			do {
 				String musicTitle = cursor.getString(cursor
@@ -352,10 +352,10 @@ public class LocalMusicAdapter extends BaseAdapter {
 				if (isPlayMusicTitle.trim().equals(musicTitle.trim())) {
 					cursor.close();
 					Constant.isInsert = true;
+					Log.e("不断查询", "不断查询");
 					return true;
 				}
 			} while (cursor.moveToNext());
-
 		}
 		Constant.isInsert = false;
 		return false;

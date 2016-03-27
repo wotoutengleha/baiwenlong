@@ -51,6 +51,8 @@ public class Constant {
 	public static boolean isLocalStop = true;// 控制本地音乐的进度条
 	public static boolean isLikeStop = true;// 控制喜欢音乐的进度条
 	public static boolean isInsert = false;// 是否插入了数据
+	public static final String IS_LIKE = "is_like";//是否为喜欢的音乐
+	
 
 	// 是否开启了振动模式
 	public static final String SHAKE_ON_OFF = "SHAKE_ON_OFF";
@@ -88,7 +90,6 @@ public class Constant {
 	public static final int WHAT_NET_RISEMUSIC_LIST = 0x118;
 	public static final int WHAT_EXECEPTION = 0X114;
 	public static final int WHAT_UPDATE_BTN = 0x115;// 点击播放网络音乐的时候更新按钮
-
 	public static final String YR_URL = "http://music.163.com/api/song/media?id=";
 	public static final String DIR_LRC = "/youran_music/lrc";
 }

@@ -4,12 +4,19 @@
     android:layout_height="match_parent"
     android:background="#D6D6D6" >
 
+    <View
+        android:id="@+id/view"
+        android:layout_width="match_parent"
+        android:layout_height="20dp" >
+    </View>
+
     <ImageView
         android:id="@+id/backImg"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:scaleType="centerCrop"
+        android:layout_below="@id/view"
         android:background="#D6D6D6"
+        android:scaleType="centerCrop"
         android:src="@drawable/profile_default_bg" >
     </ImageView>
 
@@ -26,8 +33,7 @@
             <ImageView
                 android:id="@+id/lockSingerBackgroundImage"
                 android:layout_width="fill_parent"
-                android:layout_height="fill_parent"
-              />
+                android:layout_height="fill_parent" />
 
             <LinearLayout
                 android:layout_width="fill_parent"
