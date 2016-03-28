@@ -83,7 +83,6 @@ public class LockActivity extends SwipeBackActivity implements OnClickListener {
 	private LockButtonRelativeLayout prewButton;
 	private LockButtonRelativeLayout nextButton;
 	private LockPalyOrPauseButtonRelativeLayout playOrPauseButton;
-	private RelativeLayout lockBackGround;// ËøÆÁµÄ½çÃæ±³¾°
 	private ImageView playImageView;
 	private ImageView pauseImageView;
 	private LrcView lrcView;
@@ -141,7 +140,6 @@ public class LockActivity extends SwipeBackActivity implements OnClickListener {
 		songerTextView = (TextView) findViewById(R.id.songer);
 		prewButton = (LockButtonRelativeLayout) findViewById(R.id.prev_button);
 		nextButton = (LockButtonRelativeLayout) findViewById(R.id.next_button);
-		lockBackGround = (RelativeLayout) findViewById(R.id.kscManyLineLyricsViewParent);
 		lrcView = (LrcView) findViewById(R.id.locklrcview);
 		lockImageView = (ImageView) findViewById(R.id.tip_image);
 		playOrPauseButton = (LockPalyOrPauseButtonRelativeLayout) findViewById(R.id.play_pause_button);

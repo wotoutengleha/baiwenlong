@@ -1,4 +1,4 @@
-package com.esint.music.history;
+package com.esint.music.activity;
 
 import java.text.DateFormat;
 import java.util.ArrayList;
@@ -14,12 +14,14 @@ import name.teze.layout.lib.SwipeBackActivity;
 import com.esint.music.R;
 import com.esint.music.XListView.XListView;
 import com.esint.music.XListView.XListView.IXListViewListener;
-import com.esint.music.activity.MainFragmentActivity;
+import com.esint.music.adapter.SearchHistoryAdapter;
 import com.esint.music.adapter.SearchResultAdapter;
+import com.esint.music.model.SearchData;
 import com.esint.music.model.SearchMusicInfo;
 import com.esint.music.utils.Constant;
 import com.esint.music.utils.MyHttpUtils;
 import com.esint.music.view.CustomProgressDialog;
+import com.esint.music.view.CustomerListView;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -50,7 +52,13 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class SearchShopActivity extends SwipeBackActivity implements
+/**   
+* 类名称：SearchMusicActivity   
+* 类描述：  搜索音乐的界面
+* 创建人：bai   
+* 创建时间：2016-3-28 上午9:44:24         
+*/
+public class SearchMusicActivity extends SwipeBackActivity implements
 		OnClickListener {
 	private EditText etSearch;
 	private ImageView ivDeleteSearch;
@@ -101,7 +109,7 @@ public class SearchShopActivity extends SwipeBackActivity implements
 
 	private void initData() {
 		myHttpUtils = new MyHttpUtils(this);
-		context = SearchShopActivity.this;
+		context = SearchMusicActivity.this;
 		searchMusicList = new ArrayList<SearchMusicInfo>();
 		sp = getSharedPreferences(SEARCH_HISTORY, 0);
 		lstAllHistory = new ArrayList<SearchData>();
@@ -218,7 +226,7 @@ public class SearchShopActivity extends SwipeBackActivity implements
 		case R.id.tv_search:// 搜索按钮
 			String searchContent = etSearch.getText().toString().trim();
 			if (TextUtils.isEmpty(searchContent)) {
-				SearchShopActivity.this.finish();
+				SearchMusicActivity.this.finish();
 			} else {
 				saveSearchHistory(searchContent);
 				readSearchHistory();
@@ -296,7 +304,7 @@ public class SearchShopActivity extends SwipeBackActivity implements
 			mAdapter.notifyDataSetChanged();
 			lvHistory.setVisibility(View.GONE);
 			btnClearHistory.setVisibility(View.GONE);
-			Toast.makeText(SearchShopActivity.this, "清空历史记录成功",
+			Toast.makeText(SearchMusicActivity.this, "清空历史记录成功",
 					Toast.LENGTH_SHORT).show();
 			break;
 

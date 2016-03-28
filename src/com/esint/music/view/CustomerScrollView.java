@@ -1,4 +1,4 @@
-package com.esint.music.history;
+package com.esint.music.view;
 
 import android.content.Context;
 import android.os.Handler;
@@ -7,10 +7,13 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.widget.ScrollView;
 
-/**
- * 澧炲姞ScrollView鎺т欢鐨勫脊绨ф晥鏋?
- * 
- */
+
+/**   
+* 类名称：CustomerScrollView   
+* 类描述： 搜索界面的ScrollView 
+* 创建人：bai   
+* 创建时间：2016-3-28 上午9:45:55         
+*/
 public class CustomerScrollView extends ScrollView {
 
 	Context mContext;

@@ -69,7 +69,6 @@ import com.esint.music.dialog.Effectstype;
 import com.esint.music.dialog.NiftyDialogBuilder;
 import com.esint.music.fragment.MyTabMusic;
 import com.esint.music.fragment.NetMusicFragment;
-import com.esint.music.history.SearchShopActivity;
 import com.esint.music.model.DownMucicInfo;
 import com.esint.music.model.LikeMusicModel;
 import com.esint.music.model.Mp3Info;
@@ -405,7 +404,7 @@ public class MainFragmentActivity extends BaseActivity implements
 			break;
 		case R.id.btn_search:
 //			searchMusicView();
-			startActivity(new Intent(MainFragmentActivity.this,SearchShopActivity.class));
+			startActivity(new Intent(MainFragmentActivity.this,SearchMusicActivity.class));
 			overridePendingTransition(R.anim.in_from_right, R.anim.out_to_left);
 			break;
 		case R.id.musiccontent: {

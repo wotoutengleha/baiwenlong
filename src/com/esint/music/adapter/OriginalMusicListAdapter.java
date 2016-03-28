@@ -281,7 +281,7 @@ public class OriginalMusicListAdapter extends BaseAdapter {
 										}
 									});
 						}
-						loadingDialog.showDialog("正在下载请稍后。。。");
+						loadingDialog.showDialog("正在下载，请稍后~");
 					}
 				});
 

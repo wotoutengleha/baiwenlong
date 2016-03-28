@@ -276,7 +276,6 @@ public class SearchResultAdapter extends BaseAdapter {
 
 							@Override
 							public void onSuccess(ResponseInfo<File> arg0) {
-								Toast.makeText(context, "图片下载成功", 0).show();
 								if (loadingDialog.isShowing()
 										&& loadingDialog != null) {
 									loadingDialog.dismiss();
@@ -316,7 +315,7 @@ public class SearchResultAdapter extends BaseAdapter {
 								}
 							});
 				}
-				loadingDialog.showDialog("正在下载请稍后。。。");
+				loadingDialog.showDialog("正在下载，请稍后~");
 			}
 		});
 

@@ -123,7 +123,7 @@ public class NetMusicAdapter extends BaseAdapter {
 		Toast.makeText(context,
 				"正在下载" + netDataList.get(position).getMusicName(), 0).show();
 		final ProgressDialog dialog = new ProgressDialog(context);
-		dialog.setMessage("正在下载，请稍后。。。。");
+		dialog.setMessage("正在下载，请稍后~");
 		dialog.show();
 		DownMusicUtils.getInstance().setListener(new OnDownLoadListener() {
 			@Override

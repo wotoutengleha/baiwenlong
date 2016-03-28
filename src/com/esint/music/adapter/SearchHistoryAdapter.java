@@ -1,8 +1,9 @@
-package com.esint.music.history;
+package com.esint.music.adapter;
 
 import java.util.List;
 
 import com.esint.music.R;
+import com.esint.music.model.SearchData;
 
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -11,10 +12,15 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.TextView;
 
-
+/**   
+* 类名称：SearchHistoryAdapter   
+* 类描述： 搜索listView的适配器  
+* 创建人：bai   
+* 创建时间：2016-3-28 上午9:46:11         
+*/
 public class SearchHistoryAdapter extends BaseAdapter {
 	private Context mContext;
-	private List<SearchData> lstHistory;// 鎵?湁鍘嗗彶璁板綍
+	private List<SearchData> lstHistory;
 
 	public SearchHistoryAdapter(Context context, List<SearchData> lstHistory) {
 		this.mContext = context;
@@ -41,8 +47,10 @@ public class SearchHistoryAdapter extends BaseAdapter {
 		ViewHolder holder = null;
 		if (convertView == null) {
 			holder = new ViewHolder();
-			convertView = LayoutInflater.from(mContext).inflate(R.layout.item_search_history, parent, false);
-			holder.tvContent = (TextView) convertView.findViewById(R.id.tv_content);
+			convertView = LayoutInflater.from(mContext).inflate(
+					R.layout.item_search_history, parent, false);
+			holder.tvContent = (TextView) convertView
+					.findViewById(R.id.tv_content);
 			convertView.setTag(holder);
 		} else {
 			holder = (ViewHolder) convertView.getTag();

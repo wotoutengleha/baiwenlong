@@ -69,7 +69,6 @@
             android:screenOrientation="portrait"
             android:taskAffinity="com.esint.music"
             android:theme="@android:style/Theme.Translucent.NoTitleBar" />
-        <activity android:name="com.esint.music.fragment.MylocalMusinFrag" />
         <activity
             android:name="com.esint.music.activity.MainFragmentActivity"
             android:configChanges="orientation|keyboardHidden|navigation"
@@ -82,15 +81,12 @@
             android:theme="@android:style/Theme.Translucent.NoTitleBar"
             android:windowSoftInputMode="adjustPan" />
         <activity
-            android:name="com.esint.music.history.SearchShopActivity"
+            android:name="com.esint.music.activity.SearchMusicActivity"
             android:configChanges="orientation|keyboardHidden|navigation"
             android:theme="@android:style/Theme.Translucent.NoTitleBar"
             android:windowSoftInputMode="adjustPan" />
 
         <service android:name="com.esint.music.service.MusicPlayService" />
-        <service android:name="com.esint.music.service.NotificationService" />
-        <service android:name="com.esint.music.service.NetMusicService" >
-        </service>
 
         <receiver
             android:name="com.esint.music.receiver.AlarmReceiver"

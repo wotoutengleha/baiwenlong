@@ -1,14 +1,15 @@
-package com.esint.music.history;
+package com.esint.music.view;
 
 import android.content.Context;
 import android.util.AttributeSet;
 import android.widget.ListView;
-/**
- * 鑷畾涔塋istView
- * @author 鍛ㄨ緣
- * @version 1.4
- * @created 2014-9-1
- */
+
+/**   
+* 类名称：CustomerListView   
+* 类描述：搜索界面的listView   
+* 创建人：bai   
+* 创建时间：2016-3-28 上午9:45:31         
+*/
 public class CustomerListView extends ListView {
 	public CustomerListView(Context context) {
         super(context);
