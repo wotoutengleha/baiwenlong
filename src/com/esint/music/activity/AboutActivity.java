@@ -25,7 +25,6 @@ public class AboutActivity extends SwipeBackActivity implements OnClickListener 
 	private RelativeLayout newVersion;
 	private LoadingDialog dialog = null;
 	private RelativeLayout aboutActionBar;
-	
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -51,7 +50,7 @@ public class AboutActivity extends SwipeBackActivity implements OnClickListener 
 	}
 
 	private void initData() {
-		
+
 	}
 
 	@Override

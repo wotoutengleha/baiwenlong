@@ -3,40 +3,38 @@ package com.esint.music.fragment;
 import java.util.ArrayList;
 
 import android.annotation.SuppressLint;
+import android.app.ActionBar;
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.content.ComponentName;
-import android.content.Context;
 import android.content.Intent;
-import android.content.ServiceConnection;
-import android.content.IntentSender.SendIntentException;
+import android.content.res.TypedArray;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.IBinder;
 import android.os.Message;
 import android.support.v4.app.Fragment;
-import android.text.TextUtils;
 import android.util.Log;
 import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.WindowManager;
 import android.view.View.OnClickListener;
+import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.view.animation.LinearInterpolator;
-import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
-import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.esint.music.R;
+import com.esint.music.R.color;
 import com.esint.music.activity.MainFragmentActivity;
 import com.esint.music.adapter.HotMusicListAdapter;
 import com.esint.music.adapter.NewMusicListAdapter;
@@ -46,8 +44,6 @@ import com.esint.music.model.HotMusicInfo;
 import com.esint.music.model.NewMusicInfo;
 import com.esint.music.model.OriginalMusicInfo;
 import com.esint.music.model.RiseMusicInfo;
-import com.esint.music.service.MusicPlayService;
-import com.esint.music.service.MusicPlayService.PlayBinder;
 import com.esint.music.utils.Constant;
 import com.esint.music.utils.MyHttpUtils;
 import com.esint.music.utils.PageAction;
@@ -190,8 +186,16 @@ public class NetMusicFragment extends Fragment implements OnClickListener {
 	 * @return void
 	 * @author bai
 	 */
+	@SuppressWarnings("null")
+	@SuppressLint({ "NewApi", "Recycle" })
 	private void newMusicView() {
-
+		LayoutInflater inflater = getActivity().getLayoutInflater();
+		final View netNewMusicView = inflater.inflate(
+				R.layout.activity_netnewmusiclist, null, false);
+		newMuiscLayout = (RelativeLayout) netNewMusicView
+				.findViewById(R.id.newmusicActionbar);
+		final ListView lv_netnewmusic = (ListView) netNewMusicView
+				.findViewById(R.id.lv_netnewmusic1);
 		String updateTime = SharedPrefUtil.getString(mainFragmentActivity,
 				"hotMusicUpdateTime", "");
 		String description = SharedPrefUtil.getString(mainFragmentActivity,
@@ -199,11 +203,6 @@ public class NetMusicFragment extends Fragment implements OnClickListener {
 		String trackCount = SharedPrefUtil.getString(mainFragmentActivity,
 				"hotMusicTrackCount", "");
 
-		LayoutInflater inflater = getActivity().getLayoutInflater();
-		final View netNewMusicView = inflater.inflate(
-				R.layout.activity_netnewmusiclist, null, false);
-		final ListView lv_netnewmusic = (ListView) netNewMusicView
-				.findViewById(R.id.lv_netnewmusic1);
 		ImageView btnBack = (ImageView) netNewMusicView
 				.findViewById(R.id.net_button_back);
 		btnBack.setOnClickListener(new OnClickListener() {
@@ -236,7 +235,7 @@ public class NetMusicFragment extends Fragment implements OnClickListener {
 			}
 		});
 		lv_netnewmusic.addHeaderView(headerView);
-
+		updateActionBar(1);
 		myHttpUtils.netNewMusicList(Constant.API_NET_NEWMUSIC_LIST);
 
 		// 通过handler传递过来的集合
@@ -281,8 +280,8 @@ public class NetMusicFragment extends Fragment implements OnClickListener {
 
 				switch (networkType) {
 				case 0:// 流量网络
-					showNetAlert(currnetPoi,netNewMusicList.get(currnetPoi)
-							.getMp3Url(),"NEW_MUSIC");
+					showNetAlert(currnetPoi, netNewMusicList.get(currnetPoi)
+							.getMp3Url(), "NEW_MUSIC");
 					break;
 				case 1:// Wi-Fi网络 //直接播放
 						// 使用handler更新UI
@@ -326,6 +325,8 @@ public class NetMusicFragment extends Fragment implements OnClickListener {
 				null, false);
 		View headerView = inflater.inflate(R.layout.headerview_nethotmusiclist,
 				null, false);
+		hotMusicActionBar = (RelativeLayout) hotMusicView
+				.findViewById(R.id.hotmusicActionbar);
 		TextView updateTime = (TextView) headerView
 				.findViewById(R.id.hot_updatetv);
 		TextView songCount = (TextView) headerView
@@ -352,6 +353,8 @@ public class NetMusicFragment extends Fragment implements OnClickListener {
 				}
 			}
 		});
+
+		updateActionBar(2);
 
 		myHttpUtils.netHotMusicList(Constant.API_NET_HOTMUSIC_LIST);
 		// 通过handler传递过来的集合
@@ -394,8 +397,8 @@ public class NetMusicFragment extends Fragment implements OnClickListener {
 				// mainFragmentActivity.musicPlayService.pause();
 				switch (networkType) {
 				case 0:// 流量网络
-					showNetAlert(currnetPoi,netHotMusicList.get(currnetPoi)
-							.getMp3Url(),"HOT_MUSIC");
+					showNetAlert(currnetPoi, netHotMusicList.get(currnetPoi)
+							.getMp3Url(), "HOT_MUSIC");
 					break;
 				case 1:// Wi-Fi网络 //直接播放
 						// 使用handler更新UI
@@ -438,6 +441,8 @@ public class NetMusicFragment extends Fragment implements OnClickListener {
 		LayoutInflater inflater = getActivity().getLayoutInflater();
 		View originalMusicView = inflater.inflate(
 				R.layout.activity_originalmusiclist, null, false);
+		originAction = (RelativeLayout) originalMusicView
+				.findViewById(R.id.originActionBar);
 		View headerView = inflater.inflate(
 				R.layout.headerview_originalmusiclist, null, false);
 		TextView updateTime = (TextView) headerView
@@ -466,6 +471,8 @@ public class NetMusicFragment extends Fragment implements OnClickListener {
 				}
 			}
 		});
+
+		updateActionBar(3);
 
 		myHttpUtils.originalMusicList(Constant.API_NET_ORIGINALMUSIC_LIST);
 		// 通过handler传递过来的集合
@@ -512,8 +519,9 @@ public class NetMusicFragment extends Fragment implements OnClickListener {
 				// mainFragmentActivity.musicPlayService.pause();
 				switch (networkType) {
 				case 0:// 流量网络
-					showNetAlert(currnetPoi,netOriginalMusicList.get(currnetPoi)
-							.getMp3Url(),"ORIGINAL_MUSIC");
+					showNetAlert(currnetPoi,
+							netOriginalMusicList.get(currnetPoi).getMp3Url(),
+							"ORIGINAL_MUSIC");
 					break;
 				case 1:// Wi-Fi网络 //直接播放
 						// 使用handler更新UI
@@ -558,6 +566,9 @@ public class NetMusicFragment extends Fragment implements OnClickListener {
 				null, false);
 		View headerView = inflater.inflate(R.layout.headerview_risemusiclist,
 				null, false);
+		riseAction = (RelativeLayout) riseMusicView
+				.findViewById(R.id.riseActionBar);
+
 		TextView updateTime = (TextView) headerView
 				.findViewById(R.id.rise_updatetv);
 		TextView songCount = (TextView) headerView
@@ -584,6 +595,8 @@ public class NetMusicFragment extends Fragment implements OnClickListener {
 				}
 			}
 		});
+
+		updateActionBar(4);
 
 		myHttpUtils.riseMusicList(Constant.API_NET_RISEMUSIC_LIST);
 		// 通过handler传递过来的集合
@@ -627,8 +640,8 @@ public class NetMusicFragment extends Fragment implements OnClickListener {
 				// mainFragmentActivity.musicPlayService.pause();
 				switch (networkType) {
 				case 0:// 流量网络
-					showNetAlert(currnetPoi,netRiseMusicList.get(currnetPoi)
-							.getMp3Url(),"RISE_MUSIC");
+					showNetAlert(currnetPoi, netRiseMusicList.get(currnetPoi)
+							.getMp3Url(), "RISE_MUSIC");
 					break;
 				case 1:// Wi-Fi网络 //直接播放
 						// 使用handler更新UI
@@ -669,7 +682,8 @@ public class NetMusicFragment extends Fragment implements OnClickListener {
 	* @return void 
 	* @author bai
 	*/
-	private void showNetAlert(final int position,final String musicUrl,final String musicFlag) {
+	private void showNetAlert(final int position, final String musicUrl,
+			final String musicFlag) {
 
 		AlertDialog.Builder builder = new AlertDialog.Builder(
 				mainFragmentActivity);
@@ -693,31 +707,31 @@ public class NetMusicFragment extends Fragment implements OnClickListener {
 			@Override
 			public void onClick(View v) {
 				dialog.dismiss();
-				if(musicFlag.equals("NEW_MUSIC")){
+				if (musicFlag.equals("NEW_MUSIC")) {
 					Message songInfo = handler.obtainMessage(
 							Constant.WHAT_NEW_SONGINFO, position);
 					songInfo.sendToTarget();
 					mainFragmentActivity.musicPlayService
-					.playNetMusic(musicUrl);
-					
-				}else if(musicFlag.equals("HOT_MUSIC")){
+							.playNetMusic(musicUrl);
+
+				} else if (musicFlag.equals("HOT_MUSIC")) {
 					Message songInfo = handler.obtainMessage(
 							Constant.WHAT_HOT_SONGINFO, position);
 					songInfo.sendToTarget();
 					mainFragmentActivity.musicPlayService
-					.playNetMusic(musicUrl);
-				}else if(musicFlag.equals("ORIGINAL_MUSIC")){
+							.playNetMusic(musicUrl);
+				} else if (musicFlag.equals("ORIGINAL_MUSIC")) {
 					Message songInfo = handler.obtainMessage(
 							Constant.WHAT_ORIGINAL_SONGINFO, position);
 					songInfo.sendToTarget();
 					mainFragmentActivity.musicPlayService
-					.playNetMusic(musicUrl);
-				}else if(musicFlag.equals("RISE_MUSIC")){
+							.playNetMusic(musicUrl);
+				} else if (musicFlag.equals("RISE_MUSIC")) {
 					Message songInfo = handler.obtainMessage(
 							Constant.WHAT_RISE_SONGINFO, position);
 					songInfo.sendToTarget();
 					mainFragmentActivity.musicPlayService
-					.playNetMusic(musicUrl);
+							.playNetMusic(musicUrl);
 				}
 				// 发送广播更新按钮
 				Intent intent = new Intent(Constant.PLAYBUTTON_BROAD);
@@ -731,6 +745,120 @@ public class NetMusicFragment extends Fragment implements OnClickListener {
 				dialog.dismiss();
 			}
 		});
+
+	}
+
+	private RelativeLayout newMuiscLayout;
+	private RelativeLayout hotMusicActionBar;
+	private RelativeLayout originAction;
+	private RelativeLayout riseAction;
+
+	// 更新状态栏
+	private void updateActionBar(int index) {
+		int colorIndex = SharedPrefUtil.getInt(getActivity(),
+				Constant.COLOR_INDEX, -1);
+		if (colorIndex != -1 && index == 1) {
+			switch (colorIndex) {
+			case 0:
+				newMuiscLayout.setBackgroundResource(color.tianyilan);
+				break;
+			case 1:
+				newMuiscLayout.setBackgroundResource(color.hidden_bitterness);
+				break;
+			case 2:
+				newMuiscLayout.setBackgroundResource(color.gorgeous);
+				break;
+			case 3:
+				newMuiscLayout.setBackgroundResource(color.romance);
+				break;
+			case 4:
+				newMuiscLayout.setBackgroundResource(color.sunset);
+				break;
+			case 5:
+				newMuiscLayout.setBackgroundResource(color.warm_colour);
+				break;
+
+			default:
+				newMuiscLayout.setBackgroundResource(color.holo_blue_light);
+				break;
+			}
+		} else if (colorIndex != -1 && index == 2) {
+			switch (colorIndex) {
+			case 0:
+				hotMusicActionBar.setBackgroundResource(color.tianyilan);
+				break;
+			case 1:
+				hotMusicActionBar
+						.setBackgroundResource(color.hidden_bitterness);
+				break;
+			case 2:
+				hotMusicActionBar.setBackgroundResource(color.gorgeous);
+				break;
+			case 3:
+				hotMusicActionBar.setBackgroundResource(color.romance);
+				break;
+			case 4:
+				hotMusicActionBar.setBackgroundResource(color.sunset);
+				break;
+			case 5:
+				hotMusicActionBar.setBackgroundResource(color.warm_colour);
+				break;
+
+			default:
+				hotMusicActionBar.setBackgroundResource(color.holo_blue_light);
+				break;
+			}
+		} else if (colorIndex != -1 && index == 3) {
+			switch (colorIndex) {
+			case 0:
+				originAction.setBackgroundResource(color.tianyilan);
+				break;
+			case 1:
+				originAction.setBackgroundResource(color.hidden_bitterness);
+				break;
+			case 2:
+				originAction.setBackgroundResource(color.gorgeous);
+				break;
+			case 3:
+				originAction.setBackgroundResource(color.romance);
+				break;
+			case 4:
+				originAction.setBackgroundResource(color.sunset);
+				break;
+			case 5:
+				originAction.setBackgroundResource(color.warm_colour);
+				break;
+
+			default:
+				originAction.setBackgroundResource(color.holo_blue_light);
+				break;
+			}
+		} else if (colorIndex != -1 && index == 4) {
+			switch (colorIndex) {
+			case 0:
+				riseAction.setBackgroundResource(color.tianyilan);
+				break;
+			case 1:
+				riseAction.setBackgroundResource(color.hidden_bitterness);
+				break;
+			case 2:
+				riseAction.setBackgroundResource(color.gorgeous);
+				break;
+			case 3:
+				riseAction.setBackgroundResource(color.romance);
+				break;
+			case 4:
+				riseAction.setBackgroundResource(color.sunset);
+				break;
+			case 5:
+				riseAction.setBackgroundResource(color.warm_colour);
+				break;
+
+			default:
+				riseAction.setBackgroundResource(color.holo_blue_light);
+				break;
+			}
+		}
 
 	}
 

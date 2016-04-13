@@ -52,6 +52,7 @@ public class BackGroundActivity extends SwipeBackActivity implements
 		initView();
 		initData();
 	}
+
 	@Override
 	protected void onResume() {
 		super.onResume();
@@ -82,6 +83,7 @@ public class BackGroundActivity extends SwipeBackActivity implements
 			break;
 		}
 	}
+
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
@@ -117,9 +119,8 @@ public class BackGroundActivity extends SwipeBackActivity implements
 		dialogBuilder = new NiftyDialogBuilder(this, R.style.dialog_untran);
 		dialogBuilder.withTitle("提示").withTitleColor("#FFFFFF")
 				.withDividerColor("#97E8F9").withMessage("确定要使用此背景图片吗？")
-				.withMessageColor("#FFFFFF")
-				.isCancelableOnTouchOutside(true).withEffect(effect)
-				.withButton1Text("确定").withButton2Text("取消")
+				.withMessageColor("#FFFFFF").isCancelableOnTouchOutside(true)
+				.withEffect(effect).withButton1Text("确定").withButton2Text("取消")
 				.setCustomView(R.layout.custom_view, this)
 				.setButton1Click(new View.OnClickListener() {
 					@Override

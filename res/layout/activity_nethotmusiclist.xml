@@ -6,7 +6,7 @@
     android:orientation="vertical" >
 
     <RelativeLayout
-        android:id="@+id/relativeLayout1"
+        android:id="@+id/hotmusicActionbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="#C86D5A"
@@ -29,12 +29,14 @@
             android:layout_centerVertical="true"
             android:background="@drawable/button_backround_deep"
             android:contentDescription="@string/app_name"
+               android:visibility="gone"
             android:src="@drawable/actionbar_mor" />
 
         <ImageView
             android:layout_width="33dp"
             android:layout_height="33dp"
             android:layout_centerVertical="true"
+               android:visibility="gone"
             android:layout_marginRight="8dp"
             android:layout_toLeftOf="@+id/hot_iv_functions"
             android:background="@drawable/button_backround_deep"

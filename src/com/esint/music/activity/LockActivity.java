@@ -164,7 +164,7 @@ public class LockActivity extends SwipeBackActivity implements OnClickListener {
 
 	@SuppressWarnings("deprecation")
 	private void initData() {
-		AniUtil.startAnimation(aniLoading);// 开启动画
+		AniUtil.startAnimation(aniLoading);
 		// 绑定服务
 		Intent intent = new Intent(this, MusicPlayService.class);
 		bindService(intent, connection, Context.BIND_AUTO_CREATE);

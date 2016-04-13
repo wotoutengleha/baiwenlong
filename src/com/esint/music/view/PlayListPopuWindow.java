@@ -2,13 +2,10 @@ package com.esint.music.view;
 
 import java.util.ArrayList;
 
-import android.R.color;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
-import android.os.Handler;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,9 +18,7 @@ import android.widget.TextView;
 
 import com.esint.music.R;
 import com.esint.music.model.Mp3Info;
-import com.esint.music.utils.Constant;
 import com.esint.music.utils.MediaUtils;
-import com.esint.music.utils.SharedPrefUtil;
 import com.esint.music.utils.SortListUtil;
 
 /**   

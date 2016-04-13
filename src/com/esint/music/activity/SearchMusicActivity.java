@@ -60,6 +60,7 @@ import android.widget.Toast;
 */
 public class SearchMusicActivity extends SwipeBackActivity implements
 		OnClickListener {
+
 	private EditText etSearch;
 	private ImageView ivDeleteSearch;
 	private TextView tvSearch;

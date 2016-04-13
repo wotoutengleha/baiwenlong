@@ -116,6 +116,7 @@ public class LoadingDialog extends Dialog {
 
 	public interface DialogListener {
 		public void onShowed();
+
 		public void onDismissed();
 	}
 

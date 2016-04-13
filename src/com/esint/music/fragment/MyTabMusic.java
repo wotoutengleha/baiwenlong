@@ -111,8 +111,7 @@ public class MyTabMusic extends Fragment implements OnClickListener {
 	private MyBroadcastReceiver broadcastReceiver;
 	private MusicPlayService musicPlayService;
 	public static ArrayList<Mp3Info> sortMyLikeMp3Infos;
-	private String musicFlag;
-	private ArrayList<DownMucicInfo> downMusicList;
+	public static ArrayList<DownMucicInfo> downMusicList;
 	private DownMusicAdapter adapter_down;// 我的下载列表的适配器
 	private LikeMusicAdapter adapter_fav;
 	private String imageTarget;// 下载的图片存放的路径
@@ -197,11 +196,11 @@ public class MyTabMusic extends Fragment implements OnClickListener {
 		// 实例化汉字转拼音类
 		characterParser = CharacterParser.getInstance();
 		pinyinComparator = new PinyinComparator();
-		mp3List = MediaUtils.getMp3Info(getActivity());
-		mp3List = filledData(mp3List);
+		// mp3List = MediaUtils.getMp3Info(getActivity());
+		// mp3List = filledData(mp3List);
 		// 根据a-z进行排序源数据
-		Collections.sort(mp3List, pinyinComparator);
-		musicnNmber.setText(mp3List.size() + "首歌曲");
+		// Collections.sort(mp3List, pinyinComparator);
+		// musicnNmber.setText(mp3List.size() + "首歌曲");
 
 		broadCast = new MyBroadCast();
 		IntentFilter intentFilter = new IntentFilter();
@@ -222,8 +221,6 @@ public class MyTabMusic extends Fragment implements OnClickListener {
 		filter.addAction(Constant.PLAYBUTTON_BROAD);
 		filter.addAction(Constant.PAUSEBUTTON_BROAD);
 		getActivity().registerReceiver(broadcastReceiver, filter);
-		musicFlag = SharedPrefUtil.getString(mainActivity, Constant.MUSIC_FLAG,
-				"");
 
 		mHandler = new Handler() {
 			@Override
@@ -242,7 +239,8 @@ public class MyTabMusic extends Fragment implements OnClickListener {
 				case Constant.NEXT_LEKE_MUSIC: {
 					// 当点击喜欢列表里取消喜欢的按钮时 判断当前播放的歌曲是否和点击取消的歌曲位置一致
 					String musicTitle = (String) msg.obj;
-					if (musicTitle.equals(songName.getText().toString())&&MainFragmentActivity.likeMusciList.size()>=2) {
+					if (musicTitle.equals(songName.getText().toString())
+							&& MainFragmentActivity.likeMusciList.size() >= 2) {
 						// 调用下一首的喜欢的音乐列表
 						Log.e("进来了", "进来了");
 						musicPlayService.nextLikeMusic();
@@ -254,6 +252,16 @@ public class MyTabMusic extends Fragment implements OnClickListener {
 								currentPositionDown);
 						changeUIStatusOnPlayLike(currentPositionDown);
 					}
+				}
+					break;
+				case 88888: {
+					List<Mp3Info> mp3List  = (List<Mp3Info>)msg.obj;
+					musicnNmber.setText(mp3List.size() + "首歌曲");
+					adapter = new LocalMusicAdapter(getActivity(), mp3List);
+					if(sortListView!=null){
+						sortListView.setAdapter(adapter);
+					}
+					Log.e("ewqewqewq", "sdsadsa");
 				}
 					break;
 				}
@@ -545,6 +553,11 @@ public class MyTabMusic extends Fragment implements OnClickListener {
 	@Override
 	public void onResume() {
 		super.onResume();
+		mp3List = MediaUtils.getMp3Info(getActivity());
+		mp3List = filledData(mp3List);
+		Collections.sort(mp3List, pinyinComparator);
+		musicnNmber.setText(mp3List.size() + "首歌曲");
+		Log.e("111111111111", "22222222222");
 		if (adapter != null) {
 			adapter.notifyDataSetChanged();
 		}

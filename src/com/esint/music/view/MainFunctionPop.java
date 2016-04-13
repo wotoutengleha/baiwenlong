@@ -129,26 +129,29 @@ public class MainFunctionPop extends PopupWindow {
 			@Override
 			public void handleMessage(Message msg) {
 				super.handleMessage(msg);
-				
+
 				Log.e("接收到了消息", "接收到了消息");
 				switch (MusicPlayService.getPlayMode()) {
 				case 2:
 					randomLayout.setVisibility(View.VISIBLE);
 					singleLayout.setVisibility(View.INVISIBLE);
 					orderLayout.setVisibility(View.INVISIBLE);
-					SharedPrefUtil.setInt(MyApplication.getContext(), Constant.PLAY_MODE, 2);
+					SharedPrefUtil.setInt(MyApplication.getContext(),
+							Constant.PLAY_MODE, 2);
 					break;
 				case 3:
 					singleLayout.setVisibility(View.VISIBLE);
 					randomLayout.setVisibility(View.INVISIBLE);
 					orderLayout.setVisibility(View.INVISIBLE);
-					SharedPrefUtil.setInt(MyApplication.getContext(), Constant.PLAY_MODE, 3);
+					SharedPrefUtil.setInt(MyApplication.getContext(),
+							Constant.PLAY_MODE, 3);
 					break;
 				case 1:
 					orderLayout.setVisibility(View.VISIBLE);
 					singleLayout.setVisibility(View.INVISIBLE);
 					randomLayout.setVisibility(View.INVISIBLE);
-					SharedPrefUtil.setInt(MyApplication.getContext(), Constant.PLAY_MODE, 1);
+					SharedPrefUtil.setInt(MyApplication.getContext(),
+							Constant.PLAY_MODE, 1);
 					break;
 				}
 

@@ -2,13 +2,13 @@
 
     <!--
         Base application theme, dependent on API level. This theme is replaced
-        by AppBaseTheme from res/values-vXX/styles.xml on newer devices.
+        by AppBaseTheme from res/values-vXX/styles.xml on newer devices.
     -->
     <style name="AppBaseTheme" parent="android:Theme.Light">
         <!--
             Theme customizations available in newer API levels can go in
             res/values-vXX/styles.xml, while customizations related to
-            backward-compatibility can go here.
+            backward-compatibility can go here.
         -->
     </style>
     <!-- Application theme. -->
@@ -20,7 +20,6 @@
     </style>
 
     <style name="Animationbutton">
-
         <!-- PopupWindow左右弹出的效果 -->
         <item name="android:windowEnterAnimation">@anim/push_bottom_in</item>
         <item name="android:windowExitAnimation">@anim/push_bottom_out</item>
@@ -132,16 +131,18 @@
         <item name="android:windowBackground">@android:color/transparent</item>
         <item name="android:backgroundDimEnabled">true</item>
     </style>
-  <style name="CustomDialog" parent="@android:style/Theme.Dialog">
-		<item name="android:windowFrame">@null</item>
-    	<item name="android:windowIsFloating">true</item>
-    	<item name="android:windowContentOverlay">@null</item>
-    	<item name="android:windowAnimationStyle">@android:style/Animation.Dialog</item>
-    	<item name="android:windowSoftInputMode">stateUnspecified|adjustPan</item>
-	</style>
-	
-	<style name="CustomProgressDialog" parent="@style/CustomDialog">
-		<item name="android:windowBackground">@android:color/transparent</item>
-    	<item name="android:windowNoTitle">true</item>
-	</style>
+
+    <style name="CustomDialog" parent="@android:style/Theme.Dialog">
+        <item name="android:windowFrame">@null</item>
+        <item name="android:windowIsFloating">true</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:windowAnimationStyle">@android:style/Animation.Dialog</item>
+        <item name="android:windowSoftInputMode">stateUnspecified|adjustPan</item>
+    </style>
+
+    <style name="CustomProgressDialog" parent="@style/CustomDialog">
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowNoTitle">true</item>
+    </style>
+
 </resources>

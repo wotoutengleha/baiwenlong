@@ -22,9 +22,12 @@ import com.esint.music.model.DownImageInfo;
 import com.esint.music.model.Mp3Info;
 import com.esint.music.model.DownMucicInfo;
 
+import android.app.AlertDialog;
+import android.content.BroadcastReceiver;
 import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.content.Context;
+import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -33,6 +36,7 @@ import android.net.Uri;
 import android.os.Environment;
 import android.os.ParcelFileDescriptor;
 import android.provider.MediaStore;
+import android.widget.Toast;
 
 public class MediaUtils {
 
@@ -434,50 +438,54 @@ public class MediaUtils {
 
 		ArrayList<DownMucicInfo> netMusicList = new ArrayList<DownMucicInfo>();
 		File[] files = new File(Path).listFiles();
-		if(files!=null){
+		if (files != null) {
 			for (int i = 0; i < files.length; i++) {
 				File f = files[i];
 				if (f.isFile()) {
 					if (f.getPath()
-							.substring(f.getPath().length() - Extension.length())
+							.substring(
+									f.getPath().length() - Extension.length())
 							.equals(Extension)) // 判断扩展名
 						lstFile.add(f.getPath());
 					String wholeName = f.getName();// 获得文件的名称
-					String target = Environment.getExternalStorageDirectory() + "/"
-							+ "/下载的歌曲" + "/" + wholeName;
-					
-					String saveTarget = Environment.getExternalStorageDirectory() + "/"
-							+ "/下载的歌曲" + "/";
+					String target = Environment.getExternalStorageDirectory()
+							+ "/" + "/下载的歌曲" + "/" + wholeName;
+
+					String saveTarget = Environment
+							.getExternalStorageDirectory()
+							+ "/"
+							+ "/下载的歌曲"
+							+ "/";
 					String[] whole = wholeName.split("-");
 					String artist = whole[0];
 					String musicName = whole[1];
-					musicName = musicName.substring(0, musicName.lastIndexOf('.'));
+					musicName = musicName.substring(0,
+							musicName.lastIndexOf('.'));
 					DownMucicInfo netMucicInfo = new DownMucicInfo();
 
-
-//					Mp3File mp3file;
-//					try {
-//						mp3file = new Mp3File(target);
-//						Log.e("mp3file", mp3file.toString() + "");
-//						ID3v2 id3v2Tag;
-//						if (mp3file.hasId3v2Tag()) {
-//							Log.e("if", "if");
-//							id3v2Tag = mp3file.getId3v2Tag();
-//						} else {
-//							id3v2Tag = new ID3v24Tag();
-//							mp3file.setId3v2Tag(id3v2Tag);
-//							Log.e("else", "else");
-//						}
-//						id3v2Tag.setArtist(artist);
-//						id3v2Tag.setTitle(musicName);
-//						Log.e("id3v2Tag", "音乐名称" + id3v2Tag.getTitle() + "");
-//						Log.e("id3v2Tag", "artist" + id3v2Tag.getArtist() + "");
-//						id3v2Tag.setEncoder("UTF-8");
-//						mp3file.save(saveTarget +musicName+".mp3");
-	//
-//					} catch (Exception e) {
-//						e.printStackTrace();
-//					}
+					// Mp3File mp3file;
+					// try {
+					// mp3file = new Mp3File(target);
+					// Log.e("mp3file", mp3file.toString() + "");
+					// ID3v2 id3v2Tag;
+					// if (mp3file.hasId3v2Tag()) {
+					// Log.e("if", "if");
+					// id3v2Tag = mp3file.getId3v2Tag();
+					// } else {
+					// id3v2Tag = new ID3v24Tag();
+					// mp3file.setId3v2Tag(id3v2Tag);
+					// Log.e("else", "else");
+					// }
+					// id3v2Tag.setArtist(artist);
+					// id3v2Tag.setTitle(musicName);
+					// Log.e("id3v2Tag", "音乐名称" + id3v2Tag.getTitle() + "");
+					// Log.e("id3v2Tag", "artist" + id3v2Tag.getArtist() + "");
+					// id3v2Tag.setEncoder("UTF-8");
+					// mp3file.save(saveTarget +musicName+".mp3");
+					//
+					// } catch (Exception e) {
+					// e.printStackTrace();
+					// }
 
 					File sourceFile = new File(target);
 					try {
@@ -512,7 +520,7 @@ public class MediaUtils {
 				} else if (f.isDirectory() && f.getPath().indexOf("/.") == -1) // 忽略点文件（隐藏文件/文件夹）
 					GetMusicFiles(f.getPath(), Extension, IsIterative);
 			}
-			
+
 		}
 		return netMusicList;
 	}
@@ -581,4 +589,5 @@ public class MediaUtils {
 		}
 		return 0;
 	}
+
 }

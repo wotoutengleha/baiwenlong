@@ -8,9 +8,13 @@ import android.R.color;
 import android.app.AlertDialog;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.net.Uri;
+import android.os.Environment;
 import android.os.Message;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -25,13 +29,13 @@ import android.widget.Toast;
 
 import com.esint.music.R;
 import com.esint.music.activity.MainFragmentActivity;
-import com.esint.music.activity.MusicPlayAvtivity;
+import com.esint.music.activity.ScanMusicActivity;
+import com.esint.music.activity.ScanMusicActivity.ScanSdReceiver;
 import com.esint.music.db.MySQLite;
 import com.esint.music.dialog.Effectstype;
 import com.esint.music.dialog.NiftyDialogBuilder;
 import com.esint.music.fragment.MyTabMusic;
 import com.esint.music.model.Mp3Info;
-import com.esint.music.utils.AniUtil;
 import com.esint.music.utils.Constant;
 import com.esint.music.utils.MediaUtils;
 import com.esint.music.utils.SharedPrefUtil;
@@ -269,6 +273,8 @@ public class LocalMusicAdapter extends BaseAdapter {
 						Toast.makeText(mContext, "删除成功", 0).show();
 						sp.edit().clear().commit();
 						list.remove(position);
+						ScanMusicActivity.deleteMusic(position, list.get(position).getId());
+						scanSdCard();
 						notifyDataSetChanged();
 					}
 				}).setButton2Click(new OnClickListener() {
@@ -279,6 +285,22 @@ public class LocalMusicAdapter extends BaseAdapter {
 					}
 				}).show();
 	}
+
+	private void scanSdCard() {
+		String MusicTarget = Environment.getExternalStorageDirectory() + "/"
+				+ "/qqmusic" + "/song";
+		Log.e("MusicTarget", MusicTarget + "");
+		IntentFilter intentfilter = new IntentFilter(
+				Intent.ACTION_MEDIA_SCANNER_STARTED);
+		intentfilter.addAction(Intent.ACTION_MEDIA_SCANNER_FINISHED);
+		intentfilter.addDataScheme("file");
+		ScanSdReceiver scanSdReceiver = new ScanSdReceiver();
+		mContext.registerReceiver(scanSdReceiver, intentfilter);
+		mContext.sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri
+				.parse("file://" + MusicTarget)));
+	}
+
+	
 
 	// 歌曲信息的dialog
 	private void musicInfo(int position) {

@@ -3,7 +3,12 @@ package com.esint.music.utils;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.jaudiotagger.audio.mp4.atom.Mp4FtypBox.Brand;
+
 import android.app.Activity;
+
+import com.esint.music.activity.ScanMusicActivity.ScanSdReceiver;
+import com.esint.music.receiver.ScreenBroadcastReceiver;
 
 /**   
 * 类名称：ActivityCollectUtil   
@@ -26,9 +31,21 @@ public class ActivityCollectUtil {
 	public static void finishAllActi() {
 		for (Activity activity : activities) {
 			if (!activity.isFinishing()) {
+				ScreenBroadcastReceiver broadcastReceiver = new ScreenBroadcastReceiver();
+				ScanSdReceiver scanSdReceiver = new ScanSdReceiver();
+				if (broadcastReceiver != null) {
+					// 解除屏幕的广播
+					MyApplication.getContext().unregisterReceiver(
+							broadcastReceiver);
+				}
+				if (scanSdReceiver != null) {
+					MyApplication.getContext().unregisterReceiver(
+							scanSdReceiver);
+				}
 				activity.finish();
 			}
 		}
+		android.os.Process.killProcess(android.os.Process.myPid());
 	}
 
 }

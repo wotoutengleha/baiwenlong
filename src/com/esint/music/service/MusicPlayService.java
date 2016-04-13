@@ -211,8 +211,8 @@ public class MusicPlayService extends Service implements OnShakeListener,
 
 	// 播放我的下载的音乐 从头状态
 	public void playMyDown(int position) {
-		if (position >= 0 && position < downMusicList.size()) {
-			DownMucicInfo mp3Info = downMusicList.get(position);
+		if (position >= 0 && position < MyTabMusic.downMusicList.size()) {
+			DownMucicInfo mp3Info = MyTabMusic.downMusicList.get(position);
 			try {
 				mPlayer.reset();
 				// 设置播放的位置
@@ -281,7 +281,7 @@ public class MusicPlayService extends Service implements OnShakeListener,
 	public void nextDownMusic() {
 		switch (playMode) {
 		case PLAY_ORDER: {
-			if (currentPlayPosition + 1 >= downMusicList.size()) {
+			if (currentPlayPosition + 1 >= MyTabMusic.downMusicList.size()) {
 				currentPlayPosition = 0;// 回到第一首歌
 			} else {
 				currentPlayPosition++;
@@ -290,7 +290,7 @@ public class MusicPlayService extends Service implements OnShakeListener,
 			break;
 		}
 		case PLAY_RANDOM: {
-			playMyDown(random.nextInt(downMusicList.size()));
+			playMyDown(random.nextInt(MyTabMusic.downMusicList.size()));
 			break;
 		}
 		case PLAY_SINGLE: {
@@ -348,7 +348,7 @@ public class MusicPlayService extends Service implements OnShakeListener,
 	// 上一首 下载音乐列表
 	public void previousDown() {
 		if (currentPlayPosition - 1 < 0) {
-			currentPlayPosition = downMusicList.size() - 1;// 回到最后一首
+			currentPlayPosition = MyTabMusic.downMusicList.size() - 1;// 回到最后一首
 		} else {
 			currentPlayPosition--;
 		}

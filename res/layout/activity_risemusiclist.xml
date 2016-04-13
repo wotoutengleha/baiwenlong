@@ -6,7 +6,7 @@
     android:orientation="vertical" >
 
     <RelativeLayout
-        android:id="@+id/relativeLayout1"
+        android:id="@+id/riseActionBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="#548ED7"
@@ -29,7 +29,8 @@
             android:layout_centerVertical="true"
             android:background="@drawable/button_backround_deep"
             android:contentDescription="@string/app_name"
-            android:src="@drawable/actionbar_mor" />
+            android:src="@drawable/actionbar_mor"
+            android:visibility="gone" />
 
         <ImageView
             android:layout_width="33dp"
@@ -38,7 +39,8 @@
             android:layout_marginRight="8dp"
             android:layout_toLeftOf="@+id/hot_iv_functions"
             android:background="@drawable/button_backround_deep"
-            android:src="@drawable/action_search_pressed" />
+            android:src="@drawable/action_search_pressed"
+            android:visibility="gone" />
 
         <TextView
             android:layout_width="wrap_content"

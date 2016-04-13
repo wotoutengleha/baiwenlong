@@ -269,7 +269,7 @@ public class SearchResultAdapter extends BaseAdapter {
 			@Override
 			public void onSuccess(ResponseInfo<File> arg0) {
 
-				Toast.makeText(context, "音乐下载成功", 0).show();
+				
 				// 音乐下载成功后把图片也下载下来
 				httpUtils.download(picUrl, ImageTarget,
 						new RequestCallBack<File>() {
@@ -278,6 +278,7 @@ public class SearchResultAdapter extends BaseAdapter {
 							public void onSuccess(ResponseInfo<File> arg0) {
 								if (loadingDialog.isShowing()
 										&& loadingDialog != null) {
+									Toast.makeText(context, "音乐下载成功", 0).show();
 									loadingDialog.dismiss();
 								}
 							}

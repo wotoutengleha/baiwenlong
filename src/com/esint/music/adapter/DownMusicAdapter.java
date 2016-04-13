@@ -67,7 +67,8 @@ public class DownMusicAdapter extends BaseAdapter {
 					.findViewById(R.id.tv_duration);
 			holder.ivRecord = (ImageView) convertView
 					.findViewById(R.id.record_down);
-			holder.listBackGround = (LinearLayout) convertView.findViewById(R.id.backgroundRecord_down);
+			holder.listBackGround = (LinearLayout) convertView
+					.findViewById(R.id.backgroundRecord_down);
 			convertView.setTag(holder);
 		} else {
 			holder = (ViewHolder) convertView.getTag();

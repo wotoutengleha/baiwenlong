@@ -408,6 +408,7 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 			}
 		};
 		MyHttpUtils.handler = new Handler() {
+			@SuppressWarnings("unchecked")
 			@Override
 			public void handleMessage(Message msg) {
 				super.handleMessage(msg);
@@ -1292,6 +1293,7 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 	}
 
 	// 根据歌曲名字上搜索音乐 用来分享音乐的链接
+	@SuppressWarnings("deprecation")
 	private void searchShakeMusic() {
 		List<NameValuePair> parmas = new ArrayList<NameValuePair>();
 		parmas.add(new BasicNameValuePair("s", intentMusicName + " "

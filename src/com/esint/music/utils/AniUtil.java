@@ -46,7 +46,6 @@ public class AniUtil {
 	private static void postAnimationMessage(final AnimationDrawable ani,
 			final int what) {
 		aniHandler.postDelayed(new Runnable() {
-
 			public void run() {
 				Message msg = Message.obtain();
 				msg.what = what;
@@ -70,7 +69,7 @@ public class AniUtil {
 		};
 	};
 
-	// 添加喜欢的动画
+	// 添加喜欢音乐时的动画
 	public static void startAnimationLike(View view) {
 		view.setVisibility(View.VISIBLE);
 		int fromX = view.getLeft();

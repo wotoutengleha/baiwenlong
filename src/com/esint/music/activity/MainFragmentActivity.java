@@ -116,14 +116,14 @@ public class MainFragmentActivity extends BaseActivity implements
 	private AlwaysMarqueeTextView musicName;
 	private AlwaysMarqueeTextView musicSinger;
 	private int currentPlayPosition;// 得到记录的位置
-	private String musciFlag;// 是本地音乐还是我的最爱
+	private String musciFlag;// 是本地音乐、喜欢的音乐、下载的音乐
 	// 汉字转换成拼音的类
 	private ArrayList<Mp3Info> mp3Infos;// 本地音乐
 	private ArrayList<DownMucicInfo> downMusicList;// 下载的歌曲
 	private MyHttpUtils myHttpUtils;// 请求网络的工具类
 	public MusicPlayService musicPlayService;
 
-	private RelativeLayout randomLayout;
+	private RelativeLayout randomLayout;// 播放模式
 	private RelativeLayout orderLayout;
 	private RelativeLayout singleLayout;
 	public static Handler mHandler;
@@ -188,17 +188,18 @@ public class MainFragmentActivity extends BaseActivity implements
 		} else {
 
 			if (currentPlayPositionDown != -1 && musciFlag.equals("down_music")) {
+				// 下载歌曲的文件夹
+				String MusicTarget = Environment.getExternalStorageDirectory()
+						+ "/" + "/下载的歌曲";
+				ArrayList<DownMucicInfo> downMusicList = MediaUtils
+						.GetMusicFiles(MusicTarget, ".mp3", true);
 				musicName.setText(downMusicList.get(currentPlayPositionDown)
 						.getDownMusicName());
 				musicSinger.setText(downMusicList.get(currentPlayPositionDown)
 						.getDownMusicArtist());
 				String ImageTarget = Environment.getExternalStorageDirectory()
 						+ "/" + "/下载的图片" + "/";
-				// 下载歌曲的文件夹
-				String MusicTarget = Environment.getExternalStorageDirectory()
-						+ "/" + "/下载的歌曲";
-				ArrayList<DownMucicInfo> downMusicList = MediaUtils
-						.GetMusicFiles(MusicTarget, ".mp3", true);
+
 				Bitmap albumBit = BitmapFactory.decodeFile(ImageTarget
 						+ downMusicList.get(currentPlayPositionDown)
 								.getDownMusicName().trim() + ".jpg", null);
@@ -403,8 +404,9 @@ public class MainFragmentActivity extends BaseActivity implements
 			initPopuWindow();
 			break;
 		case R.id.btn_search:
-//			searchMusicView();
-			startActivity(new Intent(MainFragmentActivity.this,SearchMusicActivity.class));
+			// searchMusicView();
+			startActivity(new Intent(MainFragmentActivity.this,
+					SearchMusicActivity.class));
 			overridePendingTransition(R.anim.in_from_right, R.anim.out_to_left);
 			break;
 		case R.id.musiccontent: {
@@ -952,7 +954,6 @@ public class MainFragmentActivity extends BaseActivity implements
 	public static ArrayList<LikeMusicModel> getFavMusicFromDB() {
 
 		Cursor cursor = db.query("Music", null, null, null, null, null, null);// 查询并获得游标
-
 		if (likeMusciList != null) {
 			likeMusciList.clear();
 		}
@@ -1011,7 +1012,6 @@ public class MainFragmentActivity extends BaseActivity implements
 				tintManager.setStatusBarTintResource(color.holo_blue_light);
 			}
 
-			
 		}
 	}
 

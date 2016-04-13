@@ -228,7 +228,7 @@ public class HotMusicListAdapter extends BaseAdapter {
 				MusicTarget, new RequestCallBack<File>() {
 					@Override
 					public void onSuccess(ResponseInfo<File> arg0) {
-						Toast.makeText(context, "音乐下载成功", 0).show();
+
 						// 音乐下载成功后把图片也下载下来
 						httpUtils.download(hotNewMusicList.get(position)
 								.getPicUrl(), ImageTarget,
@@ -240,6 +240,8 @@ public class HotMusicListAdapter extends BaseAdapter {
 
 										if (loadingDialog.isShowing()
 												&& loadingDialog != null) {
+											Toast.makeText(context, "音乐下载成功", 0)
+													.show();
 											loadingDialog.dismiss();
 										}
 									}

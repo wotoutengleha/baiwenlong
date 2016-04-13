@@ -237,7 +237,7 @@ public class RiseMusicListAdapter extends BaseAdapter {
 				MusicTarget, new RequestCallBack<File>() {
 					@Override
 					public void onSuccess(ResponseInfo<File> arg0) {
-						Toast.makeText(context, "音乐下载成功", 0).show();
+					
 						// 音乐下载成功后把图片也下载下来
 						httpUtils.download(riseMusicList.get(position)
 								.getPicUrl(), ImageTarget,
@@ -248,6 +248,7 @@ public class RiseMusicListAdapter extends BaseAdapter {
 											ResponseInfo<File> arg0) {
 										if (loadingDialog.isShowing()
 												&& loadingDialog != null) {
+											Toast.makeText(context, "音乐下载成功", 0).show();
 											loadingDialog.dismiss();
 										}
 									}

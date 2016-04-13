@@ -68,7 +68,7 @@
             android:layout_centerVertical="true"
             android:layout_marginLeft="5dp"
             android:layout_toRightOf="@+id/ib_playall"
-            android:text="播放全部"
+              android:text="全部歌曲"
             android:textSize="16sp" />
 
         <TextView
