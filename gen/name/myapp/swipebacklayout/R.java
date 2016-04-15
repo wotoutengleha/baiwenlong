@@ -41,11 +41,11 @@ public final class R {
 		public static final int translucent = 0x7f0201ff;
 	}
 	public static final class id {
-		public static final int action_settings = 0x7f0a014c;
+		public static final int action_settings = 0x7f0a014d;
 		public static final int button = 0x7f0a001c;
-		public static final int button1 = 0x7f0a00bb;
+		public static final int button1 = 0x7f0a00bc;
 		public static final int listView = 0x7f0a001b;
-		public static final int name = 0x7f0a013e;
+		public static final int name = 0x7f0a013f;
 		public static final int textView1 = 0x7f0a001d;
 	}
 	public static final class layout {

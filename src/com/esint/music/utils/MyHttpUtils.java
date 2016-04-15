@@ -49,7 +49,7 @@ public class MyHttpUtils {
 	public MyHttpUtils(Context context) {
 		this.context = context;
 		httpUtils = new com.lidroid.xutils.HttpUtils();
-		handler = new Handler();
+//		handler = new Handler();
 	}
 
 	public static final int NETWORN_NONE = 0;
@@ -507,6 +507,7 @@ public class MyHttpUtils {
 
 					@Override
 					public void onSuccess(ResponseInfo<String> arg0) {
+						Log.e("成功的搜索了音乐", "成功的搜索了音乐");
 						String searchResult = arg0.result;
 						ParseSearchResultJson(searchResult);
 					}
@@ -548,10 +549,12 @@ public class MyHttpUtils {
 				musicInfo.setMusicID(musicID);
 				musicInfo.setMusicName(musicName);
 				searchMusicList.add(musicInfo);
+				Log.e("musicName", musicName);
+				Log.e("成功的解析了音乐", "成功的解析了音乐");
 			}
 
 			Message message = handler.obtainMessage(
-					Constant.WHAT_NET_HOTMUSIC_LIST, searchMusicList);
+					Constant.WHAT_NET_SEARCH_LIST, searchMusicList);
 			message.sendToTarget();
 
 		} catch (JSONException e) {

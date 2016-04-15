@@ -3,11 +3,11 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent" >
 
-<!--     <View -->
-<!--         android:id="@+id/view" -->
-<!--         android:layout_width="match_parent" -->
-<!--         android:layout_height="20dp" > -->
-<!--     </View> -->
+    <!-- <View -->
+    <!-- android:id="@+id/view" -->
+    <!-- android:layout_width="match_parent" -->
+    <!-- android:layout_height="20dp" > -->
+    <!-- </View> -->
 
     <ImageView
         android:id="@+id/backImg"
@@ -80,30 +80,42 @@
                         android:textColor="#ffffff"
                         android:textSize="20dp" />
 
-                    <TextView
-                        android:id="@+id/songName"
+                    <RelativeLayout
+                        android:id="@+id/focusSongname"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_below="@+id/time"
                         android:layout_marginLeft="10dp"
-                        android:layout_marginTop="10dp"
-                        android:ellipsize="end"
-                        android:focusable="true"
-                        android:focusableInTouchMode="true"
-                        android:marqueeRepeatLimit="marquee_forever"
-                        android:singleLine="true"
-                        android:text="歌名"
-                        android:textColor="#ffffff"
-                        android:textSize="25dp" />
+                        android:layout_marginRight="10dp"
+                        android:layout_marginTop="10dp" >
 
-                    <TextView
+                        <com.esint.music.view.AlwaysMarqueeTextView
+                            android:id="@+id/songName"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:ellipsize="marquee"
+                            android:focusable="true"
+                            android:focusableInTouchMode="true"
+                            android:marqueeRepeatLimit="marquee_forever"
+                            android:scrollHorizontally="true"
+                            android:singleLine="true"
+                            android:text="歌名"
+                            android:textColor="#ffffff"
+                            android:textSize="25dp" />
+                    </RelativeLayout>
+
+                    <com.esint.music.view.AlwaysMarqueeTextView
                         android:id="@+id/songer"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_below="@+id/songName"
+                        android:layout_below="@+id/focusSongname"
                         android:layout_marginLeft="10dp"
                         android:layout_marginTop="10dp"
-                        android:ellipsize="end"
+                        android:ellipsize="marquee"
+                        android:focusable="true"
+                        android:focusableInTouchMode="true"
+                        android:marqueeRepeatLimit="marquee_forever"
+                        android:scrollHorizontally="true"
                         android:singleLine="true"
                         android:text="歌手"
                         android:textColor="#ffffff"

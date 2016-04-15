@@ -26,10 +26,8 @@ public class AlwaysMarqueeTextView extends TextView {
 			int defStyle) {
 		super(context, attrs, defStyle);
 	}
-
 	@Override
 	public boolean isFocused() {
 		return true;
 	}
-
 }

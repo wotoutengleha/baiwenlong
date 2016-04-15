@@ -46,7 +46,8 @@ public class SearchMusicUtil {
 	}
 
 	public void search(final String key, final int page) {
-		final Handler handler = new Handler(MyApplication.getContext().getMainLooper()) {
+		final Handler handler = new Handler(MyApplication.getContext()
+				.getMainLooper()) {
 			@SuppressWarnings("unchecked")
 			@Override
 			public void handleMessage(Message msg) {

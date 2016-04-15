@@ -106,7 +106,6 @@
             style="?android:attr/progressBarStyleHorizontal"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_above="@id/bottomLayout"
             android:layout_alignParentBottom="true"
             android:maxHeight="3.0dip"
             android:minHeight="3.0dip"

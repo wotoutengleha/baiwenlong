@@ -172,6 +172,13 @@ public class ScanMusicActivity extends SwipeBackActivity implements
 				.getContentResolver()
 				.delete(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
 						MediaStore.Audio.Media._ID + "=" + ids, null);
+		
+		SortListUtil sortListUtil = new SortListUtil();
+		ArrayList<Mp3Info> mp3List = MediaUtils.getMp3Info(MyApplication
+				.getContext());
+		mp3List = sortListUtil.initMyLocalMusic(mp3List);
+		Message message = MyTabMusic.mHandler.obtainMessage(88888, mp3List);
+		message.sendToTarget();
 	}
 
 	/**   
@@ -224,7 +231,7 @@ public class ScanMusicActivity extends SwipeBackActivity implements
 					Toast.makeText(context, "共增加" + count + "首歌曲",
 							Toast.LENGTH_LONG).show();
 				} else {
-					Toast.makeText(context, "共减少" + count + "首歌曲",
+					Toast.makeText(context, "共减少" + Math.abs(count) + "首歌曲",
 							Toast.LENGTH_LONG).show();
 				}
 			}

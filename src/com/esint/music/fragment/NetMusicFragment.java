@@ -20,6 +20,7 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.view.WindowManager;
+import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.view.animation.LinearInterpolator;
@@ -51,6 +52,7 @@ import com.esint.music.utils.SharedPrefUtil;
 import com.esint.music.utils.TimeFromat;
 import com.esint.music.view.AlwaysMarqueeTextView;
 import com.lidroid.xutils.BitmapUtils;
+import com.lidroid.xutils.bitmap.BitmapDisplayConfig;
 
 @SuppressLint("ValidFragment")
 public class NetMusicFragment extends Fragment implements OnClickListener {
@@ -72,6 +74,7 @@ public class NetMusicFragment extends Fragment implements OnClickListener {
 	private AlwaysMarqueeTextView songName;// ¸èÇúÃû×Ö
 	private Handler handler;
 	private BitmapUtils bitmapUtils;
+	private BitmapDisplayConfig displayConfig;
 
 	@Override
 	public void onAttach(Activity activity) {
@@ -118,6 +121,7 @@ public class NetMusicFragment extends Fragment implements OnClickListener {
 	private void initData() {
 		myHttpUtils = new MyHttpUtils(getActivity());
 		bitmapUtils = new BitmapUtils(mainFragmentActivity);
+		displayConfig = new BitmapDisplayConfig();
 
 		handler = new Handler() {
 			@SuppressLint("NewApi")
@@ -129,14 +133,30 @@ public class NetMusicFragment extends Fragment implements OnClickListener {
 					singer.setText(netNewMusicList.get(currnetPoi)
 							.getArtistsName());
 					songName.setText(netNewMusicList.get(currnetPoi).getName());
+					bitmapUtils
+							.configDefaultLoadingImage(R.drawable.play_bar_def_artist);
+					bitmapUtils
+							.configDefaultLoadingImage(R.drawable.play_bar_def_artist);
 					bitmapUtils.display(albumImg,
 							netNewMusicList.get(currnetPoi).getPicUrl());
+					AlphaAnimation alphaAnimation = new AlphaAnimation(0.1f,
+							1.0f);
+					alphaAnimation.setDuration(500);
+					displayConfig.setAnimation(alphaAnimation);
 					startAnim();
 				} else if (msg.what == Constant.WHAT_HOT_SONGINFO) {
 					int currnetPoi = (Integer) msg.obj;
 					singer.setText(netHotMusicList.get(currnetPoi)
 							.getArtistsName());
 					songName.setText(netHotMusicList.get(currnetPoi).getName());
+					bitmapUtils
+							.configDefaultLoadingImage(R.drawable.play_bar_def_artist);
+					bitmapUtils
+							.configDefaultLoadingImage(R.drawable.play_bar_def_artist);
+					AlphaAnimation alphaAnimation = new AlphaAnimation(0.1f,
+							1.0f);
+					alphaAnimation.setDuration(500);
+					displayConfig.setAnimation(alphaAnimation);
 					bitmapUtils.display(albumImg,
 							netHotMusicList.get(currnetPoi).getPicUrl());
 				} else if (msg.what == Constant.WHAT_ORIGINAL_SONGINFO) {
@@ -145,6 +165,14 @@ public class NetMusicFragment extends Fragment implements OnClickListener {
 							.getArtistsName());
 					songName.setText(netOriginalMusicList.get(currnetPoi)
 							.getName());
+					bitmapUtils
+							.configDefaultLoadingImage(R.drawable.play_bar_def_artist);
+					bitmapUtils
+							.configDefaultLoadingImage(R.drawable.play_bar_def_artist);
+					AlphaAnimation alphaAnimation = new AlphaAnimation(0.1f,
+							1.0f);
+					alphaAnimation.setDuration(500);
+					displayConfig.setAnimation(alphaAnimation);
 					bitmapUtils.display(albumImg,
 							netOriginalMusicList.get(currnetPoi).getPicUrl());
 				} else if (msg.what == Constant.WHAT_RISE_SONGINFO) {
@@ -152,6 +180,14 @@ public class NetMusicFragment extends Fragment implements OnClickListener {
 					singer.setText(netRiseMusicList.get(currnetPoi)
 							.getArtistsName());
 					songName.setText(netRiseMusicList.get(currnetPoi).getName());
+					bitmapUtils
+							.configDefaultLoadingImage(R.drawable.play_bar_def_artist);
+					bitmapUtils
+							.configDefaultLoadingImage(R.drawable.play_bar_def_artist);
+					AlphaAnimation alphaAnimation = new AlphaAnimation(0.1f,
+							1.0f);
+					alphaAnimation.setDuration(500);
+					displayConfig.setAnimation(alphaAnimation);
 					bitmapUtils.display(albumImg,
 							netRiseMusicList.get(currnetPoi).getPicUrl());
 				}

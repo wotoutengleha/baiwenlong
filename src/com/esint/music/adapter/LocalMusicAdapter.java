@@ -272,9 +272,9 @@ public class LocalMusicAdapter extends BaseAdapter {
 						new File(musicUrl).delete();
 						Toast.makeText(mContext, "É¾³ý³É¹¦", 0).show();
 						sp.edit().clear().commit();
-						list.remove(position);
 						ScanMusicActivity.deleteMusic(position, list.get(position).getId());
-						scanSdCard();
+						list.remove(position);
+//						scanSdCard();
 						notifyDataSetChanged();
 					}
 				}).setButton2Click(new OnClickListener() {

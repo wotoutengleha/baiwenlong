@@ -28,9 +28,9 @@ public class SplashActivity extends BaseActivity {
 		setContentView(R.layout.activity_splash);
 		ActivityCollectUtil.addActivity(this);
 		// 3S后进入到主界面
-		mHandler.sendEmptyMessageDelayed(Constant.START_ACTIVITY, 100);
+		mHandler.sendEmptyMessageDelayed(Constant.START_ACTIVITY, 1500);
 		startService(new Intent(this, MusicPlayService.class));
-		
+
 	}
 
 	@Override

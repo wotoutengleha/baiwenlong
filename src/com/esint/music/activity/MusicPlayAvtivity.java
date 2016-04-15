@@ -413,7 +413,7 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 			public void handleMessage(Message msg) {
 				super.handleMessage(msg);
 				switch (msg.what) {
-				case Constant.WHAT_NET_HOTMUSIC_LIST: {
+				case Constant.WHAT_NET_SEARCH_LIST: {
 					Log.e("接收到了消息", "接收到了消息");
 					searchMusicList
 							.addAll((ArrayList<SearchMusicInfo>) msg.obj);
@@ -870,7 +870,8 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 		albumIV.setImageBitmap(MainFragmentActivity.likeMusciList.get(curr)
 				.getBitmap());
 		startAnim();
-		musicPlayService.updateNotification(null,
+		musicPlayService.updateNotification(MainFragmentActivity.likeMusciList.get(curr)
+				.getBitmap(),
 				MainFragmentActivity.likeMusciList.get(nextPosition)
 						.getMusicName(), MainFragmentActivity.likeMusciList
 						.get(nextPosition).getMusicArtist());
@@ -1259,12 +1260,13 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 	}
 
 	private void showShare(int position) {
+		
+		Log.e("asdasdas", "sadsadas");
 		ShareSDK.initSDK(this);
 		OnekeyShare oks = new OnekeyShare();
 		oks.setTheme(OnekeyShareTheme.CLASSIC);
 		// 关闭sso授权
 		oks.disableSSOWhenAuthorize();
-
 		// 分享时Notification的图标和文字 2.5.9以后的版本不调用此方法
 		// oks.setNotification(R.drawable.ic_launcher,
 		// getString(R.string.app_name));
@@ -1345,6 +1347,8 @@ public class MusicPlayAvtivity extends SwipeBackActivity implements
 				String album = object.getString("album");
 				JSONObject picObject = new JSONObject(album);
 				picUrl = picObject.getString("picUrl");
+				
+				Log.e("xcxzcxzczxczx", "cxzczxczx");
 				showShare(musicPlayService.getCurrentPosition());
 			}
 

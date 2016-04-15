@@ -129,6 +129,7 @@ public class SearchMusicActivity extends SwipeBackActivity implements
 
 			@Override
 			public void onRefresh() {
+				Log.e("下拉刷新", "下拉刷新");
 				isRefresh = true;
 				// 判断是否有网络
 				final boolean isConnected = myHttpUtils.isConnnected(context);
@@ -142,6 +143,8 @@ public class SearchMusicActivity extends SwipeBackActivity implements
 
 			@Override
 			public void onLoadMore() {
+
+				Log.e("上啦加载", "上啦加载");
 				isRefresh = false;
 				// 判断是否有网络
 				final boolean isConnected = myHttpUtils.isConnnected(context);
@@ -151,15 +154,15 @@ public class SearchMusicActivity extends SwipeBackActivity implements
 					return;
 				}
 				updateSearchMusic(searchMusicList.size());
-
 			}
 		});
+		
 	}
 
 	// 更新搜索音乐的列表
 	@SuppressWarnings("deprecation")
 	private void updateSearchMusic(int offset) {
-
+		Log.e("请求了网络", "请求了网络");
 		String edSearch = etSearch.getText().toString().trim();
 		List<NameValuePair> parmas = new ArrayList<NameValuePair>();
 		parmas.add(new BasicNameValuePair("s", edSearch));
@@ -264,18 +267,19 @@ public class SearchMusicActivity extends SwipeBackActivity implements
 				}
 
 				MyHttpUtils.handler = new Handler() {
-
+					
 					@SuppressWarnings("unchecked")
 					@Override
 					public void handleMessage(Message msg) {
 						super.handleMessage(msg);
-						if (msg.what == Constant.WHAT_NET_HOTMUSIC_LIST) {
+						if (msg.what == Constant.WHAT_NET_SEARCH_LIST) {
 							onLoadEnd(resultLV);
 							if (customProgressDialog != null
 									&& customProgressDialog.isShowing()) {
 								customProgressDialog.dismiss();
 							}
 							if (isRefresh == true) {
+								Log.e("handler里边的下拉刷新", "handler里边的下拉刷新");
 								searchMusicList.clear();
 								searchMusicList
 										.addAll((ArrayList<SearchMusicInfo>) msg.obj);
@@ -283,6 +287,7 @@ public class SearchMusicActivity extends SwipeBackActivity implements
 										context, searchMusicList);
 								resultLV.setAdapter(resultAdapter);
 							} else {
+								Log.e("handler里边的上拉加载", "handler里边的上拉加载");
 								ArrayList<SearchMusicInfo> dataLoadMore = ((ArrayList<SearchMusicInfo>) msg.obj);
 								searchMusicList.addAll(dataLoadMore);
 								resultAdapter.notifyDataSetChanged();

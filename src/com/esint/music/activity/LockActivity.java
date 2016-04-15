@@ -1,35 +1,14 @@
 package com.esint.music.activity;
 
-import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 
+import name.teze.layout.lib.SwipeBackActivity;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import com.esint.music.R;
-import com.esint.music.model.DownMucicInfo;
-import com.esint.music.model.Mp3Info;
-import com.esint.music.service.MusicPlayService;
-import com.esint.music.service.MusicPlayService.PlayBinder;
-import com.esint.music.utils.ActivityCollectUtil;
-import com.esint.music.utils.AniUtil;
-import com.esint.music.utils.Constant;
-import com.esint.music.utils.MediaUtils;
-import com.esint.music.utils.SharedPrefUtil;
-import com.esint.music.utils.SortListUtil;
-import com.esint.music.view.LockButtonRelativeLayout;
-import com.esint.music.view.LockPalyOrPauseButtonRelativeLayout;
-import com.esint.music.view.LrcView;
-import com.esint.music.view.SystemStatusManager;
-import com.lidroid.xutils.BitmapUtils;
-import com.lidroid.xutils.HttpUtils;
-import com.lidroid.xutils.exception.HttpException;
-import com.lidroid.xutils.http.ResponseInfo;
-import com.lidroid.xutils.http.callback.RequestCallBack;
-import com.lidroid.xutils.http.client.HttpRequest.HttpMethod;
 
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
@@ -39,7 +18,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
-import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.AnimationDrawable;
@@ -58,11 +36,33 @@ import android.view.View.OnClickListener;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
-import name.teze.layout.lib.SwipeBackActivity;
+
+import com.bumptech.glide.Glide;
+import com.esint.music.R;
+import com.esint.music.activity.CustomImageSizeGlideModule.CustomImageSizeModel;
+import com.esint.music.model.DownMucicInfo;
+import com.esint.music.model.Mp3Info;
+import com.esint.music.service.MusicPlayService;
+import com.esint.music.service.MusicPlayService.PlayBinder;
+import com.esint.music.utils.ActivityCollectUtil;
+import com.esint.music.utils.AniUtil;
+import com.esint.music.utils.Constant;
+import com.esint.music.utils.MediaUtils;
+import com.esint.music.utils.SharedPrefUtil;
+import com.esint.music.utils.SortListUtil;
+import com.esint.music.view.AlwaysMarqueeTextView;
+import com.esint.music.view.LockButtonRelativeLayout;
+import com.esint.music.view.LockPalyOrPauseButtonRelativeLayout;
+import com.esint.music.view.LrcView;
+import com.esint.music.view.SystemStatusManager;
+import com.lidroid.xutils.BitmapUtils;
+import com.lidroid.xutils.HttpUtils;
+import com.lidroid.xutils.exception.HttpException;
+import com.lidroid.xutils.http.ResponseInfo;
+import com.lidroid.xutils.http.callback.RequestCallBack;
+import com.lidroid.xutils.http.client.HttpRequest.HttpMethod;
 
 /**  
 * 类名称：LockActivity   
@@ -75,8 +75,8 @@ public class LockActivity extends SwipeBackActivity implements OnClickListener {
 
 	private ImageView lockImageView;// 滑动提示图标
 	private AnimationDrawable aniLoading;
-	private TextView songNameTextView;// 歌名
-	private TextView songerTextView;// 歌手
+	private AlwaysMarqueeTextView songNameTextView;// 歌名
+	private AlwaysMarqueeTextView songerTextView;// 歌手
 	private TextView timeTextView;// 时间
 	private TextView dateTextView;// 日期
 	private TextView dayTextView;// 星期几
@@ -136,8 +136,8 @@ public class LockActivity extends SwipeBackActivity implements OnClickListener {
 		dayTextView = (TextView) findViewById(R.id.day);
 		playImageView = (ImageView) findViewById(R.id.play);
 		pauseImageView = (ImageView) findViewById(R.id.pause);
-		songNameTextView = (TextView) findViewById(R.id.songName);
-		songerTextView = (TextView) findViewById(R.id.songer);
+		songNameTextView = (AlwaysMarqueeTextView) findViewById(R.id.songName);
+		songerTextView = (AlwaysMarqueeTextView) findViewById(R.id.songer);
 		prewButton = (LockButtonRelativeLayout) findViewById(R.id.prev_button);
 		nextButton = (LockButtonRelativeLayout) findViewById(R.id.next_button);
 		lrcView = (LrcView) findViewById(R.id.locklrcview);
@@ -427,6 +427,12 @@ public class LockActivity extends SwipeBackActivity implements OnClickListener {
 		setLrc(songNameTextView.getText().toString());
 		Log.e("点击本地音乐下一首的时候歌手的名字", songerTextView.getText().toString());
 		downLoadArtistImag(songerTextView.getText().toString());
+		Bitmap nextBitmap = MediaUtils.getArtwork(this,
+				mp3List.get(nextPosition).getId(), mp3List.get(nextPosition)
+						.getAlbumId(), true, false);
+		musicPlayService.updateNotification(nextBitmap,
+				mp3List.get(nextPosition).getTitle(), mp3List.get(nextPosition)
+						.getArtist());
 	}
 
 	// 在下载的音乐点击下一首的时候调用的方法
@@ -452,6 +458,10 @@ public class LockActivity extends SwipeBackActivity implements OnClickListener {
 		setLrc(songNameTextView.getText().toString());
 		Log.e("点击下载的音乐下一首的时候歌手的名字", songerTextView.getText().toString());
 		downLoadArtistImag(songerTextView.getText().toString());
+		
+		musicPlayService.updateNotification(albumBit,
+				downMusicList.get(nextPosition).getDownMusicName(),
+				downMusicList.get(nextPosition).getDownMusicArtist());
 	}
 
 	// 在喜欢的的音乐点击下一首的时候调用的方法
@@ -477,6 +487,12 @@ public class LockActivity extends SwipeBackActivity implements OnClickListener {
 		setLrc(songNameTextView.getText().toString());
 		Log.e("点击喜欢的音乐下一首的时候歌手的名字", songerTextView.getText().toString());
 		downLoadArtistImag(songerTextView.getText().toString());
+		
+		musicPlayService.updateNotification(MainFragmentActivity.likeMusciList.get(nextPosition)
+				.getBitmap(),
+				MainFragmentActivity.likeMusciList.get(nextPosition)
+						.getMusicName(), MainFragmentActivity.likeMusciList
+						.get(nextPosition).getMusicArtist());
 	}
 
 	// 点击暂停或者播放按钮 的时候调用的方法
@@ -570,7 +586,6 @@ public class LockActivity extends SwipeBackActivity implements OnClickListener {
 
 			@Override
 			public void onFailure(HttpException arg0, String arg1) {
-				Toast.makeText(LockActivity.this, "请求失败了" + arg1, 0).show();
 				bitmapUtils.display(backImg,
 						"assets/img/profile_default_bg.jpg");
 			}
@@ -611,13 +626,30 @@ public class LockActivity extends SwipeBackActivity implements OnClickListener {
 				}
 			}
 			if (wpurl != null) {
-				bitmapUtils.display(backImg, wpurl);
+				// .display(backImg, wpurl);
+
+				CustomImageSizeModel customImageRequest = new CustomImageSizeModelFutureStudio(
+						wpurl);
+
+				Glide.with(getApplicationContext()).load(customImageRequest)
+						.placeholder(R.drawable.profile_default_bg).crossFade()
+						.into(backImg);
 				Log.e("wpurl设置的", "wpurl设置的");
 			}
 
 			if (bkurl != null) {
 				Log.e("bkurl设置的", "bkurl设置的");
-				bitmapUtils.display(backImg, bkurl);
+
+				CustomImageSizeModel customImageRequest = new CustomImageSizeModelFutureStudio(
+						bkurl);
+
+				Glide.with(getApplicationContext()).load(customImageRequest)
+						.placeholder(R.drawable.profile_default_bg).crossFade()
+						.into(backImg);
+
+				Glide.with(LockActivity.this).load(customImageRequest)
+						.placeholder(R.drawable.profile_default_bg).crossFade()
+						.into(backImg);
 			}
 
 		} catch (JSONException e) {
@@ -637,6 +669,18 @@ public class LockActivity extends SwipeBackActivity implements OnClickListener {
 			SystemStatusManager tintManager = new SystemStatusManager(this);
 			tintManager.setStatusBarTintEnabled(true);
 			tintManager.setStatusBarTintResource(0);// 状态栏无背景
+		}
+	}
+
+	public class CustomImageSizeModelFutureStudio implements
+			CustomImageSizeModel {
+		String baseImageUrl;
+		public CustomImageSizeModelFutureStudio(String baseImageUrl) {
+			this.baseImageUrl = baseImageUrl;
+		}
+		@Override
+		public String requestCustomSizeUrl(int width, int height) {
+			return baseImageUrl + "?w=" + width + "&h=" + height;
 		}
 	}
 }

@@ -86,6 +86,7 @@ public class Constant {
 	public static final int WHAT_ORIGINAL_SONGINFO = 0x117;
 	public static final int WHAT_RISE_SONGINFO = 0x119;
 	public static final int WHAT_NET_HOTMUSIC_LIST = 0x113;
+	public static final int WHAT_NET_SEARCH_LIST = 0x120;
 	public static final int WHAT_NET_ORIGINALMUSIC_LIST = 0x116;
 	public static final int WHAT_NET_RISEMUSIC_LIST = 0x118;
 	public static final int WHAT_EXECEPTION = 0X114;
