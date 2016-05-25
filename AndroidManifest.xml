@@ -5,7 +5,7 @@
     android:versionName="1.0" >
 
     <uses-sdk
-        android:minSdkVersion="11"
+        android:minSdkVersion="8"
         android:targetSdkVersion="17" />
     <!-- shared SDK -->
     <uses-permission android:name="android.permission.GET_TASKS" />
@@ -35,7 +35,7 @@
         android:label="@string/app_name"
         android:theme="@style/AppBaseTheme" >
         <meta-data
-            android:name="com.esint.music.activity.CustomImageSizeGlideModule"
+            android:name="com.esint.music.view.CustomImageSizeGlideModule"
             android:value="GlideModule" />
 
         <activity
@@ -74,7 +74,7 @@
             android:taskAffinity="com.esint.music"
             android:theme="@android:style/Theme.Translucent.NoTitleBar" />
         <activity
-            android:name="com.esint.music.activity.MainFragmentActivity"
+            android:name="com.esint.music.activity.MainActivity"
             android:configChanges="orientation|keyboardHidden|navigation"
             android:launchMode="singleTask"
             android:theme="@style/AppTheme"
