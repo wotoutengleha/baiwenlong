@@ -58,9 +58,9 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="@color/white"
-        android:cacheColorHint="#cccccc"
+        android:cacheColorHint="#e5e6e6"
         android:clickable="true"
-        android:divider="#cccccc"
+        android:divider="#e5e6e6"
         android:dividerHeight="1dp"
         android:focusable="true"
         android:focusableInTouchMode="true" >

@@ -9,7 +9,7 @@
         android:id="@+id/newmusicActionbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-       android:background="#ff33b5e5"
+        android:background="#ff33b5e5"
         android:padding="3dp" >
 
         <ImageView
@@ -26,21 +26,21 @@
             android:layout_width="30dp"
             android:layout_height="30dp"
             android:layout_alignParentRight="true"
-               android:visibility="gone"
             android:layout_centerVertical="true"
             android:background="@drawable/button_backround_deep"
             android:contentDescription="@string/app_name"
-            android:src="@drawable/actionbar_mor" />
+            android:src="@drawable/actionbar_mor"
+            android:visibility="gone" />
 
         <ImageView
             android:layout_width="33dp"
             android:layout_height="33dp"
             android:layout_centerVertical="true"
             android:layout_marginRight="8dp"
-            android:visibility="gone"
             android:layout_toLeftOf="@+id/play_more_functions"
             android:background="@drawable/button_backround_deep"
-            android:src="@drawable/action_search_pressed" />
+            android:src="@drawable/action_search_pressed"
+            android:visibility="gone" />
 
         <TextView
             android:layout_width="wrap_content"
@@ -58,9 +58,9 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="@color/white"
-        android:cacheColorHint="#cccccc"
+        android:cacheColorHint="#e5e6e6"
         android:clickable="true"
-        android:divider="#cccccc"
+        android:divider="#e5e6e6"
         android:dividerHeight="1dp"
         android:focusable="true"
         android:focusableInTouchMode="true" >

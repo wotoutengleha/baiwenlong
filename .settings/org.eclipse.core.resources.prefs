@@ -1,9 +1,13 @@
 eclipse.preferences.version=1
+encoding//src/cn/sharesdk/onekeyshare/CustomerLogo.java=UTF-8
+encoding//src/cn/sharesdk/onekeyshare/OnekeyShare.java=UTF-8
 encoding//src/cn/sharesdk/onekeyshare/OnekeySharePage.java=UTF-8
 encoding//src/cn/sharesdk/onekeyshare/OnekeyShareTheme.java=UTF-8
 encoding//src/cn/sharesdk/onekeyshare/OnekeyShareThemeImpl.java=UTF-8
+encoding//src/cn/sharesdk/onekeyshare/ShareContentCustomizeCallback.java=UTF-8
 encoding//src/cn/sharesdk/onekeyshare/themes/classic/ClassicTheme.java=UTF-8
 encoding//src/cn/sharesdk/onekeyshare/themes/classic/FriendAdapter.java=UTF-8
 encoding//src/cn/sharesdk/onekeyshare/themes/classic/FriendListPage.java=UTF-8
 encoding//src/com/esint/music/activity/MusicPlayAvtivity.java=UTF-8
 encoding//src/com/esint/music/activity/SearchMusicActivity.java=UTF-8
+encoding//src/com/esint/music/wxapi/WXEntryActivity.java=UTF-8
